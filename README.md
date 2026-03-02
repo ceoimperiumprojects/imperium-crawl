@@ -31,6 +31,18 @@ While others charge $19+/month for basic scraping, imperium-crawl gives you **mo
 
 ## Installation
 
+```bash
+npm install -g imperium-crawl
+```
+
+Or run directly without installing:
+
+```bash
+npx -y imperium-crawl
+```
+
+### MCP Client Config
+
 Add to your MCP client config (Claude Code, Cursor, VS Code, Windsurf, or any MCP client):
 
 ```json
