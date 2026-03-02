@@ -268,28 +268,35 @@ Turn any website into an API. No documentation needed.
 
 ---
 
-## Real-World Test Results
+## 🔥 Real-World Test Results
 
 Every tool tested against production websites with real anti-bot defenses:
 
-| Tool | Test Target | Result |
-|------|------------|--------|
-| **scrape** | bbc.com/news | Full markdown extraction, stealth level 3 auto-escalation |
-| **crawl** | blog.cloudflare.com | 213K chars crawled across multiple pages with depth control |
-| **map** | bbc.com | Full URL discovery via sitemap + page link extraction |
-| **extract** | imdb.com | Structured CSS selector extraction with `@attr` support |
-| **readability** | Medium article | Clean article extraction — title, author, content, date |
-| **screenshot** | producthunt.com | Captured Cloudflare Turnstile challenge page (auto-solves with 2Captcha key) |
-| **search** | "test" query | Web results via Brave API |
-| **news_search** | "AI" query | News results with freshness ranking |
-| **image_search** | "landscape" query | Image results with thumbnails and source URLs |
-| **video_search** | "tutorial" query | Video results across platforms |
-| **discover_apis** | weather.com | Found 11 hidden APIs including main weather API with exposed key |
-| **query_api** | jsonplaceholder API | Direct JSON API calls with stealth headers |
-| **monitor_websocket** | example.com | WebSocket connection monitoring and message capture |
-| **create_skill** | Any page | Auto-detects repeating patterns, generates CSS selectors |
-| **run_skill** | Saved skill | Fresh structured data from saved extraction config |
-| **list_skills** | — | Lists all saved skills with configurations |
+| Tool | Target | Result |
+|------|--------|--------|
+| 🕷️ **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
+| 🔓 **discover_apis** | Spotify | **8 hidden APIs** — access token exposed, client ID, dealer servers, analytics |
+| 🕷️ **extract** | Stack Overflow | **15 top questions** — #1 with 27,520 votes |
+| 📡 **monitor_websocket** | Binance BTC/USDT | **3 WebSocket connections, 23 live messages** — real-time price $69,390 |
+| 🔓 **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome anti-bot, Google Maps key exposed, internal search/polygon/viewport APIs |
+| 🕷️ **extract** | Hacker News | **30 front-page posts** — titles + URLs extracted |
+| 🔓 **discover_apis** | Netflix | **5 APIs** — OneTrust consent, geolocation (detected country: Serbia 🇷🇸) |
+| 📄 **scrape** | BBC News | Full markdown content, stealth level 3 auto-escalation |
+| 🕸️ **crawl** | Cloudflare Blog | **213K characters** crawled with depth control |
+| 🗺️ **map** | BBC | Full URL discovery via sitemap + page link extraction |
+| 📖 **readability** | Medium article | Clean extraction — title, author, content, publish date |
+| 📸 **screenshot** | ProductHunt | Captured Cloudflare Turnstile challenge page |
+| 🔓 **discover_apis** | weather.com | **11 hidden APIs** — main weather API with exposed key |
+| ⚡ **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
+| 🔍 **search** | Brave Web Search | Web results with snippets and URLs |
+| 📰 **news_search** | Brave News Search | News results with freshness ranking |
+| 🖼️ **image_search** | Brave Image Search | Images with thumbnails and source URLs |
+| 🎬 **video_search** | Brave Video Search | Video results across platforms |
+| 🛠️ **create_skill** | Any page | Auto-detects repeating patterns, generates CSS selectors |
+| ▶️ **run_skill** | Saved skill | Fresh structured data from saved extraction config |
+| 📋 **list_skills** | — | Lists all saved skills with configurations |
+
+> 🏆 **16/16 tools working. 58 hidden APIs discovered. Live crypto feed captured. Zero API keys needed for scraping.**
 
 ---
 
