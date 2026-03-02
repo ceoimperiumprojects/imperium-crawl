@@ -15,6 +15,7 @@ import {
   formatOutput,
   parseToolOutput,
 } from "./formatters.js";
+import { PACKAGE_VERSION } from "./constants.js";
 
 // ── Zod Unwrapping ───────────────────────────────────────────────────
 
@@ -222,7 +223,7 @@ export function buildCli(): Command {
     .description(
       "16-tool web scraping, crawling, search, and API discovery CLI.\nRun without arguments to start as MCP server.",
     )
-    .version("1.0.0")
+    .version(PACKAGE_VERSION)
     .addOption(
       new Option("--output-format <fmt>", "Output format")
         .choices(["json", "jsonl", "csv", "markdown"])

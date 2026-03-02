@@ -77,6 +77,64 @@ npx playwright install chromium
 
 ---
 
+## CLI Mode
+
+imperium-crawl works as both an **MCP server** and a **standalone CLI tool**. All 16 tools are available as subcommands:
+
+```bash
+# Scrape a website to markdown
+imperium-crawl scrape --url https://bbc.com/news
+
+# Crawl with depth control
+imperium-crawl crawl --url https://blog.cloudflare.com --max-depth 2 --max-pages 5
+
+# Extract structured data with CSS selectors
+imperium-crawl extract --url https://news.ycombinator.com --selectors '{"title":".titleline a","score":".score"}' --items-selector ".athing"
+
+# Discover hidden APIs on any website
+imperium-crawl discover-apis --url https://weather.com
+
+# Search the web (requires BRAVE_API_KEY)
+imperium-crawl search --query "latest AI news" --count 5
+
+# Take a screenshot
+imperium-crawl screenshot --url https://github.com --full-page
+```
+
+### Output Formats
+
+```bash
+# JSON (default)
+imperium-crawl scrape --url https://example.com
+
+# CSV
+imperium-crawl extract --url https://example.com --selectors '{"title":"h1"}' --output-format csv
+
+# Markdown
+imperium-crawl scrape --url https://example.com --output-format markdown
+
+# JSONL (one JSON object per line)
+imperium-crawl crawl --url https://example.com --output-format jsonl
+
+# Pretty-print JSON
+imperium-crawl scrape --url https://example.com --pretty
+
+# Write to file
+imperium-crawl scrape --url https://example.com --output result.json
+```
+
+### Help
+
+```bash
+imperium-crawl --help              # List all commands
+imperium-crawl scrape --help       # Help for specific tool
+imperium-crawl --version           # Show version
+```
+
+> **No arguments** = starts as MCP server (stdio). **With subcommand** = runs as CLI tool.
+
+---
+
 ## 16 Tools
 
 ### Scraping (no API key needed)
