@@ -23,6 +23,7 @@ While others charge $19+/month for basic scraping, imperium-crawl gives you **mo
 | Priority-based crawling | **Yes** | No | No | No | No |
 | Circuit breaker + jitter backoff | **Yes** | No | No | No | No |
 | URL normalization (11 steps) | **Yes** | No | No | No | No |
+| Adaptive learning (self-improving) | **Yes** | No | No | No | No |
 | Self-hosted | **Yes** | No | N/A | Yes | No |
 | Requires external service | **No** | Yes | No | No | Yes |
 | Total tools | **16** | 5 | 2 | 2 | 4 |
@@ -208,6 +209,59 @@ Once imperium-crawl determines a domain needs Level 3 (browser), it **caches tha
 
 ---
 
+## 🧠 Adaptive Learning Engine
+
+imperium-crawl **learns from every request** and gets smarter over time. No configuration needed — it works automatically in the background.
+
+### How It Works
+
+Every time you scrape a website, the engine records:
+- Which **stealth level** worked (1, 2, or 3)
+- Which **anti-bot system** was detected (Cloudflare, DataDome, etc.)
+- Whether a **proxy** was needed
+- **Response time** and **HTTP status**
+- Whether the request was **blocked or successful**
+
+Next time you hit the same domain, the engine **predicts the optimal configuration** — skipping failed levels and going straight to what works.
+
+### What It Learns Per Domain
+
+| Data Point | How It's Used |
+|-----------|---------------|
+| Optimal stealth level | Skip straight to the level that works — no wasted escalation |
+| Anti-bot system | Remember which defense the site uses |
+| Proxy requirement | Auto-suggest proxy if requests keep failing without one |
+| Response time | Exponential moving average — adapts to site speed changes |
+| Rate limit | Auto-throttles on 429 responses (reduces rate by 30%) |
+| Success/fail ratio | Confidence scoring — high confidence = use cached strategy |
+
+### Smart Features
+
+- **Time decay** — Knowledge older than 7 days loses weight, so the engine adapts when sites change defenses
+- **Confidence scoring** — Low data = start from level 1. High confidence = skip directly to optimal level
+- **Auto-prune** — Domains unused for 30 days are automatically cleaned up. Max 2,000 domains stored
+- **Atomic persistence** — Knowledge saved to `~/.imperium-crawl/knowledge.json` via atomic write (tmp → rename). Never corrupts
+- **Debounced writes** — Batches saves every 30 seconds to avoid disk thrashing
+
+### Example
+
+```
+First visit to cloudflare.com:
+  Level 1 → blocked ❌
+  Level 2 → blocked ❌
+  Level 3 → success ✅ (Cloudflare detected)
+  → Engine records: cloudflare.com needs Level 3
+
+Second visit to cloudflare.com:
+  → Engine predicts: Level 3, confidence 85%, Cloudflare
+  → Skips Level 1 and 2 entirely — goes straight to browser
+  → 3x faster than first visit
+```
+
+> **The more you use it, the faster it gets.** Zero configuration. Fully automatic.
+
+---
+
 ## Skills System
 
 Skills let you teach imperium-crawl how to extract data from any website, then re-run it for fresh content whenever you want.
@@ -266,6 +320,7 @@ Turn any website into an API. No documentation needed.
 - **HTTP transport hardening** — rate limiting (100 req/min), 1MB body limit, 5min request timeout
 - **Proxy support** — single proxy (`PROXY_URL`) or rotating pool (`PROXY_URLS`) with http/https/socks4/socks5 support
 - **Browser pool** — keyed by proxy URL, auto-eviction, configurable pool size
+- **Adaptive learning** — remembers optimal stealth level per domain, gets faster with every request
 - **Graceful shutdown** — 10s timeout on browser cleanup to prevent hung processes
 - **robots.txt** — respected by default (configurable)
 
