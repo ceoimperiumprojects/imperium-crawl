@@ -69,6 +69,7 @@ Add to your MCP client config (Claude Code, Cursor, VS Code, Windsurf, or any MC
 > |-----|----------------|-----------------|
 > | `BRAVE_API_KEY` | 4 search tools (web, news, image, video) | [brave.com/search/api](https://brave.com/search/api/) (free tier available) |
 > | `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving (reCAPTCHA v2/v3, hCaptcha, Turnstile) | [2captcha.com](https://2captcha.com/) |
+> | `PROXY_URL` | Route all requests through a proxy (http/https/socks4/socks5) | Any proxy provider |
 
 ### Enable full stealth (Level 3 — headless browser)
 
