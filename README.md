@@ -79,6 +79,23 @@ npm i rebrowser-playwright
 npx playwright install chromium
 ```
 
+### AI Agent Guide (SKILL.md)
+
+imperium-crawl ships with [`SKILL.md`](./SKILL.md) — a structured guide that teaches AI agents (Claude, GPT, etc.) how to use all 16 tools effectively. It includes 6 proven workflows, decision trees, error recovery strategies, and advanced patterns like manual skill refinement.
+
+**Without SKILL.md**, agents can call tools but won't know which tool to try first, when to fallback, or how to chain tools together optimally.
+
+**With SKILL.md**, agents follow battle-tested workflows — readability → scrape → extract fallback chains, auto-detect → manual refinement for skills, search → select → deep-scrape for research, and more.
+
+How to use it:
+
+| AI Agent | How to add SKILL.md |
+|----------|-------------------|
+| **Claude Code** | Copy `SKILL.md` to your project root — Claude Code reads it automatically |
+| **Cursor / Windsurf** | Add `SKILL.md` to project rules or include in system prompt |
+| **Custom agents** | Include SKILL.md content in your system prompt or context window |
+| **ChatGPT / GPT agents** | Paste SKILL.md content into custom instructions |
+
 ---
 
 ## CLI Mode
