@@ -1,0 +1,147 @@
+import { z } from "zod";
+import { isPlaywrightAvailable } from "../stealth/browser.js";
+import { normalizeUrl } from "../utils/url.js";
+import { DEFAULT_TIMEOUT_MS } from "../constants.js";
+
+export const name = "monitor_websocket";
+
+export const description =
+  "Navigate to a page and capture WebSocket messages for a specified duration. Essential for monitoring real-time data feeds, chat applications, live dashboards, and financial tickers. Requires rebrowser-playwright.";
+
+export const schema = z.object({
+  url: z.string().describe("The URL to navigate to"),
+  duration_seconds: z.number().default(10).describe("How many seconds to capture WebSocket messages (default: 10)"),
+  timeout: z.number().default(DEFAULT_TIMEOUT_MS).describe("Navigation timeout in ms"),
+  max_messages: z.number().default(100).describe("Maximum number of messages to capture"),
+  filter_url: z.string().optional().describe("Only capture WebSocket connections matching this substring"),
+});
+
+export type MonitorWebSocketInput = z.infer<typeof schema>;
+
+interface WebSocketMessage {
+  ws_url: string;
+  direction: "sent" | "received";
+  data: unknown;
+  timestamp: number;
+}
+
+interface WebSocketConnection {
+  url: string;
+  messages_sent: number;
+  messages_received: number;
+}
+
+export async function execute(input: MonitorWebSocketInput) {
+  if (!(await isPlaywrightAvailable())) {
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            { error: "rebrowser-playwright is required for WebSocket monitoring. Install with: npm i rebrowser-playwright" },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  }
+
+  const url = normalizeUrl(input.url);
+  const pw = await import("rebrowser-playwright");
+  let browser;
+
+  try {
+    browser = await pw.chromium.launch({ headless: true });
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    const messages: WebSocketMessage[] = [];
+    const connections = new Map<string, WebSocketConnection>();
+
+    // Listen for WebSocket connections
+    page.on("websocket", (ws) => {
+      const wsUrl = ws.url();
+
+      // Apply URL filter
+      if (input.filter_url && !wsUrl.includes(input.filter_url)) return;
+
+      const conn: WebSocketConnection = {
+        url: wsUrl,
+        messages_sent: 0,
+        messages_received: 0,
+      };
+      connections.set(wsUrl, conn);
+
+      ws.on("framereceived", (frame) => {
+        if (messages.length >= input.max_messages) return;
+        conn.messages_received++;
+
+        let data: unknown;
+        try {
+          data = JSON.parse(frame.payload as string);
+        } catch {
+          data = frame.payload;
+        }
+
+        messages.push({
+          ws_url: wsUrl,
+          direction: "received",
+          data,
+          timestamp: Date.now(),
+        });
+      });
+
+      ws.on("framesent", (frame) => {
+        if (messages.length >= input.max_messages) return;
+        conn.messages_sent++;
+
+        let data: unknown;
+        try {
+          data = JSON.parse(frame.payload as string);
+        } catch {
+          data = frame.payload;
+        }
+
+        messages.push({
+          ws_url: wsUrl,
+          direction: "sent",
+          data,
+          timestamp: Date.now(),
+        });
+      });
+    });
+
+    // Navigate — use "domcontentloaded" because streaming sites never reach "networkidle"
+    // WebSocket connections open during/after load, and we capture them via the event listener
+    await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: input.timeout,
+    });
+
+    // Wait for the specified duration to capture messages
+    await page.waitForTimeout(input.duration_seconds * 1000);
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              url,
+              duration_seconds: input.duration_seconds,
+              websocket_connections: connections.size,
+              total_messages: messages.length,
+              connections: Array.from(connections.values()),
+              messages,
+            },
+            null,
+            2,
+          ),
+        },
+      ],
+    };
+  } finally {
+    await browser?.close();
+  }
+}
