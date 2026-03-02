@@ -12,12 +12,14 @@ export const description =
 
 export const schema = z.object({
   url: z.string().max(MAX_URL_LENGTH).describe("The URL to extract data from"),
-  selectors: z
-    .record(z.string().max(MAX_SELECTOR_LENGTH))
-    .refine((obj) => Object.keys(obj).length <= MAX_SELECTOR_KEYS, {
-      message: `Too many selectors (max ${MAX_SELECTOR_KEYS})`,
-    })
-    .describe("Map of field names to CSS selectors. Use @attr suffix to extract attributes (e.g. 'a @href')"),
+  selectors: z.preprocess(
+    (val) => (typeof val === "string" ? JSON.parse(val) : val),
+    z
+      .record(z.string().max(MAX_SELECTOR_LENGTH))
+      .refine((obj) => Object.keys(obj).length <= MAX_SELECTOR_KEYS, {
+        message: `Too many selectors (max ${MAX_SELECTOR_KEYS})`,
+      }),
+  ).describe("Map of field names to CSS selectors. Use @attr suffix to extract attributes (e.g. 'a @href')"),
   items_selector: z
     .string()
     .max(MAX_SELECTOR_LENGTH)
