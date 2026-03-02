@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { isPlaywrightAvailable } from "../stealth/browser.js";
+import { acquirePage } from "../stealth/chrome-profile.js";
+import { resolveProxy } from "../stealth/proxy.js";
 import { normalizeUrl } from "../utils/url.js";
-import { DEFAULT_TIMEOUT_MS } from "../constants.js";
+import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_DURATION_SECONDS, MAX_TIMEOUT_MS, MAX_MESSAGES } from "../constants.js";
 
 export const name = "monitor_websocket";
 
@@ -9,11 +11,13 @@ export const description =
   "Navigate to a page and capture WebSocket messages for a specified duration. Essential for monitoring real-time data feeds, chat applications, live dashboards, and financial tickers. Requires rebrowser-playwright.";
 
 export const schema = z.object({
-  url: z.string().describe("The URL to navigate to"),
-  duration_seconds: z.number().default(10).describe("How many seconds to capture WebSocket messages (default: 10)"),
-  timeout: z.number().default(DEFAULT_TIMEOUT_MS).describe("Navigation timeout in ms"),
-  max_messages: z.number().default(100).describe("Maximum number of messages to capture"),
-  filter_url: z.string().optional().describe("Only capture WebSocket connections matching this substring"),
+  url: z.string().max(MAX_URL_LENGTH).describe("The URL to navigate to"),
+  duration_seconds: z.number().min(1).max(MAX_DURATION_SECONDS).default(10).describe("How many seconds to capture WebSocket messages (default: 10)"),
+  timeout: z.number().min(1).max(MAX_TIMEOUT_MS).default(DEFAULT_TIMEOUT_MS).describe("Navigation timeout in ms"),
+  max_messages: z.number().min(1).max(MAX_MESSAGES).default(100).describe("Maximum number of messages to capture"),
+  filter_url: z.string().max(MAX_URL_LENGTH).optional().describe("Only capture WebSocket connections matching this substring"),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type MonitorWebSocketInput = z.infer<typeof schema>;
@@ -48,13 +52,14 @@ export async function execute(input: MonitorWebSocketInput) {
   }
 
   const url = normalizeUrl(input.url);
-  const pw = await import("rebrowser-playwright");
-  let browser;
+  const proxyUrl = resolveProxy(input.proxy);
+  const handle = await acquirePage({
+    chromeProfile: input.chrome_profile,
+    proxyUrl,
+  });
 
   try {
-    browser = await pw.chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    const { page } = handle;
 
     const messages: WebSocketMessage[] = [];
     const connections = new Map<string, WebSocketConnection>();
@@ -142,6 +147,6 @@ export async function execute(input: MonitorWebSocketInput) {
       ],
     };
   } finally {
-    await browser?.close();
+    await handle.cleanup();
   }
 }

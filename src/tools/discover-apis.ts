@@ -1,7 +1,9 @@
 import { z } from "zod";
 import { isPlaywrightAvailable } from "../stealth/browser.js";
+import { acquirePage } from "../stealth/chrome-profile.js";
+import { resolveProxy } from "../stealth/proxy.js";
 import { normalizeUrl } from "../utils/url.js";
-import { DEFAULT_TIMEOUT_MS } from "../constants.js";
+import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_WAIT_SECONDS, MAX_TIMEOUT_MS } from "../constants.js";
 
 export const name = "discover_apis";
 
@@ -9,14 +11,17 @@ export const description =
   "Navigate to a page and capture all API calls (XHR/fetch) from network traffic. Discovers REST and GraphQL endpoints automatically. Requires rebrowser-playwright.";
 
 export const schema = z.object({
-  url: z.string().describe("The URL to navigate to and capture API traffic from"),
-  wait_seconds: z.number().default(5).describe("How many seconds to wait for API calls after page load (default: 5)"),
-  timeout: z.number().default(DEFAULT_TIMEOUT_MS).describe("Navigation timeout in ms"),
+  url: z.string().max(MAX_URL_LENGTH).describe("The URL to navigate to and capture API traffic from"),
+  wait_seconds: z.number().min(0).max(MAX_WAIT_SECONDS).default(5).describe("How many seconds to wait for API calls after page load (default: 5)"),
+  timeout: z.number().min(1).max(MAX_TIMEOUT_MS).default(DEFAULT_TIMEOUT_MS).describe("Navigation timeout in ms"),
   include_headers: z.boolean().default(false).describe("Include request headers in output"),
   filter_content_type: z
     .string()
+    .max(200)
     .optional()
     .describe("Filter by response content type (e.g. 'application/json')"),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type DiscoverApisInput = z.infer<typeof schema>;
@@ -104,13 +109,14 @@ export async function execute(input: DiscoverApisInput) {
   }
 
   const url = normalizeUrl(input.url);
-  const pw = await import("rebrowser-playwright");
-  let browser;
+  const proxyUrl = resolveProxy(input.proxy);
+  const handle = await acquirePage({
+    chromeProfile: input.chrome_profile,
+    proxyUrl,
+  });
 
   try {
-    browser = await pw.chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const page = await context.newPage();
+    const { page } = handle;
 
     const discoveredApis: DiscoveredApi[] = [];
     const seenUrls = new Set<string>();
@@ -228,6 +234,6 @@ export async function execute(input: DiscoverApisInput) {
       ],
     };
   } finally {
-    await browser?.close();
+    await handle.cleanup();
   }
 }

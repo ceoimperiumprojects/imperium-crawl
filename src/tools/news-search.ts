@@ -1,15 +1,16 @@
 import { z } from "zod";
 import { issueRequest } from "../brave-api/index.js";
 import { hasBraveApiKey } from "../config.js";
+import { MAX_QUERY_LENGTH } from "../constants.js";
 
 export const name = "news_search";
 
 export const description = "Search for news articles using Brave Search API. Requires BRAVE_API_KEY.";
 
 export const schema = z.object({
-  query: z.string().describe("News search query"),
+  query: z.string().min(1).max(MAX_QUERY_LENGTH).describe("News search query"),
   count: z.number().min(1).max(20).default(10).describe("Number of results"),
-  country: z.string().optional().describe("Country code"),
+  country: z.string().max(10).optional().describe("Country code"),
   freshness: z
     .enum(["pd", "pw", "pm", "py"])
     .optional()

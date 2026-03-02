@@ -5,8 +5,8 @@ import { hasBraveApiKey, hasTwoCaptchaApiKey } from "../src/config.js";
 import { TwoCaptchaSolver } from "../src/captcha/solver.js";
 
 describe("Tool Registry", () => {
-  it("has exactly 16 tools registered", () => {
-    expect(allTools).toHaveLength(16);
+  it("has exactly 17 tools registered", () => {
+    expect(allTools).toHaveLength(17);
   });
 
   it("all tools have required fields", () => {
@@ -31,6 +31,7 @@ describe("Tool Registry", () => {
       "search", "news_search", "image_search", "video_search",
       "create_skill", "run_skill", "list_skills",
       "discover_apis", "query_api", "monitor_websocket",
+      "visual_builder",
     ];
     for (const name of expected) {
       expect(names).toContain(name);

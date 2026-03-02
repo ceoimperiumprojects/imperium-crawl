@@ -15,6 +15,16 @@ interface CacheEntry {
 
 const cache = new Map<string, CacheEntry>();
 
+// Periodic cleanup: sweep expired entries every 60s
+setInterval(() => {
+  const now = Date.now();
+  for (const [domain, entry] of cache) {
+    if (now - entry.timestamp > DEFAULT_ROBOTS_CACHE_TTL_MS) {
+      cache.delete(domain);
+    }
+  }
+}, 60_000).unref();
+
 function createParser(url: string, text: string): Robot {
   return (robotsParser as any)(url, text) as Robot;
 }

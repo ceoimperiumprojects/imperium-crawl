@@ -2,6 +2,7 @@ import { smartFetch, type FetchResult, type StealthOptions } from "../stealth/in
 import { isAllowed } from "./robots.js";
 import { getOptions } from "../config.js";
 import { DEFAULT_CONCURRENCY } from "../constants.js";
+import { getKnowledgeEngine } from "../knowledge/index.js";
 
 // ── Concurrency Limiter ──
 
@@ -37,6 +38,7 @@ interface CircuitBreaker {
   failures: number;
   openedAt: number;
   probeSuccesses: number;
+  lastAccessed: number;
 }
 
 const CIRCUIT_FAILURE_THRESHOLD = 5;
@@ -44,6 +46,17 @@ const CIRCUIT_OPEN_DURATION_MS = 60_000;
 const CIRCUIT_PROBE_SUCCESSES = 3;
 
 const circuits = new Map<string, CircuitBreaker>();
+
+// Periodic cleanup: remove closed circuits idle for >1 hour
+const CIRCUIT_STALE_MS = 3_600_000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [domain, circuit] of circuits) {
+    if (circuit.state === "closed" && now - circuit.lastAccessed > CIRCUIT_STALE_MS) {
+      circuits.delete(domain);
+    }
+  }
+}, 300_000).unref();
 
 function getDomain(url: string): string {
   try {
@@ -56,9 +69,11 @@ function getDomain(url: string): string {
 function getCircuit(domain: string): CircuitBreaker {
   let circuit = circuits.get(domain);
   if (!circuit) {
-    circuit = { state: "closed", failures: 0, openedAt: 0, probeSuccesses: 0 };
+    circuit = { state: "closed", failures: 0, openedAt: 0, probeSuccesses: 0, lastAccessed: Date.now() };
     circuits.set(domain, circuit);
   }
+
+  circuit.lastAccessed = Date.now();
 
   // Check if open circuit should transition to half-open
   if (circuit.state === "open" && Date.now() - circuit.openedAt >= CIRCUIT_OPEN_DURATION_MS) {
@@ -85,12 +100,22 @@ function recordSuccess(domain: string): void {
 
 function recordFailure(domain: string): void {
   const circuit = getCircuit(domain);
+  // Half-open probe failed → immediately reopen circuit
+  if (circuit.state === "half-open") {
+    circuit.state = "open";
+    circuit.openedAt = Date.now();
+    circuit.failures = CIRCUIT_FAILURE_THRESHOLD;
+    return;
+  }
   circuit.failures++;
   if (circuit.failures >= CIRCUIT_FAILURE_THRESHOLD) {
     circuit.state = "open";
     circuit.openedAt = Date.now();
   }
 }
+
+// Exported for testing
+export { circuits, getCircuit, recordSuccess, recordFailure, CIRCUIT_FAILURE_THRESHOLD, CIRCUIT_OPEN_DURATION_MS, CIRCUIT_PROBE_SUCCESSES, CIRCUIT_STALE_MS };
 
 // ── Exponential Backoff with Full Jitter (AWS pattern) ──
 
@@ -129,15 +154,42 @@ export async function fetchPage(url: string, options?: SmartFetchOptions): Promi
 
   const retries = options?.retries ?? 2;
   let lastError: Error | undefined;
+  const startTime = Date.now();
+  const knowledgeEngine = getKnowledgeEngine();
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const result = await smartFetch(url, options);
       recordSuccess(domain);
+      knowledgeEngine.record({
+        url,
+        domain,
+        levelUsed: result.level,
+        success: true,
+        responseTimeMs: Date.now() - startTime,
+        antiBotSystem: null,
+        captchaType: result.captchaSolved ? "detected" : null,
+        proxyUsed: !!result.proxyUsed,
+        blocked: false,
+        httpStatus: result.status,
+      });
       return result;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
       recordFailure(domain);
+
+      knowledgeEngine.record({
+        url,
+        domain,
+        levelUsed: 1, // best guess — we don't know which level failed
+        success: false,
+        responseTimeMs: Date.now() - startTime,
+        antiBotSystem: null,
+        captchaType: null,
+        proxyUsed: !!options?.proxy,
+        blocked: true,
+        httpStatus: 0,
+      });
 
       // Check if circuit just opened
       const updatedCircuit = getCircuit(domain);

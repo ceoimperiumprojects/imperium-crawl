@@ -1,16 +1,21 @@
 import { getTwoCaptchaApiKey } from "../config.js";
+import { HUMAN_DELAY_MIN_MS, HUMAN_DELAY_MAX_MS } from "../constants.js";
 import { trySolveCaptcha, hasCaptcha } from "../captcha/index.js";
+import { acquirePage } from "./chrome-profile.js";
 
 export interface BrowserFetchResult {
   html: string;
   status: number;
   url: string;
+  chromeProfile?: string;
 }
 
 export interface BrowserFetchOptions {
   timeout?: number;
   screenshot?: boolean;
   solveCaptcha?: boolean; // Explicitly enable/disable (default: auto based on API key)
+  proxyUrl?: string;
+  chromeProfile?: string;
 }
 
 let playwrightAvailable: boolean | null = null;
@@ -39,27 +44,13 @@ export async function browserFetch(
     throw new Error("rebrowser-playwright is not installed. Install it with: npm i rebrowser-playwright");
   }
 
-  const pw = await import("rebrowser-playwright");
-  let browser;
+  const handle = await acquirePage({
+    chromeProfile: options?.chromeProfile,
+    proxyUrl: options?.proxyUrl,
+  });
 
   try {
-    browser = await pw.chromium.launch({ headless: true });
-    const context = await browser.newContext();
-
-    // Try to inject fingerprints if available
-    let page;
-    let usedFpContext = false;
-    let fpContext;
-
-    try {
-      const { newInjectedContext } = await import("fingerprint-injector");
-      fpContext = await newInjectedContext(browser);
-      page = await fpContext.newPage();
-      usedFpContext = true;
-    } catch {
-      // Fallback without fingerprint injection
-      page = await context.newPage();
-    }
+    const { page } = handle;
 
     // Use "load" instead of "networkidle" — streaming sites (BBC, Binance, etc.)
     // never reach networkidle. After load, we briefly wait for networkidle as a bonus
@@ -74,6 +65,10 @@ export async function browserFetch(
       page.waitForLoadState("networkidle").catch(() => {}),
       new Promise((r) => setTimeout(r, 5000)),
     ]);
+
+    // ── Human-like delay — anti-bot systems flag instant page reads ──
+    const humanDelay = HUMAN_DELAY_MIN_MS + Math.random() * (HUMAN_DELAY_MAX_MS - HUMAN_DELAY_MIN_MS);
+    await new Promise((r) => setTimeout(r, humanDelay));
 
     let captchaSolved = false;
 
@@ -97,20 +92,15 @@ export async function browserFetch(
       screenshotBase64 = buf.toString("base64");
     }
 
-    const result = {
+    return {
       html,
       status: response?.status() || 200,
       url: page.url(),
       screenshot: screenshotBase64,
       captchaSolved,
+      chromeProfile: handle.profilePath,
     };
-
-    if (usedFpContext && fpContext) {
-      await fpContext.close();
-    }
-
-    return result;
   } finally {
-    await browser?.close();
+    await handle.cleanup();
   }
 }

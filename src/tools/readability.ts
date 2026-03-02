@@ -4,6 +4,7 @@ import { Readability, isProbablyReaderable } from "@mozilla/readability";
 import { fetchPage } from "../utils/fetcher.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { normalizeUrl } from "../utils/url.js";
+import { MAX_URL_LENGTH } from "../constants.js";
 
 export const name = "readability";
 
@@ -11,15 +12,17 @@ export const description =
   "Extract the main article content from a web page using Mozilla's Readability. Returns title, author, text, date, and excerpt. Uses linkedom for fast DOM parsing.";
 
 export const schema = z.object({
-  url: z.string().describe("The URL to extract the article from"),
+  url: z.string().max(MAX_URL_LENGTH).describe("The URL to extract the article from"),
   format: z.enum(["markdown", "html", "text"]).default("markdown").describe("Output format for content"),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type ReadabilityInput = z.infer<typeof schema>;
 
 export async function execute(input: ReadabilityInput) {
   const url = normalizeUrl(input.url);
-  const result = await fetchPage(url);
+  const result = await fetchPage(url, { proxy: input.proxy, chromeProfile: input.chrome_profile });
 
   const { document } = parseHTML(result.html);
 

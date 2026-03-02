@@ -2,7 +2,7 @@ import { z } from "zod";
 import { fetchPage, ConcurrencyLimiter } from "../utils/fetcher.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { normalizeUrl, isSameOrigin } from "../utils/url.js";
-import { DEFAULT_MAX_DEPTH, DEFAULT_MAX_PAGES, DEFAULT_CONCURRENCY } from "../constants.js";
+import { DEFAULT_MAX_DEPTH, DEFAULT_MAX_PAGES, DEFAULT_CONCURRENCY, MAX_URL_LENGTH, MAX_PAGES, MAX_CONCURRENCY, MAX_CRAWL_CONTENT_PER_PAGE } from "../constants.js";
 import * as cheerio from "cheerio";
 
 export const name = "crawl";
@@ -11,10 +11,12 @@ export const description =
   "Crawl a website using priority-based traversal. Prioritizes content-rich URLs (articles, blog posts) over navigation pages. Returns Markdown content for each page.";
 
 export const schema = z.object({
-  url: z.string().describe("Starting URL to crawl"),
-  max_depth: z.number().default(DEFAULT_MAX_DEPTH).describe("Maximum crawl depth"),
-  max_pages: z.number().default(DEFAULT_MAX_PAGES).describe("Maximum number of pages to crawl"),
-  concurrency: z.number().default(DEFAULT_CONCURRENCY).describe("Max concurrent requests"),
+  url: z.string().max(MAX_URL_LENGTH).describe("Starting URL to crawl"),
+  max_depth: z.number().min(0).max(10).default(DEFAULT_MAX_DEPTH).describe("Maximum crawl depth"),
+  max_pages: z.number().min(1).max(MAX_PAGES).default(DEFAULT_MAX_PAGES).describe("Maximum number of pages to crawl"),
+  concurrency: z.number().min(1).max(MAX_CONCURRENCY).default(DEFAULT_CONCURRENCY).describe("Max concurrent requests"),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type CrawlInput = z.infer<typeof schema>;
@@ -138,8 +140,11 @@ export async function execute(input: CrawlInput) {
     const tasks = batch.map(({ url, depth }) =>
       limiter.run(async () => {
         try {
-          const result = await fetchPage(url);
-          const content = htmlToMarkdown(result.html);
+          const result = await fetchPage(url, { proxy: input.proxy, chromeProfile: input.chrome_profile });
+          let content = htmlToMarkdown(result.html);
+          if (content.length > MAX_CRAWL_CONTENT_PER_PAGE) {
+            content = content.substring(0, MAX_CRAWL_CONTENT_PER_PAGE) + "\n\n[Content truncated at 100KB]";
+          }
           results.push({ url: result.url, depth, content });
 
           // Extract and score links for next depth

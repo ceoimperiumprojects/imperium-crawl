@@ -3,6 +3,7 @@ import * as cheerio from "cheerio";
 import type { AnyNode } from "domhandler";
 import { fetchPage } from "../utils/fetcher.js";
 import * as manager from "../skills/manager.js";
+import { MAX_URL_LENGTH, MAX_ITEMS } from "../constants.js";
 
 export const name = "run_skill";
 
@@ -10,9 +11,11 @@ export const description =
   "Run a previously created skill to extract fresh structured data from its URL.";
 
 export const schema = z.object({
-  name: z.string().describe("The skill name to run"),
-  url: z.string().optional().describe("Override the skill's default URL"),
-  max_items: z.number().default(50).describe("Maximum items to return"),
+  name: z.string().regex(/^[a-zA-Z0-9_-]+$/, "Skill name may only contain letters, numbers, hyphens, and underscores").describe("The skill name to run"),
+  url: z.string().max(MAX_URL_LENGTH).optional().describe("Override the skill's default URL"),
+  max_items: z.number().min(1).max(MAX_ITEMS).default(50).describe("Maximum items to return"),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type RunSkillInput = z.infer<typeof schema>;
@@ -57,7 +60,7 @@ export async function execute(input: RunSkillInput) {
   const maxPages = config.pagination?.max_pages || 1;
 
   while (page < maxPages && allItems.length < input.max_items) {
-    const result = await fetchPage(currentUrl);
+    const result = await fetchPage(currentUrl, { proxy: input.proxy, chromeProfile: input.chrome_profile });
     const $ = cheerio.load(result.html);
 
     $(config.selectors.items).each((_, el) => {

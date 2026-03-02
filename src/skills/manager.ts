@@ -2,6 +2,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { getSkillsDir } from "../config.js";
 
+const SKILL_NAME_RE = /^[a-zA-Z0-9_-]+$/;
+
+export function validateSkillName(name: string): void {
+  if (!SKILL_NAME_RE.test(name)) {
+    throw new Error(
+      `Invalid skill name "${name}". Only letters, numbers, hyphens, and underscores are allowed.`,
+    );
+  }
+}
+
 export interface SkillFieldSelectors {
   [field: string]: string;
 }
@@ -31,12 +41,14 @@ async function ensureDir(): Promise<string> {
 }
 
 export async function save(name: string, config: SkillConfig): Promise<void> {
+  validateSkillName(name);
   const dir = await ensureDir();
   const filePath = path.join(dir, `${name}.json`);
   await fs.writeFile(filePath, JSON.stringify(config, null, 2), "utf-8");
 }
 
 export async function load(name: string): Promise<SkillConfig | null> {
+  validateSkillName(name);
   const dir = getSkillsDir();
   const filePath = path.join(dir, `${name}.json`);
   try {
@@ -68,6 +80,7 @@ export async function list(): Promise<SkillConfig[]> {
 }
 
 export async function remove(name: string): Promise<boolean> {
+  validateSkillName(name);
   const dir = getSkillsDir();
   const filePath = path.join(dir, `${name}.json`);
   try {

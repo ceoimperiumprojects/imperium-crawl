@@ -2,6 +2,7 @@ import { z } from "zod";
 import { fetchPage } from "../utils/fetcher.js";
 import { normalizeUrl, isSameOrigin } from "../utils/url.js";
 import { getSitemapUrls } from "../utils/robots.js";
+import { MAX_URL_LENGTH, MAX_URLS } from "../constants.js";
 import * as cheerio from "cheerio";
 
 export const name = "map";
@@ -10,16 +11,18 @@ export const description =
   "Discover all URLs on a website by parsing sitemap.xml and crawling links. Returns a list of discovered URLs.";
 
 export const schema = z.object({
-  url: z.string().describe("The website URL to map"),
-  max_urls: z.number().default(100).describe("Maximum number of URLs to return"),
+  url: z.string().max(MAX_URL_LENGTH).describe("The website URL to map"),
+  max_urls: z.number().min(1).max(MAX_URLS).default(100).describe("Maximum number of URLs to return"),
   include_sitemap: z.boolean().default(true).describe("Parse sitemap.xml"),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type MapInput = z.infer<typeof schema>;
 
-async function parseSitemap(sitemapUrl: string): Promise<string[]> {
+async function parseSitemap(sitemapUrl: string, proxy?: string, chromeProfile?: string): Promise<string[]> {
   try {
-    const result = await fetchPage(sitemapUrl, { maxLevel: 1 });
+    const result = await fetchPage(sitemapUrl, { maxLevel: 1, proxy, chromeProfile });
     const $ = cheerio.load(result.html, { xmlMode: true });
     const urls: string[] = [];
 
@@ -52,7 +55,7 @@ export async function execute(input: MapInput) {
 
     for (const sitemap of sitemaps) {
       if (discovered.size >= input.max_urls) break;
-      const urls = await parseSitemap(sitemap);
+      const urls = await parseSitemap(sitemap, input.proxy, input.chrome_profile);
       for (const url of urls) {
         if (discovered.size >= input.max_urls) break;
         discovered.add(url);
@@ -62,7 +65,7 @@ export async function execute(input: MapInput) {
 
   // 2. Crawl page for links
   try {
-    const result = await fetchPage(baseUrl);
+    const result = await fetchPage(baseUrl, { proxy: input.proxy, chromeProfile: input.chrome_profile });
     const $ = cheerio.load(result.html);
     $("a[href]").each((_, el) => {
       if (discovered.size >= input.max_urls) return;

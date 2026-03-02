@@ -4,6 +4,7 @@ import { fetchPage } from "../utils/fetcher.js";
 import { normalizeUrl } from "../utils/url.js";
 import { detectPatterns, detectPagination } from "../skills/detector.js";
 import * as manager from "../skills/manager.js";
+import { MAX_URL_LENGTH, MAX_STRING_LENGTH, MAX_PAGES } from "../constants.js";
 
 export const name = "create_skill";
 
@@ -11,10 +12,10 @@ export const description =
   "Analyze a web page and create a reusable skill for extracting structured data. The skill can be re-run later with run_skill to get fresh content instantly.";
 
 export const schema = z.object({
-  url: z.string().describe("The URL to analyze for repeating patterns"),
-  name: z.string().describe("Unique name for this skill (e.g. 'tc-ai-news')"),
-  description: z.string().describe("What this skill extracts (e.g. 'Latest AI news from TechCrunch')"),
-  max_pages: z.number().default(3).describe("Max pagination pages to follow"),
+  url: z.string().max(MAX_URL_LENGTH).describe("The URL to analyze for repeating patterns"),
+  name: z.string().regex(/^[a-zA-Z0-9_-]+$/, "Skill name may only contain letters, numbers, hyphens, and underscores").describe("Unique name for this skill (e.g. 'tc-ai-news')"),
+  description: z.string().min(1).max(MAX_STRING_LENGTH).describe("What this skill extracts (e.g. 'Latest AI news from TechCrunch')"),
+  max_pages: z.number().min(1).max(MAX_PAGES).default(3).describe("Max pagination pages to follow"),
 });
 
 export type CreateSkillInput = z.infer<typeof schema>;

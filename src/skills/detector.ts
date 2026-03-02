@@ -17,7 +17,7 @@ interface DetectedPattern {
   score: number;
 }
 
-function getChildSignature($: cheerio.CheerioAPI, el: Element): string {
+export function getChildSignature($: cheerio.CheerioAPI, el: Element): string {
   const children = $(el).children();
   const tags: string[] = [];
   children.each((_, child) => {
@@ -28,7 +28,7 @@ function getChildSignature($: cheerio.CheerioAPI, el: Element): string {
   return tags.join("|");
 }
 
-function buildSelector(el: Element, $: cheerio.CheerioAPI): string {
+export function buildSelector(el: Element, $: cheerio.CheerioAPI): string {
   const tag = el.tagName?.toLowerCase() || "div";
   const cls = $(el).attr("class");
   if (cls) {

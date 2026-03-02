@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { fetchPage } from "../utils/fetcher.js";
 import { normalizeUrl } from "../utils/url.js";
+import { MAX_URL_LENGTH, MAX_SELECTOR_LENGTH, MAX_SELECTOR_KEYS } from "../constants.js";
 import * as cheerio from "cheerio";
 import type { AnyNode } from "domhandler";
 
@@ -10,14 +11,20 @@ export const description =
   "Extract structured data from a web page using CSS selectors. Returns JSON with the extracted fields.";
 
 export const schema = z.object({
-  url: z.string().describe("The URL to extract data from"),
+  url: z.string().max(MAX_URL_LENGTH).describe("The URL to extract data from"),
   selectors: z
-    .record(z.string())
+    .record(z.string().max(MAX_SELECTOR_LENGTH))
+    .refine((obj) => Object.keys(obj).length <= MAX_SELECTOR_KEYS, {
+      message: `Too many selectors (max ${MAX_SELECTOR_KEYS})`,
+    })
     .describe("Map of field names to CSS selectors. Use @attr suffix to extract attributes (e.g. 'a @href')"),
   items_selector: z
     .string()
+    .max(MAX_SELECTOR_LENGTH)
     .optional()
     .describe("CSS selector for repeating items. Each item will have fields extracted."),
+  proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
+  chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
 });
 
 export type ExtractInput = z.infer<typeof schema>;
@@ -36,7 +43,7 @@ function extractField($: cheerio.CheerioAPI, el: cheerio.Cheerio<AnyNode>, selec
 
 export async function execute(input: ExtractInput) {
   const url = normalizeUrl(input.url);
-  const result = await fetchPage(url);
+  const result = await fetchPage(url, { proxy: input.proxy, chromeProfile: input.chrome_profile });
   const $ = cheerio.load(result.html);
 
   if (input.items_selector) {
