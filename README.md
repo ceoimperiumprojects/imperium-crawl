@@ -54,7 +54,9 @@ Add to your MCP client config (Claude Code, Cursor, VS Code, Windsurf, or any MC
       "args": ["-y", "imperium-crawl"],
       "env": {
         "BRAVE_API_KEY": "your-brave-api-key",
-        "TWOCAPTCHA_API_KEY": "your-2captcha-api-key"
+        "TWOCAPTCHA_API_KEY": "your-2captcha-api-key",
+        "PROXY_URL": "http://user:pass@proxy:8080",
+        "PROXY_URLS": "http://proxy1:8080,socks5://proxy2:1080"
       }
     }
   }
@@ -311,7 +313,6 @@ Every tool tested against production websites with real anti-bot defenses:
 | `PROXY_URL` | No | Single proxy URL (http/https/socks4/socks5) |
 | `PROXY_URLS` | No | Comma-separated proxy URLs for rotation |
 | `BROWSER_POOL_SIZE` | No | Max pooled browser instances (default: 3) |
-| `CHROME_PROFILE_PATH` | No | Chrome user data dir for authenticated sessions |
 | `RESPECT_ROBOTS` | No | Respect robots.txt (default: `true`) |
 
 ---

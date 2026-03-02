@@ -1,5 +1,5 @@
 export const PACKAGE_NAME = "imperium-crawl";
-export const PACKAGE_VERSION = "1.1.4";
+export const PACKAGE_VERSION = "1.1.5";
 
 export const DEFAULT_TIMEOUT_MS = 30_000;
 export const DEFAULT_MAX_PAGES = 10;
