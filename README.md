@@ -53,14 +53,20 @@ Add to your MCP client config (Claude Code, Cursor, VS Code, Windsurf, or any MC
       "command": "npx",
       "args": ["-y", "imperium-crawl"],
       "env": {
-        "BRAVE_API_KEY": "your-brave-api-key"
+        "BRAVE_API_KEY": "your-brave-api-key",
+        "TWOCAPTCHA_API_KEY": "your-2captcha-api-key"
       }
     }
   }
 }
 ```
 
-> **API keys are optional.** Without `BRAVE_API_KEY`, only the 4 search tools are disabled. All 12 other tools work out of the box.
+> **Works out of the box with zero API keys** — 12 tools are fully functional without any configuration. To unlock full power, add 2 optional API keys:
+>
+> | Key | What it unlocks | Where to get it |
+> |-----|----------------|-----------------|
+> | `BRAVE_API_KEY` | 4 search tools (web, news, image, video) | [brave.com/search/api](https://brave.com/search/api/) (free tier available) |
+> | `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving (reCAPTCHA v2/v3, hCaptcha, Turnstile) | [2captcha.com](https://2captcha.com/) |
 
 ### Enable full stealth (Level 3 — headless browser)
 
@@ -68,15 +74,6 @@ Add to your MCP client config (Claude Code, Cursor, VS Code, Windsurf, or any MC
 npm i rebrowser-playwright
 npx playwright install chromium
 ```
-
-### Enable CAPTCHA auto-solving
-
-```bash
-# Add to your MCP config env:
-"TWOCAPTCHA_API_KEY": "your-2captcha-api-key"
-```
-
-Supports reCAPTCHA v2/v3, hCaptcha, and Cloudflare Turnstile. Auto-detects CAPTCHA type and solves transparently.
 
 ---
 
