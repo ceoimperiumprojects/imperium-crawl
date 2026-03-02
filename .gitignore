@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.tsbuildinfo
+*.log
 
 # Secrets
 .env
@@ -11,3 +12,11 @@ dist/
 .mcp.json
 .claude/
 .firecrawl/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
