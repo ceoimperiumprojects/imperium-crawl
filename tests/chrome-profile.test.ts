@@ -71,7 +71,7 @@ describe("Chrome Profile — resolveChromeProfile", () => {
 describe("Chrome Profile — tool schemas", () => {
   const toolsWithChromeProfile = [
     "scrape", "crawl", "map", "extract", "readability", "screenshot",
-    "run_skill", "discover_apis", "monitor_websocket", "visual_builder",
+    "run_skill", "discover_apis", "monitor_websocket",
   ];
 
   for (const toolName of toolsWithChromeProfile) {
@@ -85,7 +85,7 @@ describe("Chrome Profile — tool schemas", () => {
         chrome_profile: "/home/user/.config/google-chrome",
         // Required fields for specific tools
         ...(toolName === "extract" ? { selectors: { title: "h1" } } : {}),
-        ...(toolName === "visual_builder" ? { name: "test-skill" } : {}),
+
         ...(toolName === "run_skill" ? { name: "test-skill" } : {}),
       });
       expect(result.success).toBe(true);

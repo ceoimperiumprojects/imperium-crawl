@@ -16,7 +16,6 @@ import * as listSkills from "./list-skills.js";
 import * as discoverApis from "./discover-apis.js";
 import * as queryApi from "./query-api.js";
 import * as monitorWebsocket from "./monitor-websocket.js";
-import * as visualBuilder from "./visual-builder.js";
 
 export interface ToolDefinition {
   name: string;
@@ -47,6 +46,4 @@ export const allTools: ToolDefinition[] = [
   discoverApis as ToolDefinition,
   queryApi as ToolDefinition,
   monitorWebsocket as ToolDefinition,
-  // Visual builder (interactive, opens headed browser)
-  visualBuilder as ToolDefinition,
 ];

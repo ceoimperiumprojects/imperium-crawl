@@ -31,7 +31,7 @@ import { schema as discoverApisSchema } from "../src/tools/discover-apis.js";
 import { schema as monitorWsSchema } from "../src/tools/monitor-websocket.js";
 import { schema as createSkillSchema } from "../src/tools/create-skill.js";
 import { schema as runSkillSchema } from "../src/tools/run-skill.js";
-import { schema as visualBuilderSchema } from "../src/tools/visual-builder.js";
+
 
 // Helper: string of length n
 const strOf = (n: number) => "x".repeat(n);
@@ -268,7 +268,7 @@ describe("URL max length on all URL-bearing tools", () => {
     { name: "scrape", schema: scrapeSchema },
     { name: "screenshot", schema: screenshotSchema },
     { name: "readability", schema: readabilitySchema },
-    { name: "visual_builder", schema: visualBuilderSchema },
+
   ];
 
   for (const { name, schema } of urlSchemas) {
