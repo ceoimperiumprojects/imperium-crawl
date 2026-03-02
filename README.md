@@ -206,7 +206,7 @@ Turn any website into an API. No documentation needed.
 ## Development
 
 ```bash
-git clone https://github.com/AiExperts/imperium-crawl
+git clone https://github.com/ceoimperiumprojects/imperium-crawl
 cd imperium-crawl
 npm install
 npm run build
