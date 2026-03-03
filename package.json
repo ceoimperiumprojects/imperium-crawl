@@ -17,7 +17,11 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "scrape:discover": "tsx scripts/job-scraper/index.ts",
+    "scrape:extract": "tsx scripts/job-scraper/index.ts --phase=2",
+    "scrape:stats": "tsx scripts/job-scraper/index.ts --stats",
+    "scrape:export": "tsx scripts/job-scraper/index.ts --export-csv"
   },
   "keywords": [
     "mcp",
@@ -48,6 +52,7 @@
     "robots-parser": "^3.0.1",
     "turndown": "^7.2.0",
     "turndown-plugin-gfm": "^1.0.2",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "optionalDependencies": {
@@ -60,6 +65,7 @@
     "@types/node": "^22.13.5",
     "@types/turndown": "^5.0.5",
     "shx": "^0.3.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.8.2",
     "vitest": "^4.0.18"
   }
