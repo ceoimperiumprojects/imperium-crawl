@@ -349,27 +349,22 @@ Every tool tested against production websites with real anti-bot defenses:
 
 | Tool | Target | Result |
 |------|--------|--------|
-| 🕷️ **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
-| 🔓 **discover_apis** | Spotify | **8 hidden APIs** — access token exposed, client ID, dealer servers, analytics |
-| 🕷️ **extract** | Stack Overflow | **15 top questions** — #1 with 27,520 votes |
-| 📡 **monitor_websocket** | Binance BTC/USDT | **3 WebSocket connections, 23 live messages** — real-time price $69,390 |
-| 🔓 **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome anti-bot, Google Maps key exposed, internal search/polygon/viewport APIs |
-| 🕷️ **extract** | Hacker News | **30 front-page posts** — titles + URLs extracted |
-| 🔓 **discover_apis** | Netflix | **5 APIs** — OneTrust consent, geolocation (detected country: Serbia 🇷🇸) |
 | 📄 **scrape** | BBC News | Full markdown content, stealth level 3 auto-escalation |
 | 🕸️ **crawl** | Cloudflare Blog | **213K characters** crawled with depth control |
 | 🗺️ **map** | BBC | Full URL discovery via sitemap + page link extraction |
+| 🕷️ **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
 | 📖 **readability** | Medium article | Clean extraction — title, author, content, publish date |
 | 📸 **screenshot** | ProductHunt | Captured Cloudflare Turnstile challenge page |
-| 🔓 **discover_apis** | weather.com | **11 hidden APIs** — main weather API with exposed key |
-| ⚡ **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
 | 🔍 **search** | Brave Web Search | Web results with snippets and URLs |
 | 📰 **news_search** | Brave News Search | News results with freshness ranking |
 | 🖼️ **image_search** | Brave Image Search | Images with thumbnails and source URLs |
 | 🎬 **video_search** | Brave Video Search | Video results across platforms |
-| 🛠️ **create_skill** | Any page | Auto-detects repeating patterns, generates CSS selectors |
+| 🛠️ **create_skill** | Hacker News | Auto-detected 30 repeating stories with CSS selectors |
 | ▶️ **run_skill** | Saved skill | Fresh structured data from saved extraction config |
 | 📋 **list_skills** | — | Lists all saved skills with configurations |
+| 🔓 **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome anti-bot, Google Maps key, internal APIs |
+| ⚡ **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
+| 📡 **monitor_websocket** | Binance BTC/USDT | **3 WebSocket connections, 23 live messages** — BTC price live |
 
 > 🏆 **16/16 tools working. 58 hidden APIs discovered. Live crypto feed captured. Zero API keys needed for scraping.**
 
