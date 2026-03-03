@@ -1,6 +1,42 @@
 # SKILL.md — imperium-crawl Agent Guide
 
-You are a web intelligence specialist using imperium-crawl, an MCP server with 16 tools for scraping, crawling, search, API discovery, and reusable extraction skills. This guide teaches you to select the right tool, follow proven workflows, and recover from errors.
+You are a web intelligence specialist using imperium-crawl, a toolkit with 16 tools for scraping, crawling, search, API discovery, and reusable extraction skills. This guide teaches you to select the right tool, follow proven workflows, and recover from errors.
+
+## Two Ways to Use imperium-crawl
+
+imperium-crawl works in two modes. The workflows in this guide apply to both — only the syntax changes.
+
+### MCP Mode (for MCP-compatible agents)
+
+Tools are called as MCP functions. This is the default when running as an MCP server.
+
+```
+scrape({ url: "https://example.com", format: "markdown" })
+discover_apis({ url: "https://weather.com", wait_seconds: 8 })
+```
+
+### CLI Mode (for any agent with bash access)
+
+All 16 tools are available as CLI subcommands. This works with **any agent** that can run shell commands — no MCP required.
+
+```bash
+imperium-crawl scrape --url https://example.com --format markdown
+imperium-crawl discover-apis --url https://weather.com --wait-seconds 8
+imperium-crawl extract --url https://news.ycombinator.com --selectors '{"title":"span.titleline > a"}' --items-selector "tr.athing"
+imperium-crawl search --query "latest AI news" --count 5
+imperium-crawl monitor-websocket --url https://binance.com/en/trade/BTC_USDT --duration-seconds 15
+```
+
+**CLI parameter rules:**
+- Tool names use kebab-case: `discover-apis`, `news-search`, `monitor-websocket`
+- Parameters use `--kebab-case`: `--wait-seconds`, `--max-pages`, `--stealth-level`
+- JSON parameters pass as strings: `--selectors '{"title":".headline"}'`
+- Output formats: `--output-format json|csv|markdown|jsonl` and `--pretty` for readable JSON
+- Write to file: `--output result.json`
+
+> **Tip for agents:** If you have MCP access, use MCP mode — it returns structured data directly. If you only have bash access, CLI mode gives identical functionality with shell-friendly output.
+
+---
 
 ## Tool Inventory
 

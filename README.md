@@ -87,13 +87,20 @@ imperium-crawl ships with [`SKILL.md`](./SKILL.md) — a structured guide that t
 
 **With SKILL.md**, agents follow battle-tested workflows — readability → scrape → extract fallback chains, auto-detect → manual refinement for skills, search → select → deep-scrape for research, and more.
 
-How to use it:
+**Two ways to connect SKILL.md to any agent:**
+
+| Method | Setup | Works with |
+|--------|-------|-----------|
+| **MCP + SKILL.md** | Add imperium-crawl as MCP server + SKILL.md in agent context | Claude Code, Cursor, Windsurf, any MCP client |
+| **CLI + SKILL.md** | `npm i -g imperium-crawl` + SKILL.md in agent context | **Any agent with bash access** — OpenClaw, ChatGPT, GPT agents, custom agents, anything |
+
+The CLI approach is universal — any agent that can run shell commands can use all 16 tools. No MCP required.
 
 | AI Agent | How to add SKILL.md |
 |----------|-------------------|
 | **Claude Code** | Copy `SKILL.md` to your project root — Claude Code reads it automatically |
 | **Cursor / Windsurf** | Add `SKILL.md` to project rules or include in system prompt |
-| **Custom agents** | Include SKILL.md content in your system prompt or context window |
+| **OpenClaw / custom agents** | Include SKILL.md content in your system prompt or context window |
 | **ChatGPT / GPT agents** | Paste SKILL.md content into custom instructions |
 
 ---
