@@ -31,6 +31,18 @@ export function parseToolOutput(
 }
 
 /**
+ * Parse the first image content block from an MCP tool result.
+ * Returns base64 data + mimeType, or null if no image block found.
+ */
+export function parseImageOutput(
+  result: { content: Array<{ type: string; data?: string; mimeType?: string }> },
+): { data: string; mimeType: string } | null {
+  const imgBlock = result.content.find((c) => c.type === "image" && c.data);
+  if (!imgBlock?.data) return null;
+  return { data: imgBlock.data, mimeType: imgBlock.mimeType ?? "image/png" };
+}
+
+/**
  * Find the primary array field in an object (for jsonl/csv).
  * Looks for common keys like results, items, pages, urls, skills, etc.
  */

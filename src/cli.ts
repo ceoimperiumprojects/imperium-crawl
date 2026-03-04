@@ -22,6 +22,7 @@ import {
   type FormatOptions,
   formatOutput,
   parseToolOutput,
+  parseImageOutput,
 } from "./formatters.js";
 import { PACKAGE_VERSION } from "./constants.js";
 import {
@@ -156,6 +157,25 @@ function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
           .argParser(collect)
           .default(hasDefault ? defaultValue : []);
         cmd.addOption(opt);
+      } else if (innerTypeName === "ZodObject") {
+        // Parse as single JSON array string (e.g. --actions '[{...},{...}]')
+        const parseJsonArray = (val: string) => {
+          try {
+            const parsed = JSON.parse(val);
+            if (!Array.isArray(parsed)) throw new Error("Expected JSON array");
+            return parsed;
+          } catch {
+            throw new Error(`Invalid JSON array for --${flag}: ${val}`);
+          }
+        };
+        if (required) {
+          cmd.requiredOption(`--${flag} <json>`, desc, parseJsonArray);
+        } else {
+          const opt = new Option(`--${flag} <json>`, desc);
+          opt.argParser(parseJsonArray);
+          if (hasDefault) opt.default(defaultValue);
+          cmd.addOption(opt);
+        }
       } else {
         cmd.option(
           `--${flag} <value>`,
@@ -388,6 +408,16 @@ async function runTool(
     spinner.fail(`Failed: ${msg}`);
     handleToolError(tool.name, msg);
     process.exit(1);
+  }
+
+  // Handle image responses (screenshot tool)
+  const imageResult = parseImageOutput(result);
+  if (imageResult) {
+    const outputFile = globalOpts.output as string | undefined;
+    const filePath = outputFile ?? `screenshot-${Date.now()}.png`;
+    writeFileSync(filePath, Buffer.from(imageResult.data, "base64"));
+    process.stderr.write(`Screenshot saved to ${filePath}\n`);
+    return;
   }
 
   const data = parseToolOutput(result);
