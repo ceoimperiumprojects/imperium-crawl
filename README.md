@@ -494,28 +494,28 @@ Every tool tested against production websites with real anti-bot defenses:
 
 | Tool | Target | Result |
 |------|--------|--------|
-| **scrape** | BBC News | Full markdown, stealth level 3 auto-escalation |
-| **crawl** | Cloudflare Blog | 213K characters crawled with depth control |
-| **map** | BBC | Full URL discovery via sitemap + link extraction |
-| **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
-| **readability** | Medium article | Clean — title, author, content, publish date |
-| **screenshot** | ProductHunt | Captured Cloudflare Turnstile challenge page |
-| **search** | Brave Web | Web results with snippets and URLs |
-| **news_search** | Brave News | News results with freshness ranking |
-| **image_search** | Brave Image | Images with thumbnails and source URLs |
-| **video_search** | Brave Video | Video results across platforms |
-| **create_skill** | Hacker News | Auto-detected 30 stories with CSS selectors |
-| **run_skill** | Saved skill | Fresh structured data from saved config |
-| **list_skills** | — | Lists all skills with configurations |
-| **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome, Google Maps key, internal APIs |
-| **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
-| **monitor_websocket** | Binance BTC/USDT | 3 WebSocket connections, 23 live messages — BTC price live |
-| **ai_extract** | Amazon product | AI extracted name, price, rating, review count |
-| **interact** | Login flow | Click → type → submit — session cookies persisted |
-| **batch_scrape** | 10 news sites | Parallel, concurrency 3, soft failure, 9/10 succeeded |
-| **list_jobs** | — | Batch jobs with status and progress |
-| **job_status** | Batch job | Full per-URL results with timing |
-| **delete_job** | Completed job | Cleaned up job data from disk |
+| 📄 **scrape** | BBC News | Full markdown, stealth level 3 auto-escalation |
+| 🕸️ **crawl** | Cloudflare Blog | 213K characters crawled with depth control |
+| 🗺️ **map** | BBC | Full URL discovery via sitemap + link extraction |
+| 🕷️ **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
+| 📖 **readability** | Medium article | Clean — title, author, content, publish date |
+| 📸 **screenshot** | ProductHunt | Captured Cloudflare Turnstile challenge page |
+| 🔍 **search** | Brave Web | Web results with snippets and URLs |
+| 📰 **news_search** | Brave News | News results with freshness ranking |
+| 🖼️ **image_search** | Brave Image | Images with thumbnails and source URLs |
+| 🎬 **video_search** | Brave Video | Video results across platforms |
+| 🛠️ **create_skill** | Hacker News | Auto-detected 30 stories with CSS selectors |
+| ▶️ **run_skill** | Saved skill | Fresh structured data from saved config |
+| 📋 **list_skills** | — | Lists all skills with configurations |
+| 🔓 **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome, Google Maps key, internal APIs |
+| ⚡ **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
+| 📡 **monitor_websocket** | Binance BTC/USDT | 3 WebSocket connections, 23 live messages — BTC price live |
+| 🧠 **ai_extract** | Amazon product | AI extracted name, price, rating, review count |
+| 🖱️ **interact** | Login flow | Click → type → submit — session cookies persisted |
+| 📦 **batch_scrape** | 10 news sites | Parallel, concurrency 3, soft failure, 9/10 succeeded |
+| 📋 **list_jobs** | — | Batch jobs with status and progress |
+| 📊 **job_status** | Batch job | Full per-URL results with timing |
+| 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
 
 > **22/22 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
