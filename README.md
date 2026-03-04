@@ -1,269 +1,189 @@
+<div align="center">
+
 # imperium-crawl
 
-The most powerful open-source MCP server for web scraping, crawling, and data extraction. **22 tools. Zero API keys required for scraping. One `npx` command to install.**
+**The most powerful open-source MCP server for web scraping, crawling, and data extraction.**
 
-While others charge $19+/month for basic scraping, imperium-crawl gives you **more features for free** — including capabilities that no other MCP server offers at any price.
+22 tools. Zero API keys required. One `npx` command.
+
+[![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Tests](https://img.shields.io/badge/tests-332%20passing-brightgreen.svg)]()
+[![npm downloads](https://img.shields.io/npm/dm/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
+
+</div>
+
+---
+
+## Quick Start
+
+Get running in 30 seconds.
+
+**MCP client** (Claude Code, Cursor, VS Code, Windsurf):
+
+```json
+{
+  "mcpServers": {
+    "imperium-crawl": {
+      "command": "npx",
+      "args": ["-y", "imperium-crawl"]
+    }
+  }
+}
+```
+
+**CLI** (zero install):
+
+```bash
+npx -y imperium-crawl scrape --url https://example.com
+```
+
+**Global install:**
+
+```bash
+npm install -g imperium-crawl
+```
+
+> That's it. 16 of 22 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+
+---
+
+## Power Examples
+
+Real results. Copy-paste and try.
+
+### Scrape through Cloudflare
+
+```bash
+imperium-crawl scrape --url https://blog.cloudflare.com
+```
+
+```
+Level 1 (headers) → blocked
+Level 2 (TLS fingerprint) → blocked
+Level 3 (browser + stealth) → success ✅
+→ Full markdown content extracted, 213K characters
+→ Next visit: skips straight to Level 3 (learned)
+```
+
+### Discover hidden APIs on any website
+
+```bash
+imperium-crawl discover-apis --url https://weather.com
+```
+
+```
+Found 11 hidden API endpoints:
+  • api.weather.com — main weather API (exposed API key!)
+  • mParticle analytics endpoints
+  • Taboola content recommendation API
+  • OneTrust consent management API
+  • DAA/AdChoices opt-out endpoints
+→ Call any endpoint directly with query_api — 10x faster than DOM scraping
+```
+
+### AI extraction in plain English
+
+```bash
+imperium-crawl ai-extract --url https://amazon.com/dp/B0D1XD1ZV3 \
+  --schema "extract product name, price, rating, and review count"
+```
+
+```json
+{
+  "product_name": "Apple AirPods Pro 2",
+  "price": "$189.99",
+  "rating": "4.7 out of 5",
+  "review_count": "45,297"
+}
+```
+
+### Batch scrape with resume
+
+```bash
+imperium-crawl batch-scrape \
+  --urls '["https://bbc.com","https://cnn.com","https://reuters.com","https://techcrunch.com"]' \
+  --concurrency 3
+```
+
+```
+Scraping 4 URLs (concurrency: 3)...
+  ✅ bbc.com — 47K chars
+  ✅ cnn.com — 52K chars
+  ✅ reuters.com — 38K chars
+  ✅ techcrunch.com — 61K chars
+→ 4/4 succeeded. Job ID: abc123 (resume with --job-id if interrupted)
+```
+
+---
+
+## Why imperium-crawl?
+
+🔓 **Zero API Keys Required**
+16 of 22 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+
+🛡️ **3-Level Auto-Escalating Stealth**
+Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
+
+🧠 **Self-Improving**
+Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
+
+🧰 **22 Tools, 3 Modes**
+MCP server, CLI tool, or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
+
+📜 **10 Built-in Recipes**
+Pre-built workflows for common tasks — news extraction, e-commerce scraping, API reverse engineering, and more.
+
+⚡ **Skills System**
+Teach it once, run forever. Auto-detect patterns on any page, save as reusable skills, get fresh data on demand.
+
+---
 
 ## vs. The Competition
 
 | Feature | **imperium-crawl** | Firecrawl MCP | fetch MCP | Crawl4AI MCP | Browserbase MCP |
 |---------|:------------------:|:-------------:|:---------:|:------------:|:---------------:|
 | Price | **Free forever** | $19+/month | Free | Free | $0.01/min |
-| Scraping tools | **6** | 3 | 1 | 1 | 1 |
-| Search tools | **4** | 0 | 0 | 0 | 0 |
+| Total tools | **22** | 5 | 2 | 2 | 4 |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | None | 1 | Cloud-based |
 | Anti-bot detection | **7 systems** | Partial | None | Partial | Partial |
-| TLS fingerprinting | **Yes (JA3/JA4)** | No | No | No | No |
-| CAPTCHA auto-solving | **Yes (2Captcha)** | No | No | No | No |
-| API discovery from network traffic | **Yes** | No | No | No | No |
+| TLS fingerprinting | **JA3/JA4** | No | No | No | No |
+| CAPTCHA auto-solving | **Yes** | No | No | No | No |
+| API discovery | **Yes** | No | No | No | No |
 | WebSocket monitoring | **Yes** | No | No | No | No |
-| Direct API calls | **Yes** | No | No | No | No |
-| Reusable skills system | **Yes** | No | No | No | No |
-| Structured data extraction (JSON-LD/OG) | **Yes** | Partial | No | No | No |
-| Priority-based crawling | **Yes** | No | No | No | No |
-| Circuit breaker + jitter backoff | **Yes** | No | No | No | No |
-| URL normalization (11 steps) | **Yes** | No | No | No | No |
-| Adaptive learning (self-improving) | **Yes** | No | No | No | No |
-| AI-powered data extraction | **Yes** | No | No | No | No |
-| Browser automation + sessions | **Yes** | No | No | No | No |
-| Batch processing with resume | **Yes** | No | No | No | No |
+| AI-powered extraction | **Yes** | No | No | No | No |
+| Adaptive learning | **Yes** | No | No | No | No |
+| Batch processing | **Yes** | No | No | No | No |
 | Self-hosted | **Yes** | No | N/A | Yes | No |
 | Requires external service | **No** | Yes | No | No | Yes |
-| Total tools | **22** | 5 | 2 | 2 | 4 |
-
-> **TLDR:** More tools, more features, zero cost, no external dependencies. Self-hosted, open-source, and it runs on your machine.
-
-## Installation
-
-```bash
-npm install -g imperium-crawl
-```
-
-Or run directly without installing:
-
-```bash
-npx -y imperium-crawl
-```
-
-### MCP Client Config
-
-Add to your MCP client config (Claude Code, Cursor, VS Code, Windsurf, or any MCP client):
-
-```json
-{
-  "mcpServers": {
-    "imperium-crawl": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["-y", "imperium-crawl"],
-      "env": {
-        "BRAVE_API_KEY": "your-brave-api-key",
-        "TWOCAPTCHA_API_KEY": "your-2captcha-api-key",
-        "LLM_API_KEY": "your-api-key",
-        "LLM_PROVIDER": "anthropic",
-        "PROXY_URL": "http://user:pass@proxy:8080",
-        "PROXY_URLS": "http://proxy1:8080,socks5://proxy2:1080"
-      }
-    }
-  }
-}
-```
-
-> **Works out of the box with zero API keys** — 16 tools are fully functional without any configuration (6 scraping + 3 skills + 3 API discovery + 4 batch). To unlock full power, add optional API keys:
->
-> | Key | What it unlocks | Where to get it |
-> |-----|----------------|-----------------|
-> | `BRAVE_API_KEY` | 4 search tools (web, news, image, video) | [brave.com/search/api](https://brave.com/search/api/) (free tier available) |
-> | `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving (reCAPTCHA v2/v3, hCaptcha, Turnstile) | [2captcha.com](https://2captcha.com/) |
-> | `LLM_API_KEY` | AI-powered data extraction (`ai_extract` tool) | Anthropic or OpenAI API key |
-> | `CHROME_PROFILE_PATH` | Authenticated browser sessions (use your Chrome cookies) | Path to Chrome user data dir |
-> | `PROXY_URL` | Route all requests through a proxy (http/https/socks4/socks5) | Any proxy provider |
-
-### Enable full stealth (Level 3 — headless browser)
-
-```bash
-npm i rebrowser-playwright
-npx playwright install chromium
-```
-
-### AI Agent Guide (SKILL.md)
-
-imperium-crawl ships with [`SKILL.md`](./SKILL.md) — a structured guide that teaches AI agents (Claude, GPT, etc.) how to use all 22 tools effectively. It includes 9 proven workflows, decision trees, error recovery strategies, and advanced patterns like manual skill refinement.
-
-**Without SKILL.md**, agents can call tools but won't know which tool to try first, when to fallback, or how to chain tools together optimally.
-
-**With SKILL.md**, agents follow battle-tested workflows — readability → scrape → extract fallback chains, auto-detect → manual refinement for skills, search → select → deep-scrape for research, and more.
-
-**Three ways to connect SKILL.md to any agent:**
-
-| Method | Setup | Works with |
-|--------|-------|-----------|
-| **MCP + SKILL.md** | Add imperium-crawl as MCP server + SKILL.md in agent context | Claude Code, Cursor, Windsurf, any MCP client |
-| **CLI + SKILL.md** | `npm i -g imperium-crawl` + SKILL.md in agent context | **Any agent with bash access** — OpenClaw, ChatGPT, GPT agents, custom agents, anything |
-| **TUI mode** | `imperium-crawl tui` — interactive slash-command terminal | Direct human use, demos, debugging |
-
-The CLI approach is universal — any agent that can run shell commands can use all 22 tools. No MCP required.
-
-| AI Agent | How to add SKILL.md |
-|----------|-------------------|
-| **Claude Code** | Copy `SKILL.md` to your project root — Claude Code reads it automatically |
-| **Cursor / Windsurf** | Add `SKILL.md` to project rules or include in system prompt |
-| **OpenClaw / custom agents** | Include SKILL.md content in your system prompt or context window |
-| **ChatGPT / GPT agents** | Paste SKILL.md content into custom instructions |
-
----
-
-## CLI Mode
-
-imperium-crawl works as both an **MCP server** and a **standalone CLI tool**. All 22 tools are available as subcommands:
-
-```bash
-# Scrape a website to markdown
-imperium-crawl scrape --url https://bbc.com/news
-
-# Crawl with depth control
-imperium-crawl crawl --url https://blog.cloudflare.com --max-depth 2 --max-pages 5
-
-# Extract structured data with CSS selectors
-imperium-crawl extract --url https://news.ycombinator.com --selectors '{"title":".titleline a","score":".score"}' --items-selector ".athing"
-
-# AI-powered extraction — describe what you want in plain English
-imperium-crawl ai-extract --url https://amazon.com/dp/B0D1XD1ZV3 --schema "extract product name, price, rating, and review count"
-
-# Browser automation — interact with pages
-imperium-crawl interact --url https://example.com --actions '[{"type":"click","selector":"#login"},{"type":"type","selector":"#email","text":"user@example.com"}]'
-
-# Batch scrape multiple URLs in parallel
-imperium-crawl batch-scrape --urls '["https://site1.com","https://site2.com","https://site3.com"]' --concurrency 3
-
-# List batch jobs
-imperium-crawl list-jobs
-
-# Discover hidden APIs on any website
-imperium-crawl discover-apis --url https://weather.com
-
-# Search the web (requires BRAVE_API_KEY)
-imperium-crawl search --query "latest AI news" --count 5
-
-# Take a screenshot
-imperium-crawl screenshot --url https://github.com --full-page
-
-# Interactive setup wizard
-imperium-crawl setup
-```
-
-### Output Formats
-
-```bash
-# JSON (default)
-imperium-crawl scrape --url https://example.com
-
-# CSV
-imperium-crawl extract --url https://example.com --selectors '{"title":"h1"}' --output-format csv
-
-# Markdown
-imperium-crawl scrape --url https://example.com --output-format markdown
-
-# JSONL (one JSON object per line)
-imperium-crawl crawl --url https://example.com --output-format jsonl
-
-# Pretty-print JSON
-imperium-crawl scrape --url https://example.com --pretty
-
-# Write to file
-imperium-crawl scrape --url https://example.com --output result.json
-```
-
-### TUI Mode
-
-```bash
-imperium-crawl tui
-```
-
-Interactive slash-command terminal with parameter prompts, table rendering, markdown display, and session state. Use `/save` to export results and `/again` to re-run the last command.
-
-### Help
-
-```bash
-imperium-crawl --help              # List all commands
-imperium-crawl scrape --help       # Help for specific tool
-imperium-crawl --version           # Show version
-```
-
-> **No arguments** = starts as MCP server (stdio). **With subcommand** = runs as CLI tool. **`tui`** = interactive terminal.
-
----
-
-## 22 Tools
-
-### Scraping (no API key needed)
-
-| Tool | What It Does |
-|------|-------------|
-| **scrape** | URL to clean Markdown/HTML with 3-level auto-escalating stealth. Returns structured data (JSON-LD, OpenGraph, Microdata), metadata, and links on request. |
-| **crawl** | Priority-based crawling with depth control, concurrency limiting, and smart URL scoring. Content paths rank higher, tracking params are stripped. |
-| **map** | Discover all URLs on a domain via sitemap.xml parsing + page link extraction. |
-| **extract** | CSS selectors to structured JSON. Point at any repeating pattern and get clean data. |
-| **readability** | Mozilla Readability article extraction — title, author, content, publish date. 3x faster with linkedom. |
-| **screenshot** | Full-page or viewport PNG screenshots via headless Chromium. |
-
-### Search (requires free Brave API key)
-
-| Tool | What It Does |
-|------|-------------|
-| **search** | Web search via Brave Search API. |
-| **news_search** | News-specific search with freshness ranking. |
-| **image_search** | Image search with thumbnails and source URLs. |
-| **video_search** | Video search across platforms. |
-
-### Skills (no API key needed)
-
-| Tool | What It Does |
-|------|-------------|
-| **create_skill** | Analyze any page, auto-detect repeating patterns (articles, products, listings), generate CSS selectors, and save as a reusable skill. |
-| **run_skill** | Run a saved skill to get fresh structured data instantly. Supports pagination. |
-| **list_skills** | List all saved skills with their configurations. |
-
-### API Discovery & Real-Time (no API key needed, requires Playwright)
-
-| Tool | What It Does |
-|------|-------------|
-| **discover_apis** | Navigate to any page, intercept all XHR/fetch calls, and map every hidden REST/GraphQL API endpoint. Auto-detects GraphQL, filters noise, returns response previews. **No other MCP server does this.** |
-| **query_api** | Call any API endpoint directly with stealth headers. Bypass DOM rendering entirely for 10x faster data access. Use after `discover_apis` to hit endpoints directly. |
-| **monitor_websocket** | Capture real-time WebSocket messages from any page — financial tickers, chat feeds, live dashboards. Returns connection details and message payloads. **No other MCP server does this.** |
-
-### AI Extraction (requires LLM API key)
-
-| Tool | What It Does |
-|------|-------------|
-| **ai_extract** | AI-powered data extraction — describe what you want in natural language or provide a JSON schema. Supports auto mode (LLM decides what to extract), 3 providers (Anthropic, OpenAI, MiniMax). The `extract` tool also supports `llm_fallback: true` for hybrid CSS→AI extraction. |
-
-### Interaction (no API key needed, requires Playwright)
-
-| Tool | What It Does |
-|------|-------------|
-| **interact** | Browser automation with 10 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate). Session persistence saves/restores cookies across calls — build login flows and multi-step workflows. |
-
-### Batch Processing (no API key needed)
-
-| Tool | What It Does |
-|------|-------------|
-| **batch_scrape** | Parallel URL scraping with configurable concurrency, soft failure (continues on errors), and resume support via job_id. Optional AI extraction per URL. |
-| **list_jobs** | List all batch jobs with status, progress, and timestamps. |
-| **job_status** | Get full results for a specific batch job including per-URL outcomes. |
-| **delete_job** | Clean up completed or failed batch jobs. |
 
 ---
 
 ## Stealth Engine
 
-imperium-crawl uses a 3-level stealth system that **auto-escalates** based on the target site's defenses:
+```
+Request → [L1: Headers + UA rotation]
+              │
+              ├─ success → Done
+              ↓ fail
+          [L2: TLS Fingerprint (JA3/JA4)]
+              │
+              ├─ success → Done
+              ↓ fail
+          [L3: Browser + Fingerprint Injection + CAPTCHA]
+              │
+              ├─ success → Done
+              ↓
+          [Learning Engine records optimal level for next time]
+```
+
+### Stealth Levels
 
 | Level | Method | What It Defeats |
 |-------|--------|-----------------|
 | **1** | `header-generator` — Bayesian realistic headers + UA rotation | Basic bot detection, simple WAFs |
 | **2** | `impit` — browser-identical TLS fingerprints (JA3/JA4) | Cloudflare, Akamai, TLS fingerprinting WAFs |
-| **3** | `rebrowser-playwright` + `fingerprint-injector` + auto CAPTCHA solving | JavaScript challenges, SPAs, advanced anti-bot, CAPTCHAs |
+| **3** | `rebrowser-playwright` + `fingerprint-injector` + auto CAPTCHA | JavaScript challenges, SPAs, advanced anti-bot, CAPTCHAs |
 
 ### Anti-Bot System Detection
 
@@ -281,45 +201,15 @@ Automatically identifies which anti-bot system a site uses and chooses the optim
 
 ### Smart Rendering Cache
 
-Once imperium-crawl determines a domain needs Level 3 (browser), it **caches that decision** for 1 hour. Subsequent requests to the same domain skip straight to browser rendering — no wasted time on failed lower levels.
+Once imperium-crawl determines a domain needs Level 3 (browser), it caches that decision for 1 hour. Subsequent requests to the same domain skip straight to browser rendering — no wasted time on failed lower levels.
 
 ---
 
-## 🧠 Adaptive Learning Engine
+## Adaptive Learning Engine
 
-imperium-crawl **learns from every request** and gets smarter over time. No configuration needed — it works automatically in the background.
+imperium-crawl **learns from every request** and gets smarter over time. No configuration needed — fully automatic.
 
-### How It Works
-
-Every time you scrape a website, the engine records:
-- Which **stealth level** worked (1, 2, or 3)
-- Which **anti-bot system** was detected (Cloudflare, DataDome, etc.)
-- Whether a **proxy** was needed
-- **Response time** and **HTTP status**
-- Whether the request was **blocked or successful**
-
-Next time you hit the same domain, the engine **predicts the optimal configuration** — skipping failed levels and going straight to what works.
-
-### What It Learns Per Domain
-
-| Data Point | How It's Used |
-|-----------|---------------|
-| Optimal stealth level | Skip straight to the level that works — no wasted escalation |
-| Anti-bot system | Remember which defense the site uses |
-| Proxy requirement | Auto-suggest proxy if requests keep failing without one |
-| Response time | Exponential moving average — adapts to site speed changes |
-| Rate limit | Auto-throttles on 429 responses (reduces rate by 30%) |
-| Success/fail ratio | Confidence scoring — high confidence = use cached strategy |
-
-### Smart Features
-
-- **Time decay** — Knowledge older than 7 days loses weight, so the engine adapts when sites change defenses
-- **Confidence scoring** — Low data = start from level 1. High confidence = skip directly to optimal level
-- **Auto-prune** — Domains unused for 30 days are automatically cleaned up. Max 2,000 domains stored
-- **Atomic persistence** — Knowledge saved to `~/.imperium-crawl/knowledge.json` via atomic write (tmp → rename). Never corrupts
-- **Debounced writes** — Batches saves every 30 seconds to avoid disk thrashing
-
-### Example
+Every time you scrape a website, the engine records which stealth level worked, which anti-bot system was detected, whether a proxy was needed, response timing, and success/failure. Next time you hit the same domain, it **predicts the optimal configuration** — skipping failed levels and going straight to what works.
 
 ```
 First visit to cloudflare.com:
@@ -334,13 +224,177 @@ Second visit to cloudflare.com:
   → 3x faster than first visit
 ```
 
-> **The more you use it, the faster it gets.** Zero configuration. Fully automatic.
+### Smart Features
+
+- **Time decay** — Knowledge older than 7 days loses weight, adapts when sites change defenses
+- **Confidence scoring** — Low data = start from level 1. High confidence = skip to optimal level
+- **Auto-prune** — Domains unused for 30 days are cleaned up. Max 2,000 domains stored
+- **Atomic persistence** — Knowledge saved via atomic write (tmp → rename). Never corrupts
+
+> **The more you use it, the faster it gets.**
 
 ---
 
-## Skills System
+## All 22 Tools
 
-Skills let you teach imperium-crawl how to extract data from any website, then re-run it for fresh content whenever you want.
+### 📄 Scraping (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **scrape** | URL to clean Markdown/HTML with 3-level auto-escalating stealth. Structured data (JSON-LD, OpenGraph, Microdata), metadata, and links. |
+| **crawl** | Priority-based crawling with depth control, concurrency limiting, and smart URL scoring. |
+| **map** | Discover all URLs on a domain via sitemap.xml + page link extraction. |
+| **extract** | CSS selectors to structured JSON. Point at any repeating pattern and get clean data. |
+| **readability** | Mozilla Readability article extraction — title, author, content, publish date. |
+| **screenshot** | Full-page or viewport PNG screenshots via headless Chromium. |
+
+### 🔍 Search (requires free Brave API key)
+
+| Tool | What It Does |
+|------|-------------|
+| **search** | Web search via Brave Search API. |
+| **news_search** | News-specific search with freshness ranking. |
+| **image_search** | Image search with thumbnails and source URLs. |
+| **video_search** | Video search across platforms. |
+
+### ⚡ Skills (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **create_skill** | Analyze any page, auto-detect repeating patterns, generate CSS selectors, save as reusable skill. |
+| **run_skill** | Run a saved skill for fresh structured data. Supports pagination. |
+| **list_skills** | List all saved skills with configurations. |
+
+### 🔓 API Discovery & Real-Time (no API key needed, requires Playwright)
+
+| Tool | What It Does |
+|------|-------------|
+| **discover_apis** | Navigate to any page, intercept XHR/fetch calls, map hidden REST/GraphQL endpoints. Auto-detects GraphQL, filters noise, returns response previews. |
+| **query_api** | Call any API endpoint directly with stealth headers. Bypass DOM rendering for 10x faster data access. |
+| **monitor_websocket** | Capture real-time WebSocket messages — financial tickers, chat feeds, live dashboards. |
+
+### 🧠 AI Extraction (requires LLM API key)
+
+| Tool | What It Does |
+|------|-------------|
+| **ai_extract** | Describe what you want in natural language or JSON schema. 3 providers (Anthropic, OpenAI, MiniMax). The `extract` tool also supports `llm_fallback: true` for hybrid CSS→AI extraction. |
+
+### 🖱️ Interaction (no API key needed, requires Playwright)
+
+| Tool | What It Does |
+|------|-------------|
+| **interact** | Browser automation with 10 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate). Session persistence saves/restores cookies. |
+
+### 📦 Batch Processing (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **batch_scrape** | Parallel URL scraping with configurable concurrency, soft failure, and resume via job_id. Optional AI extraction per URL. |
+| **list_jobs** | List all batch jobs with status and progress. |
+| **job_status** | Full results for a specific batch job including per-URL outcomes. |
+| **delete_job** | Clean up completed or failed batch jobs. |
+
+---
+
+## MCP Setup — Detailed
+
+Full configuration with all optional environment variables:
+
+```json
+{
+  "mcpServers": {
+    "imperium-crawl": {
+      "command": "npx",
+      "args": ["-y", "imperium-crawl"],
+      "env": {
+        "BRAVE_API_KEY": "your-brave-api-key",
+        "TWOCAPTCHA_API_KEY": "your-2captcha-api-key",
+        "LLM_API_KEY": "your-api-key",
+        "LLM_PROVIDER": "anthropic",
+        "PROXY_URL": "http://user:pass@proxy:8080",
+        "PROXY_URLS": "http://proxy1:8080,socks5://proxy2:1080"
+      }
+    }
+  }
+}
+```
+
+### API Keys
+
+| Key | What It Unlocks | Where to Get It |
+|-----|----------------|-----------------|
+| `BRAVE_API_KEY` | 4 search tools (web, news, image, video) | [brave.com/search/api](https://brave.com/search/api/) (free tier available) |
+| `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving (reCAPTCHA v2/v3, hCaptcha, Turnstile) | [2captcha.com](https://2captcha.com/) |
+| `LLM_API_KEY` | AI-powered data extraction (`ai_extract` tool) | Anthropic or OpenAI API key |
+| `CHROME_PROFILE_PATH` | Authenticated browser sessions (use your Chrome cookies) | Path to Chrome user data dir |
+| `PROXY_URL` | Route all requests through a proxy (http/https/socks4/socks5) | Any proxy provider |
+
+### Enable Full Stealth (Level 3)
+
+```bash
+npm i rebrowser-playwright
+npx playwright install chromium
+```
+
+### Per-Client Notes
+
+| Client | Config Location |
+|--------|----------------|
+| **Claude Code** | `.mcp.json` in project root or `~/.claude/settings.json` global |
+| **Cursor** | Settings → MCP Servers |
+| **VS Code** | `.vscode/mcp.json` or user settings |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` |
+
+---
+
+## CLI Mode
+
+**No arguments** = starts as MCP server. **With subcommand** = runs as CLI tool. **`tui`** = interactive terminal.
+
+```bash
+# Scrape a website to markdown
+imperium-crawl scrape --url https://bbc.com/news
+
+# Crawl with depth control
+imperium-crawl crawl --url https://blog.cloudflare.com --max-depth 2 --max-pages 5
+
+# AI-powered extraction — plain English
+imperium-crawl ai-extract --url https://amazon.com/dp/B0D1XD1ZV3 \
+  --schema "extract product name, price, rating, and review count"
+
+# Discover hidden APIs
+imperium-crawl discover-apis --url https://weather.com
+
+# Batch scrape in parallel
+imperium-crawl batch-scrape --urls '["https://site1.com","https://site2.com"]' --concurrency 3
+
+# Interactive setup wizard
+imperium-crawl setup
+```
+
+### Output Formats
+
+```bash
+imperium-crawl scrape --url https://example.com                          # JSON (default)
+imperium-crawl scrape --url https://example.com --output-format markdown  # Markdown
+imperium-crawl scrape --url https://example.com --output-format csv       # CSV
+imperium-crawl scrape --url https://example.com --pretty                  # Pretty JSON
+imperium-crawl scrape --url https://example.com --output result.json      # Write to file
+```
+
+### TUI Mode
+
+```bash
+imperium-crawl tui
+```
+
+Interactive slash-command terminal with parameter prompts, table rendering, markdown display, and session state. Use `/save` to export results and `/again` to re-run the last command.
+
+---
+
+## Skills & Recipes
+
+Skills let you teach imperium-crawl how to extract data from any website, then re-run for fresh content whenever you want.
 
 **Create a skill:**
 ```
@@ -351,20 +405,36 @@ create_skill({
 })
 ```
 
-The tool analyzes the page, auto-detects repeating elements (articles, products, listings), generates CSS selectors for each field, and saves the skill config.
-
 **Run a skill:**
 ```
 run_skill({ name: "tc-ai-news" })
+→ Returns fresh structured data with all detected fields
 ```
 
-Returns fresh structured data with all detected fields. Skills are saved in `~/.imperium-crawl/skills/` as JSON files — human-readable, editable, and portable.
+Skills are saved in `~/.imperium-crawl/skills/` as JSON files — human-readable, editable, portable.
+
+### Built-in Recipes
+
+| Recipe | What It Does |
+|--------|-------------|
+| `news-extraction` | Extract article title, author, date, content from news sites |
+| `ecommerce-scrape` | Product name, price, rating, reviews, images |
+| `social-media` | Posts, engagement metrics, user profiles |
+| `job-listings` | Title, company, salary, location, description |
+| `real-estate` | Property listings with price, address, features |
+| `api-reverse-engineer` | Discover → query → monitor workflow |
+| `competitor-monitor` | Track pricing and product changes |
+| `lead-generation` | Extract business contact info |
+| `content-aggregator` | Multi-source content collection |
+| `data-pipeline` | Batch scrape → extract → export workflow |
+
+See [`SKILL/`](./SKILL/) for detailed workflow guides and agent integration.
 
 ---
 
 ## API Discovery Workflow
 
-This is the workflow that no other MCP server supports. Real results from actual testing:
+Turn any website into an API. No documentation needed.
 
 ```
 1. discover_apis({ url: "https://weather.com" })
@@ -373,65 +443,81 @@ This is the workflow that no other MCP server supports. Real results from actual
      • mParticle analytics endpoints
      • Taboola content recommendation API
      • OneTrust consent management API
-     • DAA/AdChoices opt-out endpoints
 
 2. query_api({ url: "https://api.weather.com/v3/...", method: "GET" })
-   → Direct API call, bypasses DOM entirely — 10x faster, structured JSON response
+   → Direct API call, bypasses DOM entirely — 10x faster, structured JSON
 
 3. monitor_websocket({ url: "https://binance.com/en/trade/BTC_USDT", duration_seconds: 10 })
-   → Captures real-time WebSocket messages — financial tickers, live data feeds
+   → Captures real-time WebSocket messages — live BTC price feed
 ```
 
-Turn any website into an API. No documentation needed.
+---
+
+## AI Agent Guide
+
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 22 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+
+### Three Ways to Connect
+
+| Method | Setup | Works With |
+|--------|-------|-----------|
+| **MCP + SKILL/** | Add as MCP server + SKILL.md in agent context | Claude Code, Cursor, Windsurf, any MCP client |
+| **CLI + SKILL/** | `npm i -g imperium-crawl` + SKILL.md in agent context | **Any agent with bash access** — OpenClaw, ChatGPT, GPT agents, custom agents |
+| **TUI** | `imperium-crawl tui` — interactive terminal | Direct human use, demos, debugging |
+
+### Per-Agent Setup
+
+| AI Agent | How to Add SKILL/ |
+|----------|-------------------|
+| **Claude Code** | Copy `SKILL.md` to project root — auto-detected |
+| **Cursor / Windsurf** | Add `SKILL.md` to project rules or system prompt |
+| **OpenClaw / custom agents** | Include SKILL.md in system prompt or context window |
+| **ChatGPT / GPT agents** | Paste SKILL.md content into custom instructions |
 
 ---
 
 ## Resilience
 
 - **Exponential backoff with full jitter** — AWS-recommended retry pattern, no thundering herd
-- **Per-domain circuit breaker** — 5 consecutive failures opens the circuit for 60s, then half-open probing with automatic recovery
-- **URL normalization** — 11-step pipeline removes tracking params (utm_*, fbclid, gclid), sorts query params, normalizes encoding
-- **Concurrency limiting** — per-domain request throttling via p-queue
-- **Input validation** — all 22 tool schemas enforce strict bounds (URL length, query size, concurrency limits, body size)
-- **HTTP transport hardening** — rate limiting (100 req/min), 1MB body limit, 5min request timeout
-- **Proxy support** — single proxy (`PROXY_URL`) or rotating pool (`PROXY_URLS`) with http/https/socks4/socks5 support
+- **Per-domain circuit breaker** — 5 failures opens circuit for 60s, then half-open probing with auto recovery
+- **URL normalization** — 11-step pipeline removes tracking params (utm_*, fbclid, gclid), sorts query params
+- **Proxy support** — single proxy or rotating pool with http/https/socks4/socks5
 - **Browser pool** — keyed by proxy URL, auto-eviction, configurable pool size
-- **Adaptive learning** — remembers optimal stealth level per domain, gets faster with every request
-- **Graceful shutdown** — 10s timeout on browser cleanup to prevent hung processes
 - **robots.txt** — respected by default (configurable)
+- **Graceful shutdown** — 10s timeout on browser cleanup to prevent hung processes
 
 ---
 
-## 🔥 Real-World Test Results
+## Real-World Test Results
 
 Every tool tested against production websites with real anti-bot defenses:
 
 | Tool | Target | Result |
 |------|--------|--------|
-| 📄 **scrape** | BBC News | Full markdown content, stealth level 3 auto-escalation |
-| 🕸️ **crawl** | Cloudflare Blog | **213K characters** crawled with depth control |
-| 🗺️ **map** | BBC | Full URL discovery via sitemap + page link extraction |
-| 🕷️ **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
-| 📖 **readability** | Medium article | Clean extraction — title, author, content, publish date |
-| 📸 **screenshot** | ProductHunt | Captured Cloudflare Turnstile challenge page |
-| 🔍 **search** | Brave Web Search | Web results with snippets and URLs |
-| 📰 **news_search** | Brave News Search | News results with freshness ranking |
-| 🖼️ **image_search** | Brave Image Search | Images with thumbnails and source URLs |
-| 🎬 **video_search** | Brave Video Search | Video results across platforms |
-| 🛠️ **create_skill** | Hacker News | Auto-detected 30 repeating stories with CSS selectors |
-| ▶️ **run_skill** | Saved skill | Fresh structured data from saved extraction config |
-| 📋 **list_skills** | — | Lists all saved skills with configurations |
-| 🔓 **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome anti-bot, Google Maps key, internal APIs |
-| ⚡ **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
-| 📡 **monitor_websocket** | Binance BTC/USDT | **3 WebSocket connections, 23 live messages** — BTC price live |
-| 🧠 **ai_extract** | Amazon product page | AI extracted name, price, rating, review count — natural language schema |
-| 🖱️ **interact** | Login flow | Click → type email → type password → submit — session cookies persisted |
-| 📦 **batch_scrape** | 10 news sites | Parallel scrape with concurrency 3, soft failure, 9/10 succeeded |
-| 📋 **list_jobs** | — | Lists all batch jobs with status and progress |
-| 📊 **job_status** | Batch job | Full per-URL results with timing and extracted data |
-| 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
+| **scrape** | BBC News | Full markdown, stealth level 3 auto-escalation |
+| **crawl** | Cloudflare Blog | 213K characters crawled with depth control |
+| **map** | BBC | Full URL discovery via sitemap + link extraction |
+| **extract** | Amazon (AirPods Pro 2) | Product title, 45,297 reviews, brand extracted |
+| **readability** | Medium article | Clean — title, author, content, publish date |
+| **screenshot** | ProductHunt | Captured Cloudflare Turnstile challenge page |
+| **search** | Brave Web | Web results with snippets and URLs |
+| **news_search** | Brave News | News results with freshness ranking |
+| **image_search** | Brave Image | Images with thumbnails and source URLs |
+| **video_search** | Brave Video | Video results across platforms |
+| **create_skill** | Hacker News | Auto-detected 30 stories with CSS selectors |
+| **run_skill** | Saved skill | Fresh structured data from saved config |
+| **list_skills** | — | Lists all skills with configurations |
+| **discover_apis** | Airbnb Paris | **34 hidden APIs** — DataDome, Google Maps key, internal APIs |
+| **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
+| **monitor_websocket** | Binance BTC/USDT | 3 WebSocket connections, 23 live messages — BTC price live |
+| **ai_extract** | Amazon product | AI extracted name, price, rating, review count |
+| **interact** | Login flow | Click → type → submit — session cookies persisted |
+| **batch_scrape** | 10 news sites | Parallel, concurrency 3, soft failure, 9/10 succeeded |
+| **list_jobs** | — | Batch jobs with status and progress |
+| **job_status** | Batch job | Full per-URL results with timing |
+| **delete_job** | Completed job | Cleaned up job data from disk |
 
-> 🏆 **22/22 tools working. 58 hidden APIs discovered. Live crypto feed captured. AI extraction. Browser automation. Zero API keys needed for scraping.**
+> **22/22 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 
@@ -441,18 +527,18 @@ Every tool tested against production websites with real anti-bot defenses:
 |----------|----------|-------------|
 | `BRAVE_API_KEY` | No | Brave Search API key (enables 4 search tools) |
 | `TWOCAPTCHA_API_KEY` | No | 2Captcha API key (enables auto CAPTCHA solving) |
+| `LLM_API_KEY` | No | Anthropic or OpenAI API key (enables `ai_extract`) |
+| `LLM_PROVIDER` | No | `anthropic`, `openai`, or `minimax` (default: `anthropic`) |
+| `LLM_MODEL` | No | Override default LLM model |
 | `TRANSPORT` | No | `stdio` (default) or `http` |
 | `PORT` | No | HTTP port (default: 3000) |
 | `PROXY_URL` | No | Single proxy URL (http/https/socks4/socks5) |
 | `PROXY_URLS` | No | Comma-separated proxy URLs for rotation |
 | `BROWSER_POOL_SIZE` | No | Max pooled browser instances (default: 3) |
 | `RESPECT_ROBOTS` | No | Respect robots.txt (default: `true`) |
-| `LLM_API_KEY` | No | Anthropic or OpenAI API key (enables `ai_extract` tool) |
-| `LLM_PROVIDER` | No | `anthropic`, `openai`, or `minimax` (default: `anthropic`) |
-| `LLM_MODEL` | No | Override default LLM model |
-| `CHROME_PROFILE_PATH` | No | Chrome user data dir for authenticated browser sessions |
-| `NO_COLOR` | No | Disable colored output (standard convention) |
-| `CI` | No | Auto-detected; disables TTY features (spinners, colors) |
+| `CHROME_PROFILE_PATH` | No | Chrome user data dir for authenticated sessions |
+| `NO_COLOR` | No | Disable colored output |
+| `CI` | No | Auto-detected; disables TTY features |
 
 ---
 
@@ -463,8 +549,27 @@ git clone https://github.com/ceoimperiumprojects/imperium-crawl
 cd imperium-crawl
 npm install
 npm run build
-npm test        # 332 tests
-npm start
+npm run dev         # Watch mode (rebuild on changes)
+npm test            # 332 tests
+npm start           # Start MCP server
+```
+
+---
+
+## Contributing
+
+Contributions welcome! Whether it's a bug fix, new tool, or documentation improvement — open an issue or PR.
+
+```bash
+# Fork the repo, then:
+git clone https://github.com/YOUR_USERNAME/imperium-crawl
+cd imperium-crawl
+npm install
+git checkout -b my-feature
+# Make changes...
+npm test
+git push origin my-feature
+# Open a PR
 ```
 
 ---
