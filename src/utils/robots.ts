@@ -14,14 +14,18 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
+const MAX_ROBOTS_CACHE_SIZE = 5000;
 
-// Periodic cleanup: sweep expired entries every 60s
+// Periodic cleanup: sweep expired entries every 60s, hard-cap on size
 setInterval(() => {
   const now = Date.now();
   for (const [domain, entry] of cache) {
     if (now - entry.timestamp > DEFAULT_ROBOTS_CACHE_TTL_MS) {
       cache.delete(domain);
     }
+  }
+  if (cache.size > MAX_ROBOTS_CACHE_SIZE) {
+    cache.clear();
   }
 }, 60_000).unref();
 

@@ -1,0 +1,25 @@
+{
+  "name": "ecommerce-product",
+  "description": "Extract product details from any e-commerce page using AI — product name, price, currency, rating, availability, images, and description",
+  "url": "https://www.example.com/product",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "ai_extract",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "product_name": { "type": "string" },
+      "price": { "type": "number" },
+      "currency": { "type": "string" },
+      "original_price": { "type": "number" },
+      "discount_percent": { "type": "number" },
+      "rating": { "type": "number" },
+      "review_count": { "type": "number" },
+      "availability": { "type": "string" },
+      "brand": { "type": "string" },
+      "description": { "type": "string" },
+      "images": { "type": "array", "items": { "type": "string" } }
+    }
+  },
+  "format": "json"
+}

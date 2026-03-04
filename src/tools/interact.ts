@@ -268,11 +268,16 @@ export async function execute(input: InteractInput) {
 
     // ── Collect results ──
     const finalUrl = page.url();
+    let sessionWarning: string | undefined;
+    if (input.session_id && !sessionSaved) {
+      sessionWarning = "Warning: Session cookies could not be saved. Session state may be lost on next call.";
+    }
 
     const output: Record<string, unknown> = {
       url: finalUrl,
       actions_executed: actionResults.length,
       session_saved: sessionSaved,
+      ...(sessionWarning && { session_warning: sessionWarning }),
       action_results: actionResults,
       screenshots: midScreenshots,
     };

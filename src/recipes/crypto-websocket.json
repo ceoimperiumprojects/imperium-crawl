@@ -1,0 +1,11 @@
+{
+  "name": "crypto-websocket",
+  "description": "Monitor Binance BTC/USDT real-time trade WebSocket stream — captures live trade data",
+  "url": "https://www.binance.com/en/trade/BTC_USDT",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "monitor_websocket",
+  "duration_seconds": 10,
+  "max_messages": 50,
+  "filter_url": "stream.binance.com"
+}

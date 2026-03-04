@@ -21,11 +21,20 @@ export interface SkillPagination {
   max_pages?: number;
 }
 
-export interface SkillConfig {
+// --- Discriminated union for skill configs ---
+
+export type RecipeTool = "extract" | "ai_extract" | "readability" | "scrape" | "monitor_websocket";
+
+interface SkillConfigBase {
   name: string;
   description: string;
   url: string;
   created_at: string;
+  builtin?: boolean;
+}
+
+export interface ExtractSkillConfig extends SkillConfigBase {
+  tool?: "extract";
   selectors: {
     items: string;
     fields: SkillFieldSelectors;
@@ -33,6 +42,38 @@ export interface SkillConfig {
   output_format: "list" | "single";
   pagination?: SkillPagination;
 }
+
+export interface AiExtractSkillConfig extends SkillConfigBase {
+  tool: "ai_extract";
+  schema: string | Record<string, unknown> | "auto";
+  format?: "json" | "csv";
+  max_tokens?: number;
+}
+
+export interface ReadabilitySkillConfig extends SkillConfigBase {
+  tool: "readability";
+  format?: "markdown" | "html" | "text";
+}
+
+export interface ScrapeSkillConfig extends SkillConfigBase {
+  tool: "scrape";
+}
+
+export interface WebSocketSkillConfig extends SkillConfigBase {
+  tool: "monitor_websocket";
+  duration_seconds?: number;
+  max_messages?: number;
+  filter_url?: string;
+}
+
+export type SkillConfig =
+  | ExtractSkillConfig
+  | AiExtractSkillConfig
+  | ReadabilitySkillConfig
+  | ScrapeSkillConfig
+  | WebSocketSkillConfig;
+
+// --- Storage functions ---
 
 async function ensureDir(): Promise<string> {
   const dir = getSkillsDir();
@@ -77,6 +118,31 @@ export async function list(): Promise<SkillConfig[]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * List all skills: user skills + builtin recipes.
+ * User skills with the same name shadow builtin recipes.
+ */
+export async function listAll(): Promise<SkillConfig[]> {
+  const { builtinRecipes } = await import("../recipes/index.js");
+  const userSkills = await list();
+
+  const userNames = new Set(userSkills.map((s) => s.name));
+  const recipes = builtinRecipes.filter((r) => !userNames.has(r.name));
+
+  return [...userSkills, ...recipes];
+}
+
+/**
+ * Load a skill by name. Checks user skills first, then builtin recipes.
+ */
+export async function loadWithRecipes(name: string): Promise<SkillConfig | null> {
+  const userSkill = await load(name);
+  if (userSkill) return userSkill;
+
+  const { builtinRecipes } = await import("../recipes/index.js");
+  return builtinRecipes.find((r) => r.name === name) ?? null;
 }
 
 export async function remove(name: string): Promise<boolean> {

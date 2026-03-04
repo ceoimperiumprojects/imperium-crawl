@@ -1,8 +1,8 @@
-import { smartFetch, type FetchResult, type StealthOptions } from "../stealth/index.js";
+import { smartFetch, StealthError, type FetchResult, type StealthOptions } from "../stealth/index.js";
 import { isAllowed } from "./robots.js";
+import { getDomain } from "./url.js";
 import { getOptions } from "../config.js";
 import { DEFAULT_CONCURRENCY } from "../constants.js";
-import { getKnowledgeEngine } from "../knowledge/index.js";
 
 // ── Concurrency Limiter ──
 
@@ -52,19 +52,11 @@ const CIRCUIT_STALE_MS = 3_600_000;
 setInterval(() => {
   const now = Date.now();
   for (const [domain, circuit] of circuits) {
-    if (circuit.state === "closed" && now - circuit.lastAccessed > CIRCUIT_STALE_MS) {
+    if (now - circuit.lastAccessed > CIRCUIT_STALE_MS) {
       circuits.delete(domain);
     }
   }
 }, 300_000).unref();
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
-  }
-}
 
 function getCircuit(domain: string): CircuitBreaker {
   let circuit = circuits.get(domain);
@@ -154,47 +146,24 @@ export async function fetchPage(url: string, options?: SmartFetchOptions): Promi
 
   const retries = options?.retries ?? 2;
   let lastError: Error | undefined;
-  const startTime = Date.now();
-  const knowledgeEngine = getKnowledgeEngine();
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const result = await smartFetch(url, options);
       recordSuccess(domain);
-      knowledgeEngine.record({
-        url,
-        domain,
-        levelUsed: result.level,
-        success: true,
-        responseTimeMs: Date.now() - startTime,
-        antiBotSystem: null,
-        captchaType: result.captchaSolved ? "detected" : null,
-        proxyUsed: !!result.proxyUsed,
-        blocked: false,
-        httpStatus: result.status,
-      });
       return result;
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
       recordFailure(domain);
 
-      knowledgeEngine.record({
-        url,
-        domain,
-        levelUsed: 1, // best guess — we don't know which level failed
-        success: false,
-        responseTimeMs: Date.now() - startTime,
-        antiBotSystem: null,
-        captchaType: null,
-        proxyUsed: !!options?.proxy,
-        blocked: true,
-        httpStatus: 0,
-      });
-
       // Check if circuit just opened
       const updatedCircuit = getCircuit(domain);
       if (updatedCircuit.state === "open") {
-        throw new Error(`Circuit breaker opened for ${domain}: ${lastError.message}`);
+        // Enrich error message with StealthError info if available
+        const detail = err instanceof StealthError
+          ? `L${err.lastLevel} HTTP ${err.httpStatus}${err.antiBotSystem ? ` [${err.antiBotSystem}]` : ""}`
+          : "";
+        throw new Error(`Circuit breaker opened for ${domain}${detail ? ` (${detail})` : ""}: ${lastError.message}`);
       }
 
       if (attempt < retries) {

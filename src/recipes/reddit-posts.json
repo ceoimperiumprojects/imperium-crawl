@@ -1,0 +1,8 @@
+{
+  "name": "reddit-posts",
+  "description": "Fetch raw subreddit posts via Reddit JSON API — returns post titles, scores, authors, URLs, and comment counts",
+  "url": "https://www.reddit.com/r/programming.json",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "scrape"
+}

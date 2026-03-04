@@ -1,0 +1,31 @@
+{
+  "name": "social-media-mentions",
+  "description": "Extract social media posts and mentions with sentiment analysis using AI — author, content, engagement metrics, and sentiment",
+  "url": "https://www.example.com/social",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "ai_extract",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "platform": { "type": "string" },
+      "posts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "author": { "type": "string" },
+            "content": { "type": "string" },
+            "date": { "type": "string" },
+            "likes": { "type": "number" },
+            "shares": { "type": "number" },
+            "comments": { "type": "number" },
+            "sentiment": { "type": "string", "enum": ["positive", "negative", "neutral"] },
+            "url": { "type": "string" }
+          }
+        }
+      }
+    }
+  },
+  "format": "json"
+}

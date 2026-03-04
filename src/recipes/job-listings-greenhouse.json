@@ -1,0 +1,17 @@
+{
+  "name": "job-listings-greenhouse",
+  "description": "Scrape Greenhouse ATS job boards — extracts job title, URL, and location. Requires browser rendering (Greenhouse uses React SPA).",
+  "url": "https://boards.greenhouse.io/example",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "extract",
+  "selectors": {
+    "items": ".job-post",
+    "fields": {
+      "title": "a .body--medium",
+      "url": "a | href",
+      "location": "a .body--metadata"
+    }
+  },
+  "output_format": "list"
+}

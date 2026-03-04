@@ -101,6 +101,17 @@ export function getBaseUrl(url: string): string {
 /**
  * Check if a URL has tracking parameters that should be stripped.
  */
+/**
+ * Extract hostname from URL. Returns raw string as fallback for invalid URLs.
+ */
+export function getDomain(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
 export function hasTrackingParams(url: string): boolean {
   try {
     const u = new URL(url);

@@ -138,6 +138,9 @@ export class TwoCaptchaSolver {
     await sleep(INITIAL_WAIT_MS);
 
     while (Date.now() - startTime < maxPollTime) {
+      const remainingBudget = maxPollTime - (Date.now() - startTime);
+      if (remainingBudget <= 0) break;
+
       const params = new URLSearchParams({
         key: this.apiKey,
         action: "get",
@@ -146,7 +149,7 @@ export class TwoCaptchaSolver {
       });
 
       const response = await fetch(`${API_BASE}/res.php?${params.toString()}`, {
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(Math.min(15_000, remainingBudget)),
       });
 
       const data = (await response.json()) as { status: number; request: string };

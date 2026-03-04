@@ -1,0 +1,33 @@
+{
+  "name": "product-reviews",
+  "description": "Extract product reviews from any review page using AI — rating, reviewer, date, title, text, pros, and cons",
+  "url": "https://www.example.com/product/reviews",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "ai_extract",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "product_name": { "type": "string" },
+      "overall_rating": { "type": "number" },
+      "total_reviews": { "type": "number" },
+      "reviews": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "rating": { "type": "number" },
+            "title": { "type": "string" },
+            "text": { "type": "string" },
+            "reviewer": { "type": "string" },
+            "date": { "type": "string" },
+            "verified": { "type": "boolean" },
+            "pros": { "type": "array", "items": { "type": "string" } },
+            "cons": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    }
+  },
+  "format": "json"
+}

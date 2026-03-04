@@ -1,0 +1,22 @@
+{
+  "name": "hn-top-stories",
+  "description": "Scrape Hacker News frontpage — extracts title, URL, points, and comment count for each story",
+  "url": "https://news.ycombinator.com/",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "extract",
+  "selectors": {
+    "items": ".athing",
+    "fields": {
+      "title": ".titleline > a",
+      "url": ".titleline > a | href",
+      "id": "@ id",
+      "site": ".titleline .sitebit .sitestr"
+    }
+  },
+  "output_format": "list",
+  "pagination": {
+    "next": "a.morelink",
+    "max_pages": 3
+  }
+}

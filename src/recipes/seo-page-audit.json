@@ -1,0 +1,26 @@
+{
+  "name": "seo-page-audit",
+  "description": "Single-page SEO audit — extracts title, meta description, canonical URL, h1 tags, Open Graph tags, and structured data",
+  "url": "https://www.example.com",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "extract",
+  "selectors": {
+    "items": "html",
+    "fields": {
+      "title": "title",
+      "meta_description": "meta[name='description'] | content",
+      "canonical": "link[rel='canonical'] | href",
+      "h1": "h1",
+      "og_title": "meta[property='og:title'] | content",
+      "og_description": "meta[property='og:description'] | content",
+      "og_image": "meta[property='og:image'] | content",
+      "og_type": "meta[property='og:type'] | content",
+      "twitter_card": "meta[name='twitter:card'] | content",
+      "robots": "meta[name='robots'] | content",
+      "viewport": "meta[name='viewport'] | content",
+      "charset": "meta[charset] | charset"
+    }
+  },
+  "output_format": "single"
+}

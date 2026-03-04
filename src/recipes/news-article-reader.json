@@ -1,0 +1,9 @@
+{
+  "name": "news-article-reader",
+  "description": "Extract clean article content from any news page using Mozilla Readability — title, author, date, and full text",
+  "url": "https://www.example.com/article",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "readability",
+  "format": "markdown"
+}

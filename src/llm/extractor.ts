@@ -6,6 +6,7 @@ export interface ExtractionResult {
   data: unknown;
   model: string;
   schemaUsed: ExtractionSchema;
+  truncated?: boolean;
   tokenUsage?: { input: number; output: number };
 }
 
@@ -96,9 +97,9 @@ export function parseJsonFromLLMResponse(text: string): unknown {
  * Truncate content to avoid hitting token limits.
  * Targets ~120k chars (~30k tokens) which is safe for most models.
  */
-function truncateContent(content: string, maxChars = 120_000): string {
-  if (content.length <= maxChars) return content;
-  return content.slice(0, maxChars) + "\n\n[Content truncated due to length]";
+function truncateContent(content: string, maxChars = 120_000): { text: string; wasTruncated: boolean } {
+  if (content.length <= maxChars) return { text: content, wasTruncated: false };
+  return { text: content.slice(0, maxChars) + "\n\n[Content truncated due to length]", wasTruncated: true };
 }
 
 export async function extractWithLLM(
@@ -107,9 +108,9 @@ export async function extractWithLLM(
   schema: ExtractionSchema,
   maxTokens = 2000,
 ): Promise<ExtractionResult> {
-  const truncated = truncateContent(content);
+  const { text: truncatedContent, wasTruncated } = truncateContent(content);
   const systemPrompt = schema === "auto" ? SYSTEM_PROMPT_AUTO : SYSTEM_PROMPT_EXTRACT;
-  const userPrompt = buildUserPrompt(schema, truncated);
+  const userPrompt = buildUserPrompt(schema, truncatedContent);
 
   const response = await client.complete(
     [
@@ -125,6 +126,7 @@ export async function extractWithLLM(
     data,
     model: response.model,
     schemaUsed: schema,
+    ...(wasTruncated && { truncated: true }),
     tokenUsage:
       response.inputTokens !== undefined && response.outputTokens !== undefined
         ? { input: response.inputTokens, output: response.outputTokens }

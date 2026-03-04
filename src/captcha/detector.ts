@@ -18,7 +18,7 @@ export interface CaptchaInfo {
 
 const RECAPTCHA_SITEKEY_PATTERNS = [
   /data-sitekey=["']([A-Za-z0-9_-]{40})["']/,
-  /grecaptcha\.render\s*\([^,]*,\s*\{\s*['"]?sitekey['"]?\s*:\s*['"]([A-Za-z0-9_-]{40})["']/,
+  /grecaptcha\.render\s*\([^,]{0,500},\s*\{\s*['"]?sitekey['"]?\s*:\s*['"]([A-Za-z0-9_-]{40})["']/,
   /['"]sitekey['"]\s*:\s*['"]([A-Za-z0-9_-]{40})["']/,
   /recaptcha\/api2?\/anchor\?.*?k=([A-Za-z0-9_-]{40})/,
   /recaptcha\/enterprise\/anchor\?.*?k=([A-Za-z0-9_-]{40})/,
@@ -88,7 +88,7 @@ function detectRecaptcha(html: string): CaptchaInfo | null {
 
 const HCAPTCHA_SITEKEY_PATTERNS = [
   /data-sitekey=["']([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})["']/,
-  /hcaptcha\.render\s*\([^,]*,\s*\{[^}]*sitekey['"]\s*:\s*['"]([0-9a-f-]{36})["']/,
+  /hcaptcha\.render\s*\([^,]{0,500},\s*\{[^}]*sitekey['"]\s*:\s*['"]([0-9a-f-]{36})["']/,
   /['"]sitekey['"]\s*:\s*['"]([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})["']/,
 ];
 
@@ -113,7 +113,7 @@ function detectHcaptcha(html: string): CaptchaInfo | null {
 const TURNSTILE_SITEKEY_PATTERNS = [
   /class=["'][^"']*cf-turnstile[^"']*["'][^>]*data-sitekey=["']([A-Za-z0-9_-]+)["']/,
   /data-sitekey=["']([A-Za-z0-9_-]+)["'][^>]*class=["'][^"']*cf-turnstile/,
-  /turnstile\.render\s*\([^,]*,\s*\{[^}]*sitekey['"]\s*:\s*['"]([A-Za-z0-9_-]+)["']/,
+  /turnstile\.render\s*\([^,]{0,500},\s*\{[^}]*sitekey['"]\s*:\s*['"]([A-Za-z0-9_-]+)["']/,
 ];
 
 function detectTurnstile(html: string): CaptchaInfo | null {

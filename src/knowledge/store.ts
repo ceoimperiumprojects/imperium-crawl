@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getKnowledgeFilePath } from "../config.js";
+import { getDomain } from "../utils/url.js";
 import {
   type DomainKnowledge,
   type FetchOutcome,
@@ -168,16 +169,6 @@ export class AdaptiveLearningEngine {
   /** Exposed for testing */
   get size(): number {
     return this.store.size;
-  }
-}
-
-// ── Helpers ──
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
   }
 }
 

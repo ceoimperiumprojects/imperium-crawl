@@ -273,12 +273,14 @@ function tryRenderTable(toolName: string, data: unknown): string | null {
   if (toolName === "list_skills") {
     const skills = Array.isArray(obj.skills) ? obj.skills : [];
     if (skills.length === 0) return null;
-    const headers = ["Name", "URL", "Fields", "Created"];
+    const headers = ["Name", "Type", "URL", "Fields", "Created"];
     const rows = skills.map((s: unknown) => {
       const skill = s as Record<string, unknown>;
       const fields = Array.isArray(skill.fields) ? skill.fields.join(", ") : "";
       const created = typeof skill.created_at === "string" ? skill.created_at.split("T")[0] : "";
-      return [String(skill.name ?? ""), colorUrl(String(skill.url ?? "")), fields, created];
+      const toolType = String(skill.tool ?? "extract");
+      const typeLabel = skill.builtin ? `${toolType} (built-in)` : toolType;
+      return [String(skill.name ?? ""), typeLabel, colorUrl(String(skill.url ?? "")), fields, created];
     });
     return renderTable(headers, rows);
   }
@@ -410,17 +412,18 @@ async function runTool(
     process.exit(1);
   }
 
-  // Handle image responses (screenshot tool)
+  // Handle image responses (screenshot tool, interact with return_screenshot)
   const imageResult = parseImageOutput(result);
   if (imageResult) {
-    const outputFile = globalOpts.output as string | undefined;
-    const filePath = outputFile ?? `screenshot-${Date.now()}.png`;
-    writeFileSync(filePath, Buffer.from(imageResult.data, "base64"));
-    process.stderr.write(`Screenshot saved to ${filePath}\n`);
-    return;
+    const imgPath = `screenshot-${Date.now()}.png`;
+    writeFileSync(imgPath, Buffer.from(imageResult.data, "base64"));
+    process.stderr.write(`Screenshot saved to ${imgPath}\n`);
   }
 
   const data = parseToolOutput(result);
+
+  // Image-only response (no text data) — we're done
+  if (imageResult && data === null) return;
 
   const table = tryRenderTable(tool.name, data);
   if (table) {

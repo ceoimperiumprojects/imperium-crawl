@@ -1,0 +1,19 @@
+{
+  "name": "github-trending",
+  "description": "Scrape GitHub trending repositories — extracts repo name, description, stars, language, and forks",
+  "url": "https://github.com/trending",
+  "created_at": "2025-01-01T00:00:00Z",
+  "builtin": true,
+  "tool": "extract",
+  "selectors": {
+    "items": "article.Box-row",
+    "fields": {
+      "repo": "h2 a | href",
+      "description": "p.col-9",
+      "language": "span[itemprop='programmingLanguage']",
+      "stars": "a[href$='/stargazers']",
+      "forks": "a[href$='/forks']"
+    }
+  },
+  "output_format": "list"
+}

@@ -5,6 +5,7 @@ import { stealthFetch } from "./tls.js";
 import { browserFetch, isPlaywrightAvailable } from "./browser.js";
 import { resolveProxy } from "./proxy.js";
 import { DEFAULT_TIMEOUT_MS } from "../constants.js";
+import { getDomain } from "../utils/url.js";
 import { getKnowledgeEngine } from "../knowledge/index.js";
 
 export type StealthLevel = 1 | 2 | 3;
@@ -19,6 +20,19 @@ export interface FetchResult {
   captchaSolved?: boolean;
   proxyUsed?: string;
   chromeProfile?: string;
+  antiBotSystem?: string;
+}
+
+export class StealthError extends Error {
+  constructor(
+    message: string,
+    public readonly lastLevel: StealthLevel,
+    public readonly httpStatus: number,
+    public readonly antiBotSystem: string | null,
+  ) {
+    super(message);
+    this.name = "StealthError";
+  }
 }
 
 export interface StealthOptions {
@@ -40,8 +54,9 @@ interface CacheEntry {
 }
 
 const renderingCache = new Map<string, CacheEntry>();
+const MAX_RENDERING_CACHE_SIZE = 5000;
 
-// Periodic cleanup: sweep expired entries every 60s
+// Periodic cleanup: sweep expired entries every 60s, hard-cap on size
 setInterval(() => {
   const now = Date.now();
   for (const [domain, entry] of renderingCache) {
@@ -49,15 +64,10 @@ setInterval(() => {
       renderingCache.delete(domain);
     }
   }
-}, 60_000).unref();
-
-function getDomain(url: string): string {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return url;
+  if (renderingCache.size > MAX_RENDERING_CACHE_SIZE) {
+    renderingCache.clear();
   }
-}
+}, 60_000).unref();
 
 function getCachedLevel(url: string): StealthLevel | null {
   const domain = getDomain(url);
@@ -124,19 +134,44 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   const maxLevel = options?.maxLevel || 3;
   const proxyUrl = resolveProxy(options?.proxy);
   const chromeProfile = options?.chromeProfile;
+  const domain = getDomain(url);
+  const engine = getKnowledgeEngine();
+  const fetchStart = Date.now();
+
+  // ── Tracking state across escalation ──
+  let detectedAntiBot: string | null = null;
+  let lastHttpStatus = 0;
+  let lastLevel: StealthLevel = 1;
+
+  /** Record success outcome and return enriched result */
+  function recordSuccess(result: FetchResult): FetchResult {
+    result.antiBotSystem = detectedAntiBot ?? undefined;
+    engine.record({
+      url, domain,
+      levelUsed: result.level,
+      success: true,
+      responseTimeMs: Date.now() - fetchStart,
+      antiBotSystem: detectedAntiBot,
+      captchaType: result.captchaSolved ? "detected" : null,
+      proxyUsed: !!result.proxyUsed,
+      blocked: false,
+      httpStatus: result.status,
+    });
+    return result;
+  }
 
   // Chrome profile → force Level 3 (no point using profile without browser)
   if (chromeProfile) {
     const result = await level3Fetch(url, timeout, options?.screenshot, proxyUrl, chromeProfile);
     cacheLevel(url, 3);
-    return result;
+    return recordSuccess(result);
   }
 
   // Forced level — skip all heuristics
   if (options?.forceLevel) {
     const result = await fetchByLevel(url, timeout, options.forceLevel, options.screenshot, proxyUrl);
     cacheLevel(url, options.forceLevel);
-    return result;
+    return recordSuccess(result);
   }
 
   // Check rendering cache — skip escalation if we know what works
@@ -144,8 +179,12 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   if (cachedLevel && cachedLevel <= maxLevel) {
     try {
       const result = await fetchByLevel(url, timeout, cachedLevel, options?.screenshot, proxyUrl);
-      if (checkResult(result)) return result;
+      if (checkResult(result)) {
+        return recordSuccess(result);
+      }
       // Cache was wrong — invalidate and fall through to full escalation
+      lastHttpStatus = result.status;
+      lastLevel = cachedLevel;
       renderingCache.delete(getDomain(url));
     } catch {
       renderingCache.delete(getDomain(url));
@@ -153,7 +192,6 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   }
 
   // Consult adaptive learning for starting level hint (soft suggestion)
-  const engine = getKnowledgeEngine();
   const prediction = await engine.predict(url);
   if (prediction && prediction.confidence >= 0.7 && prediction.startLevel > 1) {
     const startLevel = Math.min(prediction.startLevel, maxLevel) as StealthLevel;
@@ -161,8 +199,10 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
       const result = await fetchByLevel(url, timeout, startLevel, options?.screenshot, proxyUrl);
       if (checkResult(result)) {
         cacheLevel(url, startLevel);
-        return result;
+        return recordSuccess(result);
       }
+      lastHttpStatus = result.status;
+      lastLevel = startLevel;
       // Predicted level failed — fall through to normal escalation
     } catch {
       // Fall through to normal escalation
@@ -175,8 +215,11 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
       const result = await level1Fetch(url, timeout, proxyUrl);
       if (checkResult(result)) {
         cacheLevel(url, 1);
-        return result;
+        return recordSuccess(result);
       }
+      lastHttpStatus = result.status;
+      lastLevel = 1;
+
       // Check anti-bot system for smarter escalation
       const responseHeaders = result.headers || {};
       const cookies = parseCookieNames(
@@ -184,12 +227,16 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
       );
       const detection = detectAntiBot(responseHeaders, cookies, result.html);
 
+      if (detection.system !== "none") {
+        detectedAntiBot = detection.system;
+      }
+
       // If anti-bot detected and recommends Level 3, skip Level 2
       if (detection.system !== "none" && detection.recommendedLevel === 3 && maxLevel >= 3) {
         if (await isPlaywrightAvailable()) {
           const l3Result = await level3Fetch(url, timeout, options?.screenshot, proxyUrl);
           cacheLevel(url, 3);
-          return l3Result;
+          return recordSuccess(l3Result);
         }
       }
     } catch {
@@ -203,8 +250,10 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
       const result = await level2Fetch(url, timeout, proxyUrl);
       if (checkResult(result)) {
         cacheLevel(url, 2);
-        return result;
+        return recordSuccess(result);
       }
+      lastHttpStatus = result.status;
+      lastLevel = 2;
     } catch {
       // Escalate
     }
@@ -214,17 +263,38 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   if (maxLevel >= 3 && (await isPlaywrightAvailable())) {
     const result = await level3Fetch(url, timeout, options?.screenshot, proxyUrl);
     cacheLevel(url, 3);
-    return result;
+    return recordSuccess(result);
   }
 
   // Fallback: return best effort from level 2, then level 1
   try {
-    return await level2Fetch(url, timeout, proxyUrl);
+    const result = await level2Fetch(url, timeout, proxyUrl);
+    lastLevel = 2;
+    return recordSuccess(result);
   } catch {
     try {
-      return await level1Fetch(url, timeout, proxyUrl);
+      const result = await level1Fetch(url, timeout, proxyUrl);
+      lastLevel = 1;
+      return recordSuccess(result);
     } catch (finalErr) {
-      throw new Error(`All stealth levels failed for ${url}: ${finalErr instanceof Error ? finalErr.message : String(finalErr)}`);
+      // Record failure before throwing
+      engine.record({
+        url, domain,
+        levelUsed: lastLevel,
+        success: false,
+        responseTimeMs: Date.now() - fetchStart,
+        antiBotSystem: detectedAntiBot,
+        captchaType: null,
+        proxyUsed: !!proxyUrl,
+        blocked: true,
+        httpStatus: lastHttpStatus,
+      });
+      throw new StealthError(
+        `All stealth levels failed for ${url}: ${finalErr instanceof Error ? finalErr.message : String(finalErr)}`,
+        lastLevel,
+        lastHttpStatus,
+        detectedAntiBot,
+      );
     }
   }
 }

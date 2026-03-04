@@ -61,8 +61,8 @@ export class ProxyRotator {
 
   next(): ParsedProxy | undefined {
     if (this.proxies.length === 0) return undefined;
-    const proxy = this.proxies[this.index % this.proxies.length];
-    this.index++;
+    const proxy = this.proxies[this.index];
+    this.index = (this.index + 1) % this.proxies.length;
     return proxy;
   }
 }

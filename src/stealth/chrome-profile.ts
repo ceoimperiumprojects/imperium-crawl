@@ -151,8 +151,11 @@ async function acquirePoolPage(proxyUrl?: string): Promise<PageHandle> {
     context,
     isProfile: false,
     cleanup: async () => {
-      await context.close();
-      pool.release(browser);
+      try {
+        await context.close();
+      } finally {
+        pool.release(browser);
+      }
     },
   };
 }

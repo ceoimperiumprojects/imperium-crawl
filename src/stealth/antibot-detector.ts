@@ -65,7 +65,7 @@ const RULES: DetectionRule[] = [
   { system: "aws-waf", weight: 0.3, signal: "awswaf challenge", check: (c) => c.html.includes("awswaf") },
 
   // ── F5 / Shape Security ──
-  { system: "f5-shape", weight: 0.5, signal: "TS cookie prefix", check: (c) => c.cookies.some((k) => /^TS[a-f0-9]{6,}/.test(k)) },
+  { system: "f5-shape", weight: 0.5, signal: "TS cookie prefix", check: (c) => c.cookies.some((k) => /^ts[a-f0-9]{6,}/.test(k)) },
   { system: "f5-shape", weight: 0.3, signal: "shape script", check: (c) => c.html.includes("shape.js") || c.html.includes("shapesecurity.com") },
 ];
 
@@ -93,7 +93,7 @@ export function detectAntiBot(
     headers: Object.fromEntries(
       Object.entries(headers).map(([k, v]) => [k.toLowerCase(), v]),
     ),
-    cookies,
+    cookies: cookies.map((c) => c.toLowerCase()),
     html,
   };
 

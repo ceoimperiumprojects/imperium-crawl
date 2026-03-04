@@ -18,7 +18,21 @@ export function createMcpServer(): McpServer {
       async (params: Record<string, unknown>) => {
         try {
           const parsed = tool.schema.parse(params);
-          return (await tool.execute(parsed)) as any;
+          const result = await tool.execute(parsed);
+
+          // Validate MCP response format
+          if (
+            !result ||
+            !Array.isArray(result.content) ||
+            result.content.length === 0 ||
+            !result.content.every((c: Record<string, unknown>) => typeof c.type === "string")
+          ) {
+            return {
+              content: [{ type: "text" as const, text: JSON.stringify({ error: `Tool '${tool.name}' returned invalid response format` }) }],
+            };
+          }
+
+          return result as any;
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           return {

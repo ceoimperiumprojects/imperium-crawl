@@ -24,11 +24,18 @@ export async function stealthFetch(options: StealthFetchOptions): Promise<Stealt
   });
 
   // Impit doesn't support AbortSignal — use Promise.race as timeout guard
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error(`Impit fetch timed out after ${timeout}ms: ${options.url}`)), timeout).unref(),
-  );
+  let timer: ReturnType<typeof setTimeout>;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(`Impit fetch timed out after ${timeout}ms: ${options.url}`)), timeout);
+    timer.unref();
+  });
 
-  const res = await Promise.race([fetchPromise, timeoutPromise]);
+  let res: Awaited<typeof fetchPromise>;
+  try {
+    res = await Promise.race([fetchPromise, timeoutPromise]);
+  } finally {
+    clearTimeout(timer!);
+  }
 
   const html = await res.text();
   return {
