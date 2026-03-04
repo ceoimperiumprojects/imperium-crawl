@@ -2,25 +2,40 @@
 
 Comprehensive guide for AI agents using imperium-crawl's 22 MCP tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing — in both MCP and CLI modes.
 
-> **Supporting files in this folder:**
-> - [`tool-reference.md`](tool-reference.md) — All 22 tools with full parameters, return values, and gotchas
-> - [`pipelines.md`](pipelines.md) — 9 reusable pipeline patterns with dual-mode examples
-> - [`recipes.md`](recipes.md) — 10 built-in recipes + custom skill JSON format
+**Progressive disclosure:** This file is the overview hub. Each skill and reference topic has a dedicated file with full details — read them when you need depth.
+
+---
+
+## File Map
+
+| File | Lines | What's inside |
+|------|-------|---------------|
+| **SKILL.md** (this file) | ~500 | Overview hub — mode detection, all tools, decision tree, skill summaries |
+| [build-skill.md](build-skill.md) | ~356 | Full build-skill workflow: 6 steps, 9 combos, selector patterns, recipes |
+| [smart-scrape.md](smart-scrape.md) | ~184 | Full smart-scrape: decision tree, stealth escalation, tool chains |
+| [site-intel.md](site-intel.md) | ~206 | Full site-intel: 5-step workflow, report template, depth guidelines |
+| [research.md](research.md) | ~199 | Full research: search → scrape → synthesize, depth guidelines |
+| [api-recon.md](api-recon.md) | ~218 | Full API recon: discovery, categorization, WebSocket, report template |
+| [tool-reference.md](tool-reference.md) | ~426 | All 22 tools — params, types, defaults, gotchas |
+| [pipelines.md](pipelines.md) | ~273 | 9 pipeline patterns with full MCP + CLI examples |
+| [recipes.md](recipes.md) | ~151 | 10 built-in recipes + custom skill JSON format |
 
 ---
 
 ## Table of Contents
 
 1. [Mode Detection](#mode-detection)
-2. [All Tools — Dual Mode Reference](#all-tools--dual-mode-reference)
-3. [Smart Scrape](#1-smart-scrape--intelligent-page-content-extraction)
-4. [Build Skill](#2-build-skill--create-reusable-scraping-patterns)
-5. [Site Intel](#3-site-intel--comprehensive-website-analysis)
-6. [Research](#4-research--multi-source-topic-investigation)
-7. [API Recon](#5-api-recon--api-discovery-and-network-analysis)
-8. [Tool Combinations](#tool-combinations--9-core-patterns)
-9. [CLI Gotchas](#cli-gotchas)
-10. [Error Recovery](#error-recovery)
+2. [All 22 Tools — Dual Mode](#all-22-tools--dual-mode)
+3. [Master Decision Tree](#master-decision-tree)
+4. [Tool Combinations — 9 Patterns](#tool-combinations--9-patterns)
+5. [Smart Scrape](#smart-scrape)
+6. [Build Skill](#build-skill)
+7. [Site Intel](#site-intel)
+8. [Research](#research)
+9. [API Recon](#api-recon)
+10. [CLI Gotchas](#cli-gotchas)
+11. [Error Recovery](#error-recovery)
+12. [Environment Variables](#environment-variables)
 
 ---
 
@@ -39,9 +54,11 @@ Detect your execution environment and use the correct invocation format:
 
 ---
 
-## All Tools — Dual Mode Reference
+## All 22 Tools — Dual Mode
 
-See [`tool-reference.md`](tool-reference.md) for full parameter details per tool.
+Full parameter details per tool → [tool-reference.md](tool-reference.md)
+
+### Scraping Tools (6)
 
 | Action | MCP Tool | CLI Command | Key Params |
 |--------|----------|-------------|------------|
@@ -51,18 +68,48 @@ See [`tool-reference.md`](tool-reference.md) for full parameter details per tool
 | CSS extract | `mcp__imperium-crawl__extract` | `imperium-crawl extract --url URL --selectors '{}'` | `selectors`, `items_selector`, `llm_fallback` |
 | Clean article | `mcp__imperium-crawl__readability` | `imperium-crawl readability --url URL` | `format` |
 | Screenshot | `mcp__imperium-crawl__screenshot` | `imperium-crawl screenshot --url URL` | `full_page` |
+
+### Search Tools (4) — Require `BRAVE_API_KEY`
+
+| Action | MCP Tool | CLI Command | Key Params |
+|--------|----------|-------------|------------|
 | Web search | `mcp__imperium-crawl__search` | `imperium-crawl search --query "..."` | `query`, `count`, `freshness` |
 | News search | `mcp__imperium-crawl__news_search` | `imperium-crawl news-search --query "..."` | `query`, `count`, `freshness` |
 | Image search | `mcp__imperium-crawl__image_search` | `imperium-crawl image-search --query "..."` | `query`, `count` |
 | Video search | `mcp__imperium-crawl__video_search` | `imperium-crawl video-search --query "..."` | `query`, `count`, `freshness` |
+
+### AI Extraction (1) — Requires `LLM_API_KEY`
+
+| Action | MCP Tool | CLI Command | Key Params |
+|--------|----------|-------------|------------|
 | AI extract | `mcp__imperium-crawl__ai_extract` | `imperium-crawl ai-extract --url URL --schema "..."` | `schema` (string/object/"auto"), `format` |
+
+### Skill Tools (3)
+
+| Action | MCP Tool | CLI Command | Key Params |
+|--------|----------|-------------|------------|
 | Create skill | `mcp__imperium-crawl__create_skill` | `imperium-crawl create-skill --url URL --name NAME --description "..."` | `url`, `name`, `description` |
 | Run skill | `mcp__imperium-crawl__run_skill` | `imperium-crawl run-skill --name NAME` | `name`, `url` (override), `max_items` |
 | List skills | `mcp__imperium-crawl__list_skills` | `imperium-crawl list-skills` | *(none)* |
+
+### API Discovery Tools (3)
+
+| Action | MCP Tool | CLI Command | Key Params |
+|--------|----------|-------------|------------|
 | Discover APIs | `mcp__imperium-crawl__discover_apis` | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers` |
 | Query API | `mcp__imperium-crawl__query_api` | `imperium-crawl query-api --url URL` | `method`, `headers`, `body`, `params` |
 | Monitor WS | `mcp__imperium-crawl__monitor_websocket` | `imperium-crawl monitor-websocket --url URL` | `duration_seconds`, `max_messages` |
+
+### Interaction (1)
+
+| Action | MCP Tool | CLI Command | Key Params |
+|--------|----------|-------------|------------|
 | Interact | `mcp__imperium-crawl__interact` | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id`, `return_screenshot` |
+
+### Batch Processing (4)
+
+| Action | MCP Tool | CLI Command | Key Params |
+|--------|----------|-------------|------------|
 | Batch scrape | `mcp__imperium-crawl__batch_scrape` | `imperium-crawl batch-scrape --urls "url1,url2"` | `urls`, `extraction_schema`, `concurrency` |
 | List jobs | `mcp__imperium-crawl__list_jobs` | `imperium-crawl list-jobs` | *(none)* |
 | Job status | `mcp__imperium-crawl__job_status` | `imperium-crawl job-status --job-id ID` | `job_id` |
@@ -77,26 +124,33 @@ User has a web data task
 │
 ├─ "Read this article / get the text"
 │  └─ readability → if fails → scrape (markdown)
+│  → Full guide: smart-scrape.md
 │
 ├─ "Scrape this page / get content"
 │  └─ scrape (markdown + metadata) → offer extract if structured needed
+│  → Full guide: smart-scrape.md
 │
 ├─ "Extract specific data (products, prices, listings)"
 │  ├─ Know CSS selectors? → extract (fast, deterministic)
 │  │  └─ Empty results? → enable llm_fallback: true
 │  └─ Don't know structure? → ai_extract with "auto" or natural language
+│  → Full guide: smart-scrape.md
 │
 ├─ "Create a reusable scraper / build a skill"
 │  └─ inspect → extract/ai_extract → create_skill → run_skill → verify
+│  → Full guide: build-skill.md
 │
 ├─ "Analyze this website / site audit"
 │  └─ map → scrape homepage → crawl → screenshot → compile report
+│  → Full guide: site-intel.md
 │
 ├─ "Research a topic / find information"
 │  └─ search (+ news_search) → select sources → readability → synthesize
+│  → Full guide: research.md
 │
 ├─ "Find APIs / reverse engineer"
 │  └─ discover_apis → categorize → query_api → monitor_websocket
+│  → Full guide: api-recon.md
 │
 ├─ "Page behind login"
 │  └─ interact (session_id) → login → then scrape/extract
@@ -104,213 +158,21 @@ User has a web data task
 │
 ├─ "Suspect hidden API (SPA, dynamic)"
 │  └─ discover_apis → query_api (10x faster than HTML scraping)
+│  → Full guide: api-recon.md
 │
 ├─ "Bulk URLs (10+)"
 │  └─ batch_scrape (parallel, resumable, soft-fail)
 │
 └─ "Full site harvest"
    └─ map → batch_scrape (parallel fetch)
+   → Full guide: site-intel.md
 ```
 
 ---
 
-# 1. Smart Scrape — Intelligent Page Content Extraction
+## Tool Combinations — 9 Patterns
 
-*Use when: "scrape a website", "get content from URL", "read this article", "grab the text", "get product info"*
-
-### Decision Tree
-
-| User intent | Tool path |
-|-------------|-----------|
-| Read article / get text | `readability` → if empty → `scrape` (markdown) |
-| Get product info / extract prices | `scrape` (structured_data) → `extract` (CSS) → `llm_fallback` if empty |
-| Unknown page structure | `ai_extract` (schema: "auto") |
-| General scrape | `scrape` (markdown + metadata + links) |
-| Visual capture | `screenshot` (full_page) |
-
-### Stealth Escalation
-
-| Situation | Action |
-|-----------|--------|
-| Simple static site | Default (auto-escalation handles it) |
-| Known anti-bot (Cloudflare, Amazon, LinkedIn) | `stealth_level: 3` directly |
-| JavaScript SPA (React, Angular, Vue) | `stealth_level: 3` (needs browser) |
-| Empty/blocked results | `stealth_level: 3` + `proxy` |
-
-### Tool Chains
-
-- **readability → scrape** escalation: `readability(url)` → if garbage → `scrape(url, format: "markdown")`
-- **extract + llm_fallback**: CSS first, LLM if empty — best of both worlds
-- **ai_extract → extract**: AI discovers structure → CSS for fast repeat runs
-- **screenshot debug loop**: `screenshot` → `extract` → empty? → `screenshot` → refine selectors
-
----
-
-# 2. Build Skill — Create Reusable Scraping Patterns
-
-*Use when: "create a scraper", "build an extractor", "make a skill", "save this pattern", "automate this scraping"*
-
-### Workflow — 6 Steps
-
-**Step 1: Gather Requirements** — What data? Single/multiple pages? Login needed? One-time or recurring?
-
-**Step 2: Page Inspection**
-- MCP: `scrape` with `include: ["structured_data", "links", "metadata"]`
-- CLI: `imperium-crawl scrape --url URL --include structured_data,links,metadata`
-- Decision: structured_data present? → use it. Repeating elements? → CSS extract. JS-heavy? → discover_apis. Unknown? → ai_extract "auto"
-
-**Step 3: Pattern Detection**
-- **Option A — CSS** (fastest): `extract` with `selectors` + `items_selector`
-- **Option B — AI** (unknown structure): `ai_extract` with `schema: "auto"` or natural language
-- **Option C — Hybrid**: `extract` with `llm_fallback: true`
-
-**Step 4: Create Skill**
-- MCP: `create_skill` with `url`, `name`, `description`
-- CLI: `imperium-crawl create-skill --url URL --name "my-skill" --description "What it extracts"`
-- Names: alphanumeric + hyphens/underscores only
-
-**Step 5: Verify — MANDATORY**
-- Run `run_skill` with the skill name. Test on a DIFFERENT page if possible.
-- Bad results? → Back to Step 3, refine, recreate (same name overwrites).
-- **Rule: NEVER declare a skill finished without `run_skill` verification!**
-
-**Step 6: Educate User** — How to run, override URL, limit items, where stored (`~/.imperium-crawl/skills/`)
-
-### Common Selector Patterns
-
-| Site Type | items_selector | Typical Fields |
-|-----------|---------------|----------------|
-| E-commerce | `.product-card`, `.item`, `[data-product]` | name, price, image, url, rating |
-| News/Blog | `article`, `.post`, `.story` | title, date, author, excerpt, url |
-| Job Board | `.job-listing`, `.vacancy` | title, company, location, salary, url |
-| Directory | `.listing`, `.result` | name, address, phone, website, category |
-| Table Data | `table tbody tr` | cell values by `td:nth-child(N)` |
-
-### Built-in Recipes
-
-Check before creating custom skills — see [`recipes.md`](recipes.md) for full details:
-
-| Recipe | Tool | What it does |
-|--------|------|-------------|
-| `hn-top-stories` | extract | Hacker News front page |
-| `github-trending` | extract | GitHub trending repos |
-| `job-listings-greenhouse` | extract | Greenhouse ATS boards |
-| `ecommerce-product` | ai_extract | Product details (AI) |
-| `product-reviews` | ai_extract | Reviews with sentiment |
-| `crypto-websocket` | monitor_websocket | Binance BTC/USDT trades |
-| `news-article-reader` | readability | Clean article text |
-| `reddit-posts` | scrape | Reddit JSON API |
-| `seo-page-audit` | extract | SEO meta + structured data |
-| `social-media-mentions` | ai_extract | Social media + sentiment |
-
-Run: `run_skill(name: "recipe-name")` / `imperium-crawl run-skill --name "recipe-name"`
-
----
-
-# 3. Site Intel — Comprehensive Website Analysis
-
-*Use when: "analyze this website", "map this site", "site audit", "what is this website about"*
-
-### Workflow
-
-**Step 1: Site Mapping** — `map(url, max_urls: 100, include_sitemap: true)` → group URLs by section
-
-**Step 2: Homepage Deep-Dive** — `scrape(url, include: [structured_data, metadata, links])` → identity, tech stack, navigation
-
-**Step 3: Content Crawl** — `crawl(url, max_depth: 2, max_pages: 10)` → content types, quality, frequency
-
-**Step 4: Visual Capture** — `screenshot(url)` → design, layout, above-the-fold
-
-**Step 5: Compile Report** — Overview, Site Structure (table), Content Analysis, Technology, Scraping Recommendations, Visual Reference
-
-### Depth Guidelines
-
-| Request | map max_urls | crawl max_pages |
-|---------|-------------|-----------------|
-| Quick overview | 50 | 5 |
-| Standard analysis | 100 | 10 |
-| Deep audit | 200-500 | 20-30 |
-
-### Bonus Steps
-
-- **Batch harvest**: `map` → `batch_scrape(urls, concurrency: 5)` → full site data
-- **API discovery**: `discover_apis(url, wait_seconds: 10)` → find hidden JSON endpoints
-- **SEO extract**: `extract(url, selectors: {title, h1, meta_desc})` per page
-
----
-
-# 4. Research — Multi-Source Topic Investigation
-
-*Use when: "research a topic", "find information about X", "deep dive into Z", "gather intel"*
-
-### Workflow
-
-**Step 1: Decompose** — Core question, angles, recency needs, depth
-
-**Step 2: Formulate queries** — 2-3 targeted queries (primary, comparative, expert)
-
-**Step 3: Search** — `search(query, count: 10)` + optionally `news_search(query, freshness: "pw")`
-
-Freshness: `pd` (day), `pw` (week), `pm` (month), `py` (year). Requires `BRAVE_API_KEY`.
-
-**Step 4: Select sources** — 3-5 URLs. Prioritize: authoritative, content-rich, diverse, recent.
-
-**Step 5: Deep scrape** — `readability` first → fallback `scrape` (markdown). Or `batch_scrape` for 5+ sources.
-
-**Step 6: Synthesize report** — Key Findings, Detailed Analysis per angle, Sources with summaries
-
-### Depth Guidelines
-
-| Request | Sources | Approach |
-|---------|---------|----------|
-| Quick | 1-2 | Single search, top results |
-| Standard | 3-5 | 2 searches, curated |
-| Deep dive | 5-8 | 3 searches + news |
-| Competitive | 4-6 per competitor | Targeted per entity |
-
-### Tool Chains
-
-- **search → readability** — standard research
-- **news_search → batch_scrape** — bulk news collection
-- **search + news_search** — multi-source (evergreen + recent)
-- **search → ai_extract** — structured extraction per source
-
----
-
-# 5. API Recon — API Discovery and Network Analysis
-
-*Use when: "find APIs on a website", "discover hidden endpoints", "reverse engineer an API", "monitor WebSocket"*
-
-### Workflow
-
-**Step 1: Discovery** — `discover_apis(url, wait_seconds: 8, include_headers: true)`
-
-| Site type | wait_seconds |
-|-----------|-------------|
-| Simple static | 5 |
-| Standard web app | 8 |
-| Heavy SPA | 12-15 |
-| Infinite scroll | 15-20 |
-
-**Step 2: Categorize** — By type (REST/GraphQL/WebSocket), origin (first/third-party), auth (none/cookie/bearer/API key/CSRF)
-
-**Step 3: Investigate** — `query_api` for GET endpoints, GraphQL introspection, pagination testing. Only safe operations unless user asks.
-
-**Step 4: WebSocket** — `monitor_websocket(url, duration: 15-60)` → message format, types, channels, auth
-
-**Step 5: Report** — Summary, API Inventory table, Detailed Endpoint Analysis, WebSocket Analysis, Recommendations
-
-### Tool Chains
-
-- **discover → query → monitor** — full recon chain
-- **interact (login) → discover** — authenticated API recon
-- **websocket → query_api** — REST fallback (easier to automate than WS)
-
----
-
-## Tool Combinations — 9 Core Patterns
-
-See [`pipelines.md`](pipelines.md) for full dual-mode examples.
+Full dual-mode examples for each pattern → [pipelines.md](pipelines.md)
 
 ### 1. Inspect → Extract → Skill (Standard Path)
 **When:** Known page with repeating elements
@@ -366,6 +228,165 @@ screenshot → extract(selectors) → [empty?] → screenshot → refine → ext
 ```
 create_skill → run_skill → [bad?] → extract (manual) → create_skill (overwrite) → run_skill
 ```
+
+---
+
+## Smart Scrape
+
+*Use when: "scrape a website", "get content from URL", "read this article", "grab the text", "get product info"*
+
+→ **Full guide: [smart-scrape.md](smart-scrape.md)**
+
+### Quick Decision
+
+| User intent | Tool path |
+|-------------|-----------|
+| Read article / get text | `readability` → if empty → `scrape` (markdown) |
+| Get product info / extract prices | `scrape` (structured_data) → `extract` (CSS) → `llm_fallback` if empty |
+| Unknown page structure | `ai_extract` (schema: "auto") |
+| General scrape | `scrape` (markdown + metadata + links) |
+| Visual capture | `screenshot` (full_page) |
+
+### Stealth Escalation
+
+| Situation | Action |
+|-----------|--------|
+| Simple static site | Default (auto-escalation handles it) |
+| Known anti-bot (Cloudflare, Amazon, LinkedIn) | `stealth_level: 3` directly |
+| JavaScript SPA (React, Angular, Vue) | `stealth_level: 3` (needs browser) |
+| Empty/blocked results | `stealth_level: 3` + `proxy` |
+
+### Key Tool Chains
+
+- **readability → scrape** escalation
+- **extract + llm_fallback**: CSS first, LLM if empty — best of both worlds
+- **ai_extract → extract**: AI discovers structure → CSS for fast repeat runs
+- **screenshot debug loop**: visual → extract → refine → extract
+
+---
+
+## Build Skill
+
+*Use when: "create a scraper", "build an extractor", "make a skill", "save this pattern", "automate this scraping"*
+
+→ **Full guide: [build-skill.md](build-skill.md)**
+
+### Workflow Summary — 6 Steps
+
+1. **Gather Requirements** — What data? Single/multiple pages? Login needed? Recurring?
+2. **Page Inspection** — `scrape` with `include: [structured_data, links, metadata]`
+3. **Pattern Detection** — CSS (`extract`) vs AI (`ai_extract`) vs Hybrid (`llm_fallback`)
+4. **Create Skill** — `create_skill` with `url`, `name`, `description`
+5. **Verify — MANDATORY** — `run_skill` on original + different page
+6. **Educate User** — How to run, override URL, limit items, storage location
+
+### Common Selectors
+
+| Site Type | items_selector | Typical Fields |
+|-----------|---------------|----------------|
+| E-commerce | `.product-card`, `.item`, `[data-product]` | name, price, image, url, rating |
+| News/Blog | `article`, `.post`, `.story` | title, date, author, excerpt, url |
+| Job Board | `.job-listing`, `.vacancy` | title, company, location, salary, url |
+| Directory | `.listing`, `.result` | name, address, phone, website, category |
+| Table Data | `table tbody tr` | cell values by `td:nth-child(N)` |
+
+### Built-in Recipes
+
+Check before building custom skills → [recipes.md](recipes.md):
+`hn-top-stories`, `github-trending`, `job-listings-greenhouse`, `ecommerce-product`, `product-reviews`, `crypto-websocket`, `news-article-reader`, `reddit-posts`, `seo-page-audit`, `social-media-mentions`
+
+Run: `run_skill(name: "recipe-name")` / `imperium-crawl run-skill --name "recipe-name"`
+
+---
+
+## Site Intel
+
+*Use when: "analyze this website", "map this site", "site audit", "what is this website about"*
+
+→ **Full guide: [site-intel.md](site-intel.md)**
+
+### Workflow Summary
+
+1. **Site Mapping** — `map(url, max_urls: 100, include_sitemap: true)` → group URLs by section
+2. **Homepage Deep-Dive** — `scrape(url, include: [structured_data, metadata, links])` → identity, tech stack
+3. **Content Crawl** — `crawl(url, max_depth: 2, max_pages: 10)` → content types, quality
+4. **Visual Capture** — `screenshot(url)` → design, layout
+5. **Compile Report** — Overview, Structure, Content, Technology, Scraping Recommendations
+
+### Depth Guidelines
+
+| Request | map max_urls | crawl max_pages |
+|---------|-------------|-----------------|
+| Quick overview | 50 | 5 |
+| Standard analysis | 100 | 10 |
+| Deep audit | 200-500 | 20-30 |
+
+### Bonus Steps
+
+- **Batch harvest**: `map` → `batch_scrape(urls, concurrency: 5)` → full site data
+- **API discovery**: `discover_apis(url, wait_seconds: 10)` → find hidden JSON endpoints
+- **SEO extract**: `extract(url, selectors: {title, h1, meta_desc})` per page
+
+---
+
+## Research
+
+*Use when: "research a topic", "find information about X", "deep dive into Z", "gather intel"*
+
+→ **Full guide: [research.md](research.md)**
+
+### Workflow Summary
+
+1. **Decompose** — Core question, angles, recency needs, depth
+2. **Formulate queries** — 2-3 targeted queries (primary, comparative, expert)
+3. **Search** — `search(query, count: 10)` + optionally `news_search(query, freshness: "pw")`
+4. **Select sources** — 3-5 URLs: authoritative, content-rich, diverse, recent
+5. **Deep scrape** — `readability` first → fallback `scrape`. Or `batch_scrape` for 5+ sources
+6. **Synthesize report** — Key Findings, Detailed Analysis, Sources with summaries
+
+### Freshness Values
+
+`pd` (past day), `pw` (past week), `pm` (past month), `py` (past year). Requires `BRAVE_API_KEY`.
+
+### Depth Guidelines
+
+| Request | Sources | Approach |
+|---------|---------|----------|
+| Quick | 1-2 | Single search, top results |
+| Standard | 3-5 | 2 searches, curated |
+| Deep dive | 5-8 | 3 searches + news |
+| Competitive | 4-6 per competitor | Targeted per entity |
+
+---
+
+## API Recon
+
+*Use when: "find APIs on a website", "discover hidden endpoints", "reverse engineer an API", "monitor WebSocket"*
+
+→ **Full guide: [api-recon.md](api-recon.md)**
+
+### Workflow Summary
+
+1. **Discovery** — `discover_apis(url, wait_seconds: 8, include_headers: true)`
+2. **Categorize** — By type (REST/GraphQL/WS), origin (1st/3rd party), auth (none/cookie/bearer/key/CSRF)
+3. **Investigate** — `query_api` for GET endpoints, GraphQL introspection, pagination testing
+4. **WebSocket** — `monitor_websocket(url, duration: 15-60)` → message format, types, auth
+5. **Report** — Summary, API Inventory table, Detailed Analysis, Recommendations
+
+### wait_seconds Tuning
+
+| Site type | wait_seconds |
+|-----------|-------------|
+| Simple static | 5 |
+| Standard web app | 8 |
+| Heavy SPA | 12-15 |
+| Infinite scroll | 15-20 |
+
+### Key Tool Chains
+
+- **discover → query → monitor** — full recon chain
+- **interact (login) → discover** — authenticated API recon
+- **websocket → query_api** — REST fallback (easier to automate)
 
 ---
 
