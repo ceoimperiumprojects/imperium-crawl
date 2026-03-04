@@ -10,9 +10,7 @@ dist/
 
 # Local configs
 .mcp.json
-.claude/settings.json
-.claude/projects/
-.claude/todos/
+.claude/
 .firecrawl/
 
 # Coverage
