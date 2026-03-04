@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**imperium-crawl** — Open-source MCP (Model Context Protocol) server providing 16 tools for web scraping, crawling, search, and API discovery. Published as an npm package (`imperium-crawl`). TypeScript, ES2022, NodeNext modules, strict mode.
+**imperium-crawl** — Open-source MCP (Model Context Protocol) server providing 22 tools for web scraping, crawling, search, API discovery, AI-powered data extraction, browser interaction with session persistence, and batch processing. Published as an npm package (`imperium-crawl`). TypeScript, ES2022, NodeJS modules, strict mode.
 
 ## Commands
 
@@ -25,7 +25,8 @@ Build must succeed before `npm start` or `npm run inspect`. After any source cha
 ```
 src/index.ts          → CLI entry (shebang, dotenv, transport selection)
 src/server.ts         → MCP server init, registers all tools from allTools[]
-src/config.ts         → Env vars: BRAVE_API_KEY, TWOCAPTCHA_API_KEY, TRANSPORT, PORT
+src/config.ts         → Env vars: BRAVE_API_KEY, TWOCAPTCHA_API_KEY, LLM_API_KEY, TRANSPORT, PORT
+src/llm/              → LLM abstraction layer (Anthropic + OpenAI pure HTTP clients)
 src/constants.ts      → Defaults (timeouts, concurrency, paths)
 src/protocols/        → stdio (default) and http (Express) transports
 ```
@@ -34,11 +35,14 @@ src/protocols/        → stdio (default) and http (Express) transports
 
 Each tool in `src/tools/` exports: `name`, `description`, `schema` (Zod), `execute()`. All are collected in `src/tools/index.ts` as `allTools: ToolDefinition[]` and dynamically registered via `server.tool()` in server.ts.
 
-**16 tools in 4 categories:**
-- **Scraping (6):** scrape, crawl, map, extract, readability, screenshot — no API key needed
+**22 tools in 7 categories:**
+- **Scraping (6):** scrape, crawl, map, extract (+ llm_fallback), readability, screenshot — no API key needed
 - **Search (4):** search, news-search, image-search, video-search — require `BRAVE_API_KEY`
 - **Skills (3):** create-skill, run-skill, list-skills — saved to `~/.imperium-crawl/skills/`
 - **API Discovery (3):** discover-apis, query-api, monitor-websocket — use Playwright
+- **AI Extraction (1):** ai-extract — requires `LLM_API_KEY`
+- **Interaction (1):** interact — click/type/scroll/evaluate + session persistence — uses Playwright
+- **Batch Processing (4):** batch-scrape, list-jobs, job-status, delete-job — parallel scraping with resume support
 
 ### 3-Level Stealth Engine (`src/stealth/`)
 
@@ -56,6 +60,43 @@ Key behaviors:
 - **Block detection** (`detector.ts`) — checks HTTP status, content indicators, SPA shells
 - **Chrome Profile** (`chrome-profile.ts`) — `acquirePage(options?)` returns a `PageHandle` with unified cleanup. Profile mode: `launchPersistentContext` with user's Chrome cookies/sessions (opt-in via `chrome_profile` schema field or `CHROME_PROFILE_PATH` env). Pool mode: browser pool + fingerprint-injector (default). Profile mutex prevents concurrent access to same userDataDir
 
+### Interaction & Session System (`src/tools/interact.ts`, `src/sessions/`)
+
+`interact` tool — opens a browser, executes a sequence of up to 50 actions, optionally saves/restores cookies per `session_id`.
+
+**Action types:** `click`, `type`, `scroll`, `wait`, `screenshot`, `evaluate`, `select`, `hover`, `press`, `navigate`
+
+**Session storage** (`src/sessions/`):
+- `types.ts` — `StoredSession { id, cookies, url, createdAt, updatedAt }`
+- `manager.ts` — `SessionManager`: in-memory Map cache + per-file atomic JSON writes (`~/.imperium-crawl/sessions/{id}.json`). No debounce — sessions saved immediately. Singleton: `getSessionManager()`
+- `index.ts` — re-exports
+
+**Flow:** `acquirePage()` → restore cookies from session → `goto(url)` → execute actions (human delay 800-2500ms between) → save cookies to session → return `{ url, actions_executed, session_saved, content?, screenshot?, screenshots[], action_results[] }`
+
+### Adaptive Learning System (`src/knowledge/`)
+
+Domain-level learning engine — pamti optimalne fetch strategije po domenu.
+
+- `store.ts` — `AdaptiveLearningEngine`: persistent per-domain knowledge (`~/.imperium-crawl/knowledge.json`), singleton via `getKnowledgeEngine()`
+- `predictor.ts` — Time-decay weighted outcome analysis, anti-bot detection prediction, stealth level recommendation
+- `index.ts` — Re-exports: `predict()`, `aggregateOutcome()`, `getKnowledgeEngine()`
+
+### LLM Extraction System (`src/llm/`)
+
+Pure HTTP clients — no npm deps. Same pattern as CAPTCHA solver.
+
+- `index.ts` — `LLMClient` interface, `createLLMClient()` factory (reads `LLM_PROVIDER`/`LLM_API_KEY`/`LLM_MODEL`)
+- `providers/anthropic.ts` — `AnthropicClient`: POST to `api.anthropic.com/v1/messages`, handles system message separation
+- `providers/openai.ts` — `OpenAIClient`: POST to `api.openai.com/v1/chat/completions`
+- `extractor.ts` — `extractWithLLM()`: builds prompts, calls LLM, parses JSON (3 fallback strategies: direct → code block → substring scan)
+
+**Schema modes in `ai-extract`:**
+- String: natural language description ("extract all products with name, price, rating")
+- Object: JSON schema
+- `"auto"`: LLM decides what to extract (magic mode)
+
+**Hybrid cascade in `extract` tool:** CSS selectors → if empty + `llm_fallback: true` → LLM extraction (transparent fallback)
+
 ### CAPTCHA System (`src/captcha/`)
 
 Auto-enabled when `TWOCAPTCHA_API_KEY` env var is set and Level 3 fetch is active.
@@ -71,6 +112,13 @@ Auto-enabled when `TWOCAPTCHA_API_KEY` env var is set and Level 3 fetch is activ
 - `url.ts` — 11-step URL normalization including tracking param removal (utm_*, fbclid, etc.)
 - `structured-data.ts` — Extracts JSON-LD, OpenGraph, Twitter Cards, Microdata
 - `robots.ts` — robots.txt parsing + caching (1h TTL)
+
+### Output Formatting (`src/formatters.ts`)
+
+CLI output formatting — json, jsonl, csv, markdown.
+
+- `parseToolOutput()` — Extract JSON from MCP tool result
+- `formatOutput()` — Transform data to desired output format
 
 ## TypeScript Gotchas
 
@@ -96,6 +144,11 @@ These are real issues encountered in this codebase — follow these patterns:
 | `BROWSER_POOL_SIZE` | No (default: `3`) | Max pooled browser instances |
 | `CHROME_PROFILE_PATH` | No | Chrome user data dir for authenticated sessions |
 | `RESPECT_ROBOTS` | No (default: `true`) | Honor robots.txt |
+| `LLM_API_KEY` | For `ai-extract` tool | Anthropic or OpenAI API key |
+| `LLM_PROVIDER` | No (default: `anthropic`) | `anthropic`, `openai`, or `minimax` |
+| `LLM_MODEL` | No | Override model (default: `claude-haiku-4-5-20251001` or `gpt-4o-mini`) |
+| `NO_COLOR` | No | Disable colored output (standard convention) |
+| `CI` | No | Auto-detected; disables TTY features (spinners, colors) |
 
 ## Adding a New Tool
 

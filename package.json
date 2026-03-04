@@ -1,10 +1,11 @@
 {
   "name": "imperium-crawl",
-  "version": "1.1.9",
+  "version": "1.4.0",
   "description": "Open-source MCP server with Firecrawl-like scraping, crawling, search, and custom skills",
   "type": "module",
   "bin": {
-    "imperium-crawl": "dist/index.js"
+    "imperium-crawl": "dist/index.js",
+    "imperiumcrawl": "dist/index.js"
   },
   "main": "dist/index.js",
   "exports": {
@@ -22,15 +23,7 @@
     "inspect": "npx @modelcontextprotocol/inspector node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "npm run build",
-    "scrape:discover": "tsx scripts/job-scraper/index.ts",
-    "scrape:extract": "tsx scripts/job-scraper/index.ts --phase=2",
-    "scrape:stats": "tsx scripts/job-scraper/index.ts --stats",
-    "scrape:export": "tsx scripts/job-scraper/index.ts --export-csv",
-    "scrape:export-json": "tsx scripts/job-scraper/index.ts --export-json",
-    "scrape:export-xlsx": "tsx scripts/job-scraper/index.ts --export-xlsx",
-    "scrape:export-md": "tsx scripts/job-scraper/index.ts --export-md",
-    "scrape:export-all": "tsx scripts/job-scraper/index.ts --export-all"
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "mcp",
@@ -44,9 +37,13 @@
   "author": "ImperiumTech",
   "license": "MIT",
   "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "@inquirer/prompts": "^8.3.0",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@mozilla/readability": "^0.5.0",
+    "chalk": "^5.6.2",
     "cheerio": "^1.0.0",
+    "cli-table3": "^0.6.5",
     "commander": "^13.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -56,12 +53,12 @@
     "jsdom": "^26.0.0",
     "linkedom": "^0.18.12",
     "normalize-url": "^8.1.1",
+    "ora": "^8.2.0",
     "p-queue": "^8.1.1",
     "playwright": "1.52",
     "robots-parser": "^3.0.1",
     "turndown": "^7.2.0",
     "turndown-plugin-gfm": "^1.0.2",
-    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "optionalDependencies": {

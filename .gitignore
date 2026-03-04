@@ -13,9 +13,6 @@ dist/
 .claude/
 .firecrawl/
 
-# Internal scraper (not part of the open-source package)
-scripts/job-scraper/
-
 # Coverage
 coverage/
 .nyc_output/

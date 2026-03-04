@@ -1,40 +1,114 @@
 # SKILL.md — imperium-crawl Agent Guide
 
-You are a web intelligence specialist using imperium-crawl, a toolkit with 16 tools for scraping, crawling, search, API discovery, and reusable extraction skills. This guide teaches you to select the right tool, follow proven workflows, and recover from errors.
+You are a web intelligence specialist using imperium-crawl, a toolkit with 22 tools for scraping, crawling, search, API discovery, AI-powered data extraction, browser interaction with session persistence, and batch processing. This guide teaches you to select the right tool, follow proven workflows, and recover from errors.
 
-## Two Ways to Use imperium-crawl
+## Three Ways to Use imperium-crawl
 
-imperium-crawl works in two modes. The workflows in this guide apply to both — only the syntax changes.
+imperium-crawl works in three modes. The workflows in this guide apply to all — only the syntax changes.
 
 ### MCP Mode (for MCP-compatible agents)
 
-Tools are called as MCP functions. This is the default when running as an MCP server.
+Tools are called as MCP functions. This is the default when running as an MCP server (non-TTY, no args).
 
 ```
 scrape({ url: "https://example.com", format: "markdown" })
 discover_apis({ url: "https://weather.com", wait_seconds: 8 })
+batch_scrape({ urls: ["https://a.com", "https://b.com"], concurrency: 5 })
 ```
 
 ### CLI Mode (for any agent with bash access)
 
-All 16 tools are available as CLI subcommands. This works with **any agent** that can run shell commands — no MCP required.
+All 22 tools are available as CLI subcommands. This works with **any agent** that can run shell commands — no MCP required.
 
 ```bash
+# Basic scraping
 imperium-crawl scrape --url https://example.com --format markdown
-imperium-crawl discover-apis --url https://weather.com --wait-seconds 8
+imperium-crawl readability --url https://example.com/article
+
+# Structured extraction with CSS selectors
 imperium-crawl extract --url https://news.ycombinator.com --selectors '{"title":"span.titleline > a"}' --items-selector "tr.athing"
+
+# AI-powered extraction (requires LLM_API_KEY)
+imperium-crawl ai-extract --url https://example.com/products --schema "extract all products with name, price, and rating"
+
+# Search (requires BRAVE_API_KEY)
 imperium-crawl search --query "latest AI news" --count 5
+imperium-crawl news-search --query "web scraping" --freshness pw
+
+# API discovery
+imperium-crawl discover-apis --url https://weather.com --wait-seconds 8
 imperium-crawl monitor-websocket --url https://binance.com/en/trade/BTC_USDT --duration-seconds 15
+
+# Browser interaction with session persistence
+imperium-crawl interact --url https://example.com --actions '[{"type":"click","selector":"#login"},{"type":"type","selector":"#email","text":"user@example.com"}]' --session-id my-session
+
+# Batch processing (parallel scraping)
+imperium-crawl batch-scrape --urls '["https://a.com","https://b.com","https://c.com"]' --concurrency 5
+imperium-crawl list-jobs
+imperium-crawl job-status --job-id abc123
+imperium-crawl delete-job --job-id abc123
+
+# Skills (reusable extraction patterns)
+imperium-crawl create-skill --url https://news.ycombinator.com --name hn-stories --description "Top HN stories"
+imperium-crawl run-skill --name hn-stories
+imperium-crawl list-skills
 ```
 
 **CLI parameter rules:**
-- Tool names use kebab-case: `discover-apis`, `news-search`, `monitor-websocket`
-- Parameters use `--kebab-case`: `--wait-seconds`, `--max-pages`, `--stealth-level`
-- JSON parameters pass as strings: `--selectors '{"title":".headline"}'`
+- Tool names use kebab-case: `discover-apis`, `news-search`, `batch-scrape`, `ai-extract`
+- Parameters use `--kebab-case`: `--wait-seconds`, `--max-pages`, `--stealth-level`, `--session-id`
+- JSON parameters pass as strings: `--selectors '{"title":".headline"}'`, `--urls '["url1","url2"]'`
+- Actions arrays: `--actions '[{"type":"click","selector":"#btn"}]'`
 - Output formats: `--output-format json|csv|markdown|jsonl` and `--pretty` for readable JSON
 - Write to file: `--output result.json`
 
-> **Tip for agents:** If you have MCP access, use MCP mode — it returns structured data directly. If you only have bash access, CLI mode gives identical functionality with shell-friendly output.
+**Pipe-friendly output:**
+```bash
+# JSON to file
+imperium-crawl scrape --url https://example.com --output-format json > page.json
+
+# CSV export
+imperium-crawl extract --url https://example.com --selectors '{"name":".product-name","price":".price"}' --output-format csv > products.csv
+
+# JSONL for streaming/processing
+imperium-crawl search --query "web scraping" --count 20 --output-format jsonl | jq '.url'
+
+# Pipe into other tools
+imperium-crawl scrape --url https://example.com --output-format markdown | head -50
+```
+
+**Setup wizard:**
+```bash
+imperium-crawl setup   # Configure BRAVE_API_KEY, LLM_API_KEY, proxy — saved to ~/.imperium-crawl/config.json
+```
+
+### Interactive TUI Mode (for humans in terminal)
+
+When run with no arguments in a TTY, imperium-crawl launches an interactive terminal UI with slash commands:
+
+```bash
+imperium-crawl   # launches TUI
+```
+
+```
+  ✻ imperiumcrawl v1.4.0
+  ✓ Brave Search   ✓ 2Captcha          0 jobs · 3 skills
+
+  /help for commands
+
+❯ /scrape https://example.com
+❯ /search latest AI news
+❯ /ai https://example.com/products
+❯ /batch
+❯ /interact
+❯ /save results.json
+❯ /again
+❯ /setup
+```
+
+The TUI automatically prompts for required and optional parameters, renders tables for search/jobs/skills, and provides rich formatted output.
+
+> **Tip for agents:** If you have MCP access, use MCP mode — it returns structured data directly. If you only have bash access, CLI mode gives identical functionality with shell-friendly output. TUI mode is for human interactive use.
 
 ---
 
@@ -76,6 +150,43 @@ imperium-crawl monitor-websocket --url https://binance.com/en/trade/BTC_USDT --d
 | `query_api` | Call discovered API endpoints directly | `url`, `method`, `headers`, `body`, `timeout` |
 | `monitor_websocket` | Capture real-time WebSocket messages | `url`, `duration_seconds`, `max_messages`, `filter_url` |
 
+### AI Extraction Tools (require `LLM_API_KEY`)
+
+| Tool | When to use | Key Parameters |
+|------|-------------|---------------|
+| `ai_extract` | Extract data using natural language or JSON schema — no CSS selectors needed | `url`, `schema` (string/object/`"auto"`), `stealth_level` |
+
+**Schema modes:**
+- **String:** Natural language description — `"extract all products with name, price, and rating"`
+- **Object:** JSON schema — `{ "products": [{ "name": "string", "price": "number" }] }`
+- **`"auto"`:** LLM decides what to extract (magic mode — good for exploration)
+
+**Note:** The `extract` tool also supports `llm_fallback: true` which automatically falls back to AI extraction when CSS selectors return no results. This is often the best approach — CSS when possible, AI when needed.
+
+### Interaction Tools (require Playwright)
+
+| Tool | When to use | Key Parameters |
+|------|-------------|---------------|
+| `interact` | Multi-step browser automation: login flows, form filling, clicking, scrolling | `url`, `actions[]`, `session_id`, `stealth_level` |
+
+**Action types:** `click`, `type`, `scroll`, `wait`, `screenshot`, `evaluate`, `select`, `hover`, `press`, `navigate`
+
+**Session persistence:** Pass `session_id` to save/restore cookies between calls — enables multi-step workflows like login → navigate → extract across separate tool invocations.
+
+### Batch Processing Tools (no API key needed)
+
+| Tool | When to use | Key Parameters |
+|------|-------------|---------------|
+| `batch_scrape` | Scrape many URLs in parallel with optional AI extraction | `urls[]`, `concurrency`, `format`, `schema` (for AI), `job_id` (resume) |
+| `list_jobs` | See all batch jobs with status and progress | (none) |
+| `job_status` | Get full results for a specific job | `job_id` |
+| `delete_job` | Clean up completed or failed jobs | `job_id` |
+
+**Key features:**
+- **Soft fail:** Individual URL failures don't stop the batch — failed URLs are tracked separately
+- **Resume:** If a batch is interrupted, re-submit with the same `job_id` to resume from where it left off
+- **AI extraction:** Pass `schema` to extract structured data from each URL using LLM (requires `LLM_API_KEY`)
+
 ---
 
 ## Decision Tree — Which Tool First
@@ -100,6 +211,15 @@ User request
   |
   |-- "Analyze this website / site audit"
   |     --> Workflow 6: Site Intelligence
+  |
+  |-- "Extract data with AI / no selectors needed / what's on this page"
+  |     --> Workflow 7: AI Data Extraction
+  |
+  |-- "Log in to site / fill form / click buttons / automate browser"
+  |     --> Workflow 8: Browser Interaction
+  |
+  |-- "Scrape these 50 URLs / bulk extract / parallel scraping"
+  |     --> Workflow 9: Batch Processing
 ```
 
 ---
@@ -513,6 +633,222 @@ Structure as: Overview (type, technology, language) → Site Structure (sections
 | Quick overview | 50 | 5 | Map + homepage scrape + screenshot |
 | Standard analysis | 100 | 10 | Full workflow above |
 | Deep audit | 200-500 | 20-30 | Extended crawl, multiple screenshots |
+
+---
+
+## Workflow 7: AI Data Extraction
+
+**Goal:** Extract structured data from any page using natural language — no CSS selectors needed.
+
+### When to Use AI vs CSS Extraction
+
+| Scenario | Best Tool |
+|----------|-----------|
+| Simple, well-structured pages (tables, lists) | `extract` with CSS selectors |
+| Complex pages, unknown structure | `ai_extract` |
+| CSS selectors might fail | `extract` with `llm_fallback: true` |
+| Bulk extraction (10+ URLs) | `batch_scrape` with `schema` |
+| Exploration — "what data is on this page?" | `ai_extract` with `schema: "auto"` |
+
+### Step 1: Choose Your Schema Mode
+
+**Natural language** (most common):
+```
+ai_extract({ url: "https://example.com/products", schema: "extract all products with name, price, rating, and availability" })
+```
+
+**JSON schema** (precise control):
+```
+ai_extract({
+  url: "https://example.com/products",
+  schema: {
+    "products": [{
+      "name": "string",
+      "price": "number",
+      "rating": "number",
+      "in_stock": "boolean"
+    }]
+  }
+})
+```
+
+**Auto mode** (exploration):
+```
+ai_extract({ url: "https://example.com", schema: "auto" })
+```
+
+### Step 2: Evaluate Results
+
+AI extraction returns structured JSON. Check:
+- Are all requested fields present?
+- Are data types correct (numbers as numbers, not strings)?
+- Is the extraction complete (all items captured)?
+
+### Step 3: Optimize with Hybrid Cascade
+
+For recurring extractions, prefer the hybrid approach in `extract`:
+
+```
+extract({
+  url: "https://example.com/products",
+  selectors: { "name": ".product-name", "price": ".price" },
+  items_selector: ".product-card",
+  llm_fallback: true
+})
+```
+
+This tries CSS selectors first (fast, free) and only falls back to LLM if selectors return empty results.
+
+### Error Recovery
+
+| Problem | Solution |
+|---------|----------|
+| "LLM_API_KEY not configured" | Run `imperium-crawl setup` or set `LLM_API_KEY` env var |
+| Incomplete extraction (missing items) | Be more specific in schema description |
+| Wrong data types | Use JSON schema mode with explicit types |
+| Page content is JS-rendered | Add `stealth_level: 3` to force browser rendering |
+| Token limit exceeded (huge page) | Scrape first, then manually pass relevant content sections |
+
+---
+
+## Workflow 8: Browser Interaction
+
+**Goal:** Automate multi-step browser workflows — login, form filling, navigation, clicking — with session persistence across calls.
+
+### Step 1: Plan Your Action Sequence
+
+Each `interact` call executes up to 50 actions in order. Actions have human-like delays (800-2500ms between each) to avoid detection.
+
+**Common action patterns:**
+
+Login flow:
+```
+interact({
+  url: "https://example.com/login",
+  actions: [
+    { "type": "type", "selector": "#email", "text": "user@example.com" },
+    { "type": "type", "selector": "#password", "text": "mypassword" },
+    { "type": "click", "selector": "button[type=submit]" },
+    { "type": "wait", "milliseconds": 2000 },
+    { "type": "screenshot" }
+  ],
+  session_id: "my-account"
+})
+```
+
+Form filling + submission:
+```
+interact({
+  url: "https://example.com/form",
+  actions: [
+    { "type": "type", "selector": "#name", "text": "John" },
+    { "type": "select", "selector": "#country", "value": "US" },
+    { "type": "click", "selector": ".submit-btn" },
+    { "type": "wait", "milliseconds": 3000 },
+    { "type": "evaluate", "code": "document.querySelector('.result')?.textContent" }
+  ]
+})
+```
+
+### Step 2: Use Sessions for Multi-Step Workflows
+
+Sessions save cookies between calls, enabling workflows that span multiple pages:
+
+```
+# Step 1: Login (cookies saved to "my-session")
+interact({ url: "https://app.com/login", actions: [...login actions...], session_id: "my-session" })
+
+# Step 2: Navigate to dashboard (cookies restored from "my-session")
+interact({ url: "https://app.com/dashboard", actions: [...], session_id: "my-session" })
+
+# Step 3: Extract data from authenticated page
+scrape({ url: "https://app.com/dashboard/data", chrome_profile: true })
+```
+
+### Step 3: Debug with Screenshots
+
+Include `{ "type": "screenshot" }` actions at key points to verify the browser sees what you expect. All screenshots are returned as base64 in the response.
+
+### Error Recovery
+
+| Problem | Solution |
+|---------|----------|
+| Element not found | Check selector with `screenshot` action first, verify the element exists |
+| Click does nothing | Element may be behind an overlay — try `wait` before clicking, or use `evaluate` to check |
+| Login fails | Verify selectors on the login form — sites change their HTML frequently |
+| Session not persisting | Ensure you're using the same `session_id` across calls |
+| Page loads slowly | Add `wait` actions with 2000-5000ms between navigation and interaction |
+
+---
+
+## Workflow 9: Batch Processing
+
+**Goal:** Scrape many URLs in parallel with automatic retry, soft failure, and optional AI extraction.
+
+### Step 1: Submit a Batch Job
+
+```
+batch_scrape({
+  urls: ["https://a.com", "https://b.com", "https://c.com", ...],
+  concurrency: 5,
+  format: "markdown"
+})
+```
+
+For AI extraction on every URL:
+```
+batch_scrape({
+  urls: [...100 URLs...],
+  concurrency: 3,
+  schema: "extract product name, price, and description"
+})
+```
+
+### Step 2: Monitor Progress
+
+```
+list_jobs()         → see all jobs with status and progress
+job_status({ job_id: "abc123" })  → get full results for a specific job
+```
+
+### Step 3: Handle Results
+
+The `job_status` response contains:
+- `urls_total` / `urls_completed` / `urls_failed` — progress counters
+- `results[]` — array of per-URL results (content or extracted data)
+- `failed_urls[]` — URLs that failed with error reasons
+
+### Step 4: Resume Interrupted Jobs
+
+If a batch is interrupted (timeout, crash), re-submit with the same `job_id`:
+
+```
+batch_scrape({
+  urls: [...same URLs...],
+  job_id: "abc123",
+  concurrency: 5
+})
+```
+
+Already-completed URLs are skipped — only remaining URLs are processed.
+
+### Concurrency Guidelines
+
+| URL Count | Recommended Concurrency | Reason |
+|-----------|------------------------|--------|
+| 1-10 | 3 | Low volume, fast completion |
+| 10-50 | 5 | Balance speed vs rate limiting |
+| 50-200 | 3-5 | Higher risk of rate limiting |
+| 200+ | 2-3 | Be gentle, use retry |
+
+### Error Recovery
+
+| Problem | Solution |
+|---------|----------|
+| Many URLs failing | Reduce `concurrency` — you may be rate limited |
+| Job not found | Use `list_jobs` to see all job IDs |
+| Incomplete results | Resume with same `job_id` to retry failed URLs |
+| Out of memory on huge batches | Split into smaller batches of 100-200 URLs |
 
 ---
 

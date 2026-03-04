@@ -16,6 +16,12 @@ import * as listSkills from "./list-skills.js";
 import * as discoverApis from "./discover-apis.js";
 import * as queryApi from "./query-api.js";
 import * as monitorWebsocket from "./monitor-websocket.js";
+import * as aiExtract from "./ai-extract.js";
+import * as interact from "./interact.js";
+import * as batchScrape from "./batch-scrape.js";
+import * as listJobs from "./list-jobs.js";
+import * as jobStatus from "./job-status.js";
+import * as deleteJob from "./delete-job.js";
 
 export interface ToolDefinition {
   name: string;
@@ -46,4 +52,13 @@ export const allTools: ToolDefinition[] = [
   discoverApis as ToolDefinition,
   queryApi as ToolDefinition,
   monitorWebsocket as ToolDefinition,
+  // AI/LLM tools (LLM_API_KEY needed)
+  aiExtract as ToolDefinition,
+  // Interaction & session tools (Playwright needed)
+  interact as ToolDefinition,
+  // Batch processing
+  batchScrape as ToolDefinition,
+  listJobs as ToolDefinition,
+  jobStatus as ToolDefinition,
+  deleteJob as ToolDefinition,
 ];

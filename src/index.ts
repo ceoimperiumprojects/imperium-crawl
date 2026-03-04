@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import "dotenv/config";
+import { applyCliConfig } from "./cli-config.js";
 import { initProxyRotator } from "./stealth/proxy.js";
 import { getPool } from "./stealth/browser-pool.js";
 
@@ -42,6 +43,7 @@ function setupShutdownHandlers(): void {
 }
 
 async function main() {
+  applyCliConfig(); // load ~/.imperium-crawl/config.json → process.env (system env takes priority)
   // Init proxy rotator from env vars (both modes)
   initProxyRotator();
   setupShutdownHandlers();
@@ -49,6 +51,10 @@ async function main() {
   if (shouldRunCli()) {
     const { runCli } = await import("./cli.js");
     await runCli();
+  } else if (process.stdout.isTTY) {
+    // TTY + no args → interactive TUI
+    const { runTui } = await import("./cli-tui.js");
+    await runTui();
   } else {
     const { createMcpServer } = await import("./server.js");
     const { getOptions } = await import("./config.js");

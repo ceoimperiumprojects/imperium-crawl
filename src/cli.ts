@@ -3,12 +3,20 @@
  *
  * Dynamically maps each tool's Zod schema to Commander options,
  * runs execute(), then formats output via formatters.ts.
+ *
+ * TTY-aware: spinners + colored output + tables in interactive mode;
+ * clean JSON to stdout when piped (non-TTY / CI / NO_COLOR).
+ *
+ * Lazy loading: only the requested tool's module is imported at startup.
+ * This keeps cold-start time fast even though some tools pull in heavy
+ * deps (cheerio, linkedom, playwright, stealth engine).
  */
 
 import { Command, Option } from "commander";
 import { z } from "zod";
 import { writeFileSync } from "fs";
-import { allTools, type ToolDefinition } from "./tools/index.js";
+import { type ToolDefinition } from "./tools/index.js";
+import { TOOL_MANIFEST } from "./tools/manifest.js";
 import {
   type OutputFormat,
   type FormatOptions,
@@ -16,6 +24,13 @@ import {
   parseToolOutput,
 } from "./formatters.js";
 import { PACKAGE_VERSION } from "./constants.js";
+import {
+  isTTY,
+  createSpinner,
+  errorMsg,
+  renderTable,
+  colorUrl,
+} from "./cli-ui.js";
 
 // ── Zod Unwrapping ───────────────────────────────────────────────────
 
@@ -38,7 +53,6 @@ function unwrapZod(schema: z.ZodTypeAny): UnwrappedType {
   const description = schema.description;
   let current = schema;
 
-  // Peel layers
   for (let i = 0; i < 10; i++) {
     const typeName = current._def.typeName as string;
 
@@ -79,7 +93,6 @@ function camelToSnake(key: string): string {
 // ── Zod-to-Commander Option Mapper ───────────────────────────────────
 
 function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
-  // Handle empty schemas (like list-skills)
   if (getZodTypeName(schema) !== "ZodObject") return;
 
   const shape = (schema as z.ZodObject<z.ZodRawShape>).shape;
@@ -122,10 +135,8 @@ function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
       }
     } else if (typeName === "ZodBoolean") {
       if (hasDefault && defaultValue === true) {
-        // default true → --no-flag to disable
         cmd.option(`--no-${flag}`, desc);
       } else {
-        // default false or no default → --flag to enable
         cmd.option(`--${flag}`, desc, hasDefault ? (defaultValue as boolean) : false);
       }
     } else if (typeName === "ZodEnum") {
@@ -135,11 +146,8 @@ function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
       if (required) opt.makeOptionMandatory(true);
       cmd.addOption(opt);
     } else if (typeName === "ZodArray") {
-      // Array of values — collect pattern
       const collect = (val: string, prev: string[]) => prev.concat(val);
-      const innerTypeName = getZodTypeName(
-        unwrapZod(base._def.type).base,
-      );
+      const innerTypeName = getZodTypeName(unwrapZod(base._def.type).base);
       if (innerTypeName === "ZodEnum") {
         const values = (unwrapZod(base._def.type).base as z.ZodEnum<[string, ...string[]]>)._def
           .values as string[];
@@ -157,7 +165,6 @@ function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
         );
       }
     } else if (typeName === "ZodRecord") {
-      // Record → JSON string input
       const parseJson = (val: string) => {
         try {
           return JSON.parse(val);
@@ -174,7 +181,6 @@ function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
         cmd.addOption(opt);
       }
     } else {
-      // Fallback: treat as string
       cmd.option(`--${flag} <value>`, desc);
     }
   }
@@ -182,10 +188,6 @@ function addOptionsFromSchema(cmd: Command, schema: z.ZodTypeAny): void {
 
 // ── Reverse Key Mapper ───────────────────────────────────────────────
 
-/**
- * Convert Commander's camelCase opts back to Zod's snake_case keys.
- * Only includes keys that exist in the tool schema.
- */
 function optsToInput(
   opts: Record<string, unknown>,
   schema: z.ZodTypeAny,
@@ -197,7 +199,6 @@ function optsToInput(
   const input: Record<string, unknown> = {};
 
   for (const [camelKey, value] of Object.entries(opts)) {
-    // Skip Commander internals and global CLI options
     if (value === undefined) continue;
 
     const snakeKey = camelToSnake(camelKey);
@@ -205,7 +206,6 @@ function optsToInput(
     if (schemaKeys.has(snakeKey)) {
       input[snakeKey] = value;
     } else if (schemaKeys.has(camelKey)) {
-      // Some keys are already snake_case (single words like 'url', 'query')
       input[camelKey] = value;
     }
   }
@@ -213,15 +213,98 @@ function optsToInput(
   return input;
 }
 
+// ── Lazy Tool Loader ─────────────────────────────────────────────────
+
+/**
+ * Which tool command the user requested (from argv), or null for
+ * global commands (--help, setup, --version).
+ *
+ * Detected before Commander runs so we can load only that tool's module.
+ */
+function getRequestedCmd(): string | null {
+  const arg = process.argv[2];
+  if (!arg || arg.startsWith("-")) return null;
+  return arg; // e.g., "scrape", "list-jobs", "setup"
+}
+
+// ── Table Renderers ──────────────────────────────────────────────────
+
+function tryRenderTable(toolName: string, data: unknown): string | null {
+  if (!isTTY) return null;
+  if (!data || typeof data !== "object") return null;
+
+  const obj = data as Record<string, unknown>;
+
+  if (toolName === "list_jobs") {
+    const jobs = Array.isArray(obj.jobs) ? obj.jobs : [];
+    if (jobs.length === 0) return null;
+    const headers = ["Job ID", "Status", "URLs", "Progress"];
+    const rows = jobs.map((j: unknown) => {
+      const job = j as Record<string, unknown>;
+      const total = Number(job.urls_total ?? 0);
+      const done = Number(job.urls_completed ?? 0);
+      const failed = Number(job.urls_failed ?? 0);
+      const pct = total > 0 ? Math.round(((done + failed) / total) * 100) : 0;
+      return [String(job.id ?? ""), String(job.status ?? ""), `${done + failed}/${total}`, `${pct}%`];
+    });
+    return renderTable(headers, rows);
+  }
+
+  if (toolName === "list_skills") {
+    const skills = Array.isArray(obj.skills) ? obj.skills : [];
+    if (skills.length === 0) return null;
+    const headers = ["Name", "URL", "Fields", "Created"];
+    const rows = skills.map((s: unknown) => {
+      const skill = s as Record<string, unknown>;
+      const fields = Array.isArray(skill.fields) ? skill.fields.join(", ") : "";
+      const created = typeof skill.created_at === "string" ? skill.created_at.split("T")[0] : "";
+      return [String(skill.name ?? ""), colorUrl(String(skill.url ?? "")), fields, created];
+    });
+    return renderTable(headers, rows);
+  }
+
+  if (["search", "news_search", "image_search", "video_search"].includes(toolName)) {
+    const results = Array.isArray(obj.results) ? obj.results : [];
+    if (results.length === 0) return null;
+    const headers = ["#", "Title", "URL"];
+    const rows = results.slice(0, 20).map((r: unknown, i: number) => {
+      const result = r as Record<string, unknown>;
+      const title = String(result.title ?? result.name ?? "").slice(0, 50);
+      const url = colorUrl(String(result.url ?? result.source ?? "").slice(0, 60));
+      return [String(i + 1), title, url];
+    });
+    return renderTable(headers, rows);
+  }
+
+  return null;
+}
+
+// ── Contextual Error Messages ────────────────────────────────────────
+
+function handleToolError(toolName: string, msg: string): void {
+  errorMsg(msg);
+
+  const needsKey =
+    msg.includes("API_KEY") ||
+    msg.toLowerCase().includes("api key") ||
+    ["search", "news_search", "image_search", "video_search", "ai_extract"].includes(toolName);
+
+  if (needsKey) {
+    process.stderr.write(
+      "\n  Run \x1b[1mimperiumcrawl setup\x1b[0m to configure API keys.\n\n",
+    );
+  }
+}
+
 // ── Program Builder ──────────────────────────────────────────────────
 
-export function buildCli(): Command {
+export async function buildCli(): Promise<Command> {
   const program = new Command();
 
   program
-    .name("imperium-crawl")
+    .name("imperiumcrawl")
     .description(
-      "16-tool web scraping, crawling, search, and API discovery CLI.\nRun without arguments to start as MCP server.",
+      "22-tool web scraping, crawling, search, and API discovery CLI.\nRun without arguments to start as MCP server.",
     )
     .version(PACKAGE_VERSION)
     .addOption(
@@ -232,18 +315,39 @@ export function buildCli(): Command {
     .option("--output <file>", "Write output to file instead of stdout")
     .option("--pretty", "Pretty-print JSON output", false);
 
-  // Register a subcommand for each tool
-  for (const tool of allTools) {
-    const cmdName = tool.name.replace(/_/g, "-");
-    const sub = program
-      .command(cmdName)
-      .description(tool.description);
-
-    addOptionsFromSchema(sub, tool.schema);
-
-    sub.action(async (localOpts: Record<string, unknown>) => {
-      await runTool(tool, localOpts, program);
+  // ── Setup wizard ────────────────────────────────────────────────
+  program
+    .command("setup")
+    .description("Configure API keys and save them to ~/.imperium-crawl/config.json")
+    .action(async () => {
+      const { runSetup } = await import("./cli-onboarding.js");
+      await runSetup();
     });
+
+  // ── Tool commands — lazy loaded ──────────────────────────────────
+  const requestedCmd = getRequestedCmd();
+
+  for (const { cmd, description } of TOOL_MANIFEST) {
+    const sub = program.command(cmd).description(description);
+
+    if (cmd === requestedCmd) {
+      // Load the full tool module for this command only.
+      // This is the only heavy import at startup — all others are skipped.
+      const toolModule = await import(`./tools/${cmd}.js`) as ToolDefinition;
+      addOptionsFromSchema(sub, toolModule.schema);
+      sub.action(async (localOpts: Record<string, unknown>) => {
+        await runTool(toolModule, localOpts, program);
+      });
+    } else {
+      // For all other commands: register with just name + description.
+      // Options are loaded lazily if the command is somehow invoked.
+      sub.action(async (_localOpts: Record<string, unknown>) => {
+        const toolModule = await import(`./tools/${cmd}.js`) as ToolDefinition;
+        // Re-parse options now that we have the schema
+        const rawOpts = sub.opts();
+        await runTool(toolModule, rawOpts, program);
+      });
+    }
   }
 
   return program;
@@ -256,10 +360,8 @@ async function runTool(
 ): Promise<void> {
   const globalOpts = program.opts();
 
-  // Map Commander camelCase → Zod snake_case
   const input = optsToInput(localOpts, tool.schema);
 
-  // Validate via Zod
   let validated: unknown;
   try {
     validated = (tool.schema as z.ZodObject<z.ZodRawShape>).parse(input);
@@ -274,25 +376,34 @@ async function runTool(
     throw err;
   }
 
-  // Execute the tool
+  const spinner = createSpinner(`Running ${tool.name}...`);
+  const start = Date.now();
+
   let result: { content: Array<{ type: string; text?: string }> };
   try {
     result = await tool.execute(validated);
+    spinner.succeed(`Done in ${((Date.now() - start) / 1000).toFixed(1)}s`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    process.stderr.write(`Error: ${msg}\n`);
+    spinner.fail(`Failed: ${msg}`);
+    handleToolError(tool.name, msg);
     process.exit(1);
   }
 
-  // Parse and format
   const data = parseToolOutput(result);
+
+  const table = tryRenderTable(tool.name, data);
+  if (table) {
+    process.stdout.write(table + "\n");
+    return;
+  }
+
   const formatOptions: FormatOptions = {
     format: globalOpts.outputFormat as OutputFormat,
     pretty: globalOpts.pretty as boolean,
   };
   const output = formatOutput(data, formatOptions);
 
-  // Write to file or stdout
   const outputFile = globalOpts.output as string | undefined;
   if (outputFile) {
     writeFileSync(outputFile, output + "\n", "utf-8");
@@ -305,6 +416,6 @@ async function runTool(
 // ── Entry Point ──────────────────────────────────────────────────────
 
 export async function runCli(): Promise<void> {
-  const program = buildCli();
+  const program = await buildCli();
   await program.parseAsync(process.argv);
 }
