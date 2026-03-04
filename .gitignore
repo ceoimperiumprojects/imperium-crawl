@@ -12,6 +12,7 @@ dist/
 .mcp.json
 .claude/
 .firecrawl/
+CLAUDE.md
 
 # Coverage
 coverage/
