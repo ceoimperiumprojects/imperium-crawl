@@ -2,13 +2,24 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { getSessionsDir } from "../config.js";
 import type { StoredSession, StoredCookie } from "./types.js";
+import { encryptData, decryptData, isEncryptedPayload, ensureEncryptionKey } from "./encryption.js";
 
 export class SessionManager {
   private cache = new Map<string, StoredSession>();
   private dir: string;
+  private encryptionKey: string | undefined;
+  private keyLoaded = false;
 
   constructor(dir?: string) {
     this.dir = dir ?? getSessionsDir();
+  }
+
+  private async getEncryptionKey(): Promise<string | undefined> {
+    if (!this.keyLoaded) {
+      this.encryptionKey = await ensureEncryptionKey();
+      this.keyLoaded = true;
+    }
+    return this.encryptionKey;
   }
 
   private sessionPath(id: string): string {
@@ -34,7 +45,13 @@ export class SessionManager {
     await fs.mkdir(this.dir, { recursive: true });
     const filePath = this.sessionPath(id);
     const tmpPath = filePath + ".tmp";
-    await fs.writeFile(tmpPath, JSON.stringify(session, null, 2), "utf-8");
+
+    const key = await this.getEncryptionKey();
+    const content = key
+      ? JSON.stringify(encryptData(JSON.stringify(session), key), null, 2)
+      : JSON.stringify(session, null, 2);
+
+    await fs.writeFile(tmpPath, content, "utf-8");
     await fs.rename(tmpPath, filePath);
   }
 
@@ -43,7 +60,20 @@ export class SessionManager {
 
     try {
       const data = await fs.readFile(this.sessionPath(id), "utf-8");
-      const session = JSON.parse(data) as StoredSession;
+      const parsed = JSON.parse(data);
+
+      let session: StoredSession;
+      if (isEncryptedPayload(parsed)) {
+        const key = await this.getEncryptionKey();
+        if (!key) {
+          console.error("[sessions] Encrypted session found but no encryption key configured");
+          return null;
+        }
+        session = JSON.parse(decryptData(parsed, key)) as StoredSession;
+      } else {
+        session = parsed as StoredSession;
+      }
+
       this.cache.set(id, session);
       return session;
     } catch (err: unknown) {

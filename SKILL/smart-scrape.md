@@ -24,6 +24,7 @@ Extract the right content from any URL using the optimal tool and settings.
 | CSS extract | `mcp__imperium-crawl__extract` | `imperium-crawl extract --url URL --selectors '{}'` | Structured data with known selectors |
 | AI extract | `mcp__imperium-crawl__ai_extract` | `imperium-crawl ai-extract --url URL --schema "..."` | Unknown structure, let LLM figure it out |
 | Visual capture | `mcp__imperium-crawl__screenshot` | `imperium-crawl screenshot --url URL` | Visual inspection, debugging |
+| Page structure | `mcp__imperium-crawl__snapshot` | `imperium-crawl snapshot --url URL` | ARIA tree with interactive element refs — inspect before scraping |
 
 ---
 

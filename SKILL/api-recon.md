@@ -169,6 +169,15 @@ interact(login_url, actions: [login steps], session_id: "recon") → authenticat
 { "url": "https://example.com/dashboard", "wait_seconds": 10, "include_headers": true }
 ```
 
+### snapshot → interact (Ref Login) → discover (Precise Auth)
+```
+snapshot(login_url) → find login form refs
+  → interact(login_url, actions: [{ref: "N", ...}], session_id) → precise login
+    → discover_apis(protected_url) → authenticated API recon
+```
+
+**When:** Login form has dynamic selectors or no unique CSS. Use ARIA refs for reliable targeting.
+
 ### websocket → query_api (REST Fallback)
 ```
 monitor_websocket(url, duration: 30) → capture real-time data

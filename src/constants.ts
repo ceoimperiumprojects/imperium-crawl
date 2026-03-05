@@ -1,5 +1,5 @@
 export const PACKAGE_NAME = "imperium-crawl";
-export const PACKAGE_VERSION = "1.5.1";
+export const PACKAGE_VERSION = "2.0.0";
 
 export const DEFAULT_TIMEOUT_MS = 30_000;
 export const DEFAULT_MAX_PAGES = 10;
@@ -63,3 +63,7 @@ export const MAX_DURATION_SECONDS = 300;
 export const MAX_TIMEOUT_MS = 300_000;
 export const MAX_SELECTOR_KEYS = 50;
 export const MAX_CRAWL_CONTENT_PER_PAGE = 102_400; // 100KB
+
+// ── Snapshot system ──
+
+export const MAX_STORED_SNAPSHOTS = 100;

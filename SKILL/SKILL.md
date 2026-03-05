@@ -1,6 +1,6 @@
 # imperium-crawl — Agent Skill Guide
 
-Comprehensive guide for AI agents using imperium-crawl's 22 MCP tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing — in both MCP and CLI modes.
+Comprehensive guide for AI agents using imperium-crawl's 23 MCP tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing — in both MCP and CLI modes.
 
 **Progressive disclosure:** This file is the overview hub. Each skill and reference topic has a dedicated file with full details — read them when you need depth.
 
@@ -16,8 +16,8 @@ Comprehensive guide for AI agents using imperium-crawl's 22 MCP tools. Covers sc
 | [site-intel.md](site-intel.md) | ~206 | Full site-intel: 5-step workflow, report template, depth guidelines |
 | [research.md](research.md) | ~199 | Full research: search → scrape → synthesize, depth guidelines |
 | [api-recon.md](api-recon.md) | ~218 | Full API recon: discovery, categorization, WebSocket, report template |
-| [tool-reference.md](tool-reference.md) | ~426 | All 22 tools — params, types, defaults, gotchas |
-| [pipelines.md](pipelines.md) | ~273 | 9 pipeline patterns with full MCP + CLI examples |
+| [tool-reference.md](tool-reference.md) | ~500 | All 23 tools — params, types, defaults, gotchas |
+| [pipelines.md](pipelines.md) | ~310 | 10 pipeline patterns with full MCP + CLI examples |
 | [recipes.md](recipes.md) | ~151 | 10 built-in recipes + custom skill JSON format |
 
 ---
@@ -25,9 +25,9 @@ Comprehensive guide for AI agents using imperium-crawl's 22 MCP tools. Covers sc
 ## Table of Contents
 
 1. [Mode Detection](#mode-detection)
-2. [All 22 Tools — Dual Mode](#all-22-tools--dual-mode)
+2. [All 23 Tools — Dual Mode](#all-22-tools--dual-mode)
 3. [Master Decision Tree](#master-decision-tree)
-4. [Tool Combinations — 9 Patterns](#tool-combinations--9-patterns)
+4. [Tool Combinations — 10 Patterns](#tool-combinations--10-patterns)
 5. [Smart Scrape](#smart-scrape)
 6. [Build Skill](#build-skill)
 7. [Site Intel](#site-intel)
@@ -54,7 +54,7 @@ Detect your execution environment and use the correct invocation format:
 
 ---
 
-## All 22 Tools — Dual Mode
+## All 23 Tools — Dual Mode
 
 Full parameter details per tool → [tool-reference.md](tool-reference.md)
 
@@ -100,11 +100,12 @@ Full parameter details per tool → [tool-reference.md](tool-reference.md)
 | Query API | `mcp__imperium-crawl__query_api` | `imperium-crawl query-api --url URL` | `method`, `headers`, `body`, `params` |
 | Monitor WS | `mcp__imperium-crawl__monitor_websocket` | `imperium-crawl monitor-websocket --url URL` | `duration_seconds`, `max_messages` |
 
-### Interaction (1)
+### Interaction (2)
 
 | Action | MCP Tool | CLI Command | Key Params |
 |--------|----------|-------------|------------|
-| Interact | `mcp__imperium-crawl__interact` | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id`, `return_screenshot` |
+| Interact | `mcp__imperium-crawl__interact` | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id`, `return_snapshot`, `action_policy_path`, `allowed_domains`, `device` |
+| Snapshot | `mcp__imperium-crawl__snapshot` | `imperium-crawl snapshot --url URL` | `session_id`, `return_screenshot`, `selector` |
 
 ### Batch Processing (4)
 
@@ -152,6 +153,9 @@ User has a web data task
 │  └─ discover_apis → categorize → query_api → monitor_websocket
 │  → Full guide: api-recon.md
 │
+├─ "Need page structure / interactive elements"
+│  └─ snapshot → analyze ARIA refs → interact with ref targeting
+│
 ├─ "Page behind login"
 │  └─ interact (session_id) → login → then scrape/extract
 │     └─ Or use chrome_profile for existing browser session
@@ -170,7 +174,7 @@ User has a web data task
 
 ---
 
-## Tool Combinations — 9 Patterns
+## Tool Combinations — 10 Patterns
 
 Full dual-mode examples for each pattern → [pipelines.md](pipelines.md)
 
@@ -227,6 +231,12 @@ screenshot → extract(selectors) → [empty?] → screenshot → refine → ext
 **When:** ALWAYS — every skill needs validation
 ```
 create_skill → run_skill → [bad?] → extract (manual) → create_skill (overwrite) → run_skill
+```
+
+### 10. Snapshot → Interact (Ref Targeting)
+**When:** Need precise element targeting without fragile CSS selectors
+```
+snapshot(url) → analyze ARIA refs → interact(url, actions: [{ref: "N"}]) → snapshot(url) to verify
 ```
 
 ---

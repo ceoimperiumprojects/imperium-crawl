@@ -129,6 +129,15 @@ If the site is JS-heavy, check for hidden APIs:
 
 Add discovered APIs to the report's Technology section.
 
+### Interactive Element Analysis
+
+Use `snapshot` to analyze interactive elements on key pages:
+
+**MCP:** `{ "url": "...", "return_screenshot": true }`
+**CLI:** `imperium-crawl snapshot --url "URL" --return-screenshot`
+
+Reveals forms, buttons, navigation, and interactive widgets with ARIA refs — useful for understanding site functionality.
+
 ### SEO Extract (per page)
 
 Extract SEO data from individual pages:

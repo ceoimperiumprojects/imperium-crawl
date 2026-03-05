@@ -1,4 +1,4 @@
-# Tool Reference — All 22 imperium-crawl Tools
+# Tool Reference — All 23 imperium-crawl Tools
 
 Complete catalog with MCP + CLI names, parameters, and gotchas.
 
@@ -328,12 +328,12 @@ AI/LLM-powered structured data extraction.
 
 ---
 
-## Interaction (1)
+## Interaction (2)
 
 ### interact
 **MCP:** `mcp__imperium-crawl__interact` | **CLI:** `imperium-crawl interact`
 
-Browser automation with action sequences and session persistence. Requires Playwright.
+Browser automation with action sequences, session persistence, and encryption. Requires Playwright.
 
 | Param | Type | Default | Required |
 |-------|------|---------|----------|
@@ -341,8 +341,15 @@ Browser automation with action sequences and session persistence. Requires Playw
 | `actions` | array of ActionSchema (max 50) | — | YES |
 | `return_content` | boolean | true | no |
 | `return_screenshot` | boolean | false | no |
+| `return_snapshot` | boolean | false | no |
 | `session_id` | string (max 200) | — | no |
 | `timeout` | number (ms, 1000-max) | 30000 | no |
+| `action_policy_path` | string | — | no |
+| `allowed_domains` | array of strings | — | no |
+| `intercept_rules` | array of InterceptRule | — | no |
+| `return_network_log` | boolean | false | no |
+| `device` | string (e.g., "iPhone 15") | — | no |
+| `geolocation` | object `{ latitude, longitude }` | — | no |
 | `proxy` | string | — | no |
 | `chrome_profile` | string | — | no |
 
@@ -350,18 +357,41 @@ Browser automation with action sequences and session persistence. Requires Playw
 
 | Field | Type | Used by |
 |-------|------|---------|
-| `type` | `"click"` `"type"` `"scroll"` `"wait"` `"screenshot"` `"evaluate"` `"select"` `"hover"` `"press"` `"navigate"` | ALL |
-| `selector` | string (CSS) | click, type, select, hover |
+| `type` | `"click"` `"type"` `"scroll"` `"wait"` `"screenshot"` `"evaluate"` `"select"` `"hover"` `"press"` `"navigate"` `"drag"` `"upload"` `"storage"` `"cookies"` `"pdf"` `"auth_login"` | ALL |
+| `selector` | string (CSS) | click, type, select, hover, drag, upload |
+| `ref` | string (ARIA ref from snapshot) | click, type, select, hover — alternative to selector |
 | `text` | string | type |
 | `value` | string | select |
 | `script` | string (JS) | evaluate |
 | `key` | string | press (e.g., "Enter", "Tab") |
 | `url` | string | navigate |
 | `duration` | number (ms) | wait |
-| `x`, `y` | number | scroll |
+| `x`, `y` | number | scroll, drag (target) |
+| `files` | array of strings | upload |
+| `operation` | string | storage (`get`/`set`/`clear`), cookies (`get`/`set`/`delete`) |
 
-**Returns:** `{ url, actions_executed, session_saved, content?, screenshot?, screenshots[], action_results[] }`
-**Session:** Cookies saved per `session_id` to `~/.imperium-crawl/sessions/{id}.json`. Restored on next call with same ID.
+**Returns:** `{ url, actions_executed, session_saved, content?, screenshot?, snapshot?, screenshots[], action_results[], network_log? }`
+**Session:** Cookies saved per `session_id` to `~/.imperium-crawl/sessions/{id}.json`. Encrypted at rest if `SESSION_ENCRYPTION_KEY` set.
+
+---
+
+### snapshot
+**MCP:** `mcp__imperium-crawl__snapshot` | **CLI:** `imperium-crawl snapshot`
+
+ARIA-based page snapshot with interactive element refs. Use refs in interact for precise targeting.
+
+| Param | Type | Default | Required |
+|-------|------|---------|----------|
+| `url` | string | — | YES |
+| `session_id` | string (max 200) | — | no |
+| `return_screenshot` | boolean | false | no |
+| `selector` | string (CSS, scope snapshot) | — | no |
+| `timeout` | number (ms) | 30000 | no |
+| `proxy` | string | — | no |
+| `chrome_profile` | string | — | no |
+
+**Returns:** `{ url, snapshot (ARIA tree with [ref=N] markers), element_count, screenshot? }`
+**Workflow:** snapshot → find ref → interact with `{ref: "N"}` instead of CSS selector. More robust than selectors.
 
 ---
 

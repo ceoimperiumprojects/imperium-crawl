@@ -4,7 +4,7 @@
 
 **The most powerful open-source MCP server for web scraping, crawling, and data extraction.**
 
-22 tools. Zero API keys required. One `npx` command.
+23 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -44,7 +44,7 @@ npx -y imperium-crawl scrape --url https://example.com
 npm install -g imperium-crawl
 ```
 
-> That's it. 16 of 22 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 17 of 23 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -120,7 +120,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-16 of 22 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+17 of 23 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -128,7 +128,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **22 Tools, 3 Modes**
+🧰 **23 Tools, 3 Modes**
 MCP server, CLI tool, or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **10 Built-in Recipes**
@@ -144,7 +144,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl MCP | fetch MCP | Crawl4AI MCP | Browserbase MCP |
 |---------|:------------------:|:-------------:|:---------:|:------------:|:---------------:|
 | Price | **Free forever** | $19+/month | Free | Free | $0.01/min |
-| Total tools | **22** | 5 | 2 | 2 | 4 |
+| Total tools | **23** | 5 | 2 | 2 | 4 |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | None | 1 | Cloud-based |
 | Anti-bot detection | **7 systems** | Partial | None | Partial | Partial |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -154,6 +154,10 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | AI-powered extraction | **Yes** | No | No | No | No |
 | Adaptive learning | **Yes** | No | No | No | No |
 | Batch processing | **Yes** | No | No | No | No |
+| ARIA Snapshots | **Yes** | No | No | No | No |
+| Session Encryption | **Yes** | No | No | No | No |
+| Action Policy | **Yes** | No | No | No | No |
+| Domain Sandboxing | **Yes** | No | No | No | No |
 | Self-hosted | **Yes** | No | N/A | Yes | No |
 | Requires external service | **No** | Yes | No | No | Yes |
 
@@ -235,7 +239,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 22 Tools
+## All 23 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -283,7 +287,8 @@ Second visit to cloudflare.com:
 
 | Tool | What It Does |
 |------|-------------|
-| **interact** | Browser automation with 10 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate). Session persistence saves/restores cookies. |
+| **interact** | Browser automation with 18 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate, drag, upload, storage, cookies, pdf, auth_login). Ref targeting via ARIA snapshot, session encryption, action policy, domain filter, network interception, device emulation. |
+| **snapshot** | ARIA-based page snapshot with interactive element refs. Use refs in interact for precise targeting. Annotated screenshots. |
 
 ### 📦 Batch Processing (no API key needed)
 
@@ -311,6 +316,7 @@ Full configuration with all optional environment variables:
         "TWOCAPTCHA_API_KEY": "your-2captcha-api-key",
         "LLM_API_KEY": "your-api-key",
         "LLM_PROVIDER": "anthropic",
+        "SESSION_ENCRYPTION_KEY": "your-64-char-hex-key",
         "PROXY_URL": "http://user:pass@proxy:8080",
         "PROXY_URLS": "http://proxy1:8080,socks5://proxy2:1080"
       }
@@ -455,7 +461,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 22 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 23 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Three Ways to Connect
 
@@ -511,13 +517,14 @@ Every tool tested against production websites with real anti-bot defenses:
 | ⚡ **query_api** | jsonplaceholder | Direct JSON API call with stealth headers |
 | 📡 **monitor_websocket** | Binance BTC/USDT | 3 WebSocket connections, 23 live messages — BTC price live |
 | 🧠 **ai_extract** | Amazon product | AI extracted name, price, rating, review count |
-| 🖱️ **interact** | Login flow | Click → type → submit — session cookies persisted |
+| 🎯 **snapshot** | GitHub, Wikipedia | ARIA tree with 107/113 refs, annotated screenshots |
+| 🖱️ **interact** | Login flow | Click → type → submit — ref targeting, session encryption, 18 action types |
 | 📦 **batch_scrape** | 10 news sites | Parallel, concurrency 3, soft failure, 9/10 succeeded |
 | 📋 **list_jobs** | — | Batch jobs with status and progress |
 | 📊 **job_status** | Batch job | Full per-URL results with timing |
 | 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
 
-> **22/22 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **23/23 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 
@@ -530,6 +537,7 @@ Every tool tested against production websites with real anti-bot defenses:
 | `LLM_API_KEY` | No | Anthropic or OpenAI API key (enables `ai_extract`) |
 | `LLM_PROVIDER` | No | `anthropic`, `openai`, or `minimax` (default: `anthropic`) |
 | `LLM_MODEL` | No | Override default LLM model |
+| `SESSION_ENCRYPTION_KEY` | No | 32-byte hex key for encrypting session files at rest |
 | `TRANSPORT` | No | `stdio` (default) or `http` |
 | `PORT` | No | HTTP port (default: 3000) |
 | `PROXY_URL` | No | Single proxy URL (http/https/socks4/socks5) |

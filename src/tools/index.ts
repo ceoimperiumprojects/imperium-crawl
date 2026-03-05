@@ -18,6 +18,7 @@ import * as queryApi from "./query-api.js";
 import * as monitorWebsocket from "./monitor-websocket.js";
 import * as aiExtract from "./ai-extract.js";
 import * as interact from "./interact.js";
+import * as snapshot from "./snapshot.js";
 import * as batchScrape from "./batch-scrape.js";
 import * as listJobs from "./list-jobs.js";
 import * as jobStatus from "./job-status.js";
@@ -56,6 +57,7 @@ export const allTools: ToolDefinition[] = [
   aiExtract as ToolDefinition,
   // Interaction & session tools (Playwright needed)
   interact as ToolDefinition,
+  snapshot as ToolDefinition,
   // Batch processing
   batchScrape as ToolDefinition,
   listJobs as ToolDefinition,

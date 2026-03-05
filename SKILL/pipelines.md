@@ -1,4 +1,4 @@
-# Pipeline Patterns — 9 Reusable Workflows
+# Pipeline Patterns — 10 Reusable Workflows
 
 Each pipeline shows the tool chain, when to use it, and examples in both MCP and CLI modes.
 
@@ -271,3 +271,42 @@ imperium-crawl ai-extract --url "https://example.com/products" --schema auto
 imperium-crawl create-skill --url "https://example.com/products" --name "example-products" --description "Products with name, price, image, rating"
 imperium-crawl run-skill --name "example-products" --url "https://example.com/products?page=2"
 ```
+
+---
+
+## Pipeline 10: Snapshot → Interact (Ref Targeting)
+
+**When:** Need precise element targeting without fragile CSS selectors. Forms, complex UIs, dynamic content.
+
+```
+snapshot(url) → analyze ARIA tree with refs
+  → interact(url, actions: [{type: "click", ref: "N"}]) → target by ref
+    → snapshot(url) → verify result
+```
+
+**MCP:**
+```json
+// 1. Get page snapshot with ARIA refs
+{ "url": "https://example.com/form", "return_screenshot": true }
+// 2. Use ref from snapshot to interact (e.g., ref="7" is the Submit button)
+{
+  "url": "https://example.com/form",
+  "actions": [
+    { "type": "type", "ref": "3", "text": "John Doe" },
+    { "type": "type", "ref": "5", "text": "john@example.com" },
+    { "type": "click", "ref": "7" },
+    { "type": "wait", "duration": 2000 }
+  ],
+  "return_snapshot": true
+}
+// 3. Verify — check the returned snapshot for success state
+```
+
+**CLI:**
+```bash
+imperium-crawl snapshot --url "https://example.com/form" --return-screenshot
+imperium-crawl interact --url "https://example.com/form" --actions '[{"type":"type","ref":"3","text":"John Doe"},{"type":"click","ref":"7"}]' --return-snapshot
+imperium-crawl snapshot --url "https://example.com/form"
+```
+
+**Why refs > selectors:** ARIA refs are stable across page re-renders, don't break with CSS class changes, and work on elements without unique selectors.

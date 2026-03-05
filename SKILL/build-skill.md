@@ -3,8 +3,8 @@
 Create, test, and iterate reusable extraction skills that work across pages with similar structure.
 
 > **Reference files** (read when you need detail):
-> - [tool-reference.md](tool-reference.md) — All 22 tools with params, returns, gotchas
-> - [pipelines.md](pipelines.md) — 9 pipeline patterns with dual-mode examples
+> - [tool-reference.md](tool-reference.md) — All 23 tools with params, returns, gotchas
+> - [pipelines.md](pipelines.md) — 10 pipeline patterns with dual-mode examples
 > - [recipes.md](recipes.md) — 10 built-in recipes + custom skill JSON format
 
 ---
