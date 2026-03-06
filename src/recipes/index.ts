@@ -13,6 +13,7 @@ import socialMediaMentions from "./social-media-mentions.json" with { type: "jso
 import influencerNicheDiscovery from "./influencer-niche-discovery.json" with { type: "json" };
 import influencerHashtagScout from "./influencer-hashtag-scout.json" with { type: "json" };
 import influencerCompetitorSpy from "./influencer-competitor-spy.json" with { type: "json" };
+import influencerContentScout from "./influencer-content-scout.json" with { type: "json" };
 
 export const builtinRecipes: SkillConfig[] = [
   hnTopStories,
@@ -28,4 +29,5 @@ export const builtinRecipes: SkillConfig[] = [
   influencerNicheDiscovery,
   influencerHashtagScout,
   influencerCompetitorSpy,
+  influencerContentScout,
 ] as SkillConfig[];

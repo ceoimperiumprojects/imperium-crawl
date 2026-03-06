@@ -1,0 +1,14 @@
+{
+  "name": "influencer-content-scout",
+  "description": "Find micro/nano influencers by content quality — engagement, niche depth, consistency. YouTube-first with optional IG enrichment.",
+  "url": "https://youtube.com",
+  "created_at": "2026-03-06T00:00:00Z",
+  "builtin": true,
+  "tool": "influencer_discovery",
+  "workflow": "content_scout",
+  "niche": "travel",
+  "platforms": ["youtube", "brave", "instagram"],
+  "output_format": "json",
+  "threshold": 60,
+  "ig_max_calls": 5
+}

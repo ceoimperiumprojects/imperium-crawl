@@ -33,6 +33,8 @@ export const schema = z.object({
   competitor: z.string().max(200).optional().describe("Competitor brand/handle (competitor_spy workflow)"),
   output_format: z.enum(["json", "markdown", "csv"]).optional().describe("Output format for influencer discovery"),
   threshold: z.number().min(0).max(100).optional().describe("Tier qualification threshold (default 60)"),
+  min_subscribers: z.number().min(0).optional().describe("Min YouTube subscribers (content_scout, default 300)"),
+  max_subscribers: z.number().min(0).optional().describe("Max YouTube subscribers (content_scout, default 100000)"),
 });
 
 export type RunSkillInput = z.infer<typeof schema>;
@@ -416,6 +418,12 @@ interface InfluencerProfile {
   has_collab_signals?: boolean;
   niche_match_pct?: number;
   posting_frequency?: string;
+  ig_engagement_rate?: number;
+  ig_posts_count?: number;
+  niche_depth?: "SPECIALIST" | "MIXED" | "GENERALIST";
+  views_per_sub?: number;
+  likes_per_view?: number;
+  view_consistency?: number;
   platform_count: number;
   scores: { reach: number; conversion: number; partnership: number };
   tier: "GOLDEN" | "SILVER" | "BRONZE" | "UNRANKED";
@@ -442,6 +450,13 @@ async function ytExecute(action: string, params: Record<string, unknown>): Promi
   } catch {
     return null;
   }
+}
+
+// Instagram tool helper — direct in-process call
+async function igExecute(action: string, params: Record<string, unknown>): Promise<unknown> {
+  const ig = await import("./instagram.js");
+  const result = await ig.execute({ action, limit: 1, sort: "engagement", ...params } as any);
+  try { return JSON.parse(result.content[0].text || "{}"); } catch { return null; }
 }
 
 // Parse IG handle from YouTube description
@@ -614,6 +629,58 @@ function estimateFrequency(videos: Array<{ published?: string }>): string {
   return "monthly";
 }
 
+// Calculate niche depth from video titles
+function calcNicheDepth(videoTitles: string[], nicheKeywords: string[]): "SPECIALIST" | "MIXED" | "GENERALIST" {
+  if (!videoTitles.length || !nicheKeywords.length) return "GENERALIST";
+  const count = Math.min(videoTitles.length, 5);
+  let matching = 0;
+  for (let i = 0; i < count; i++) {
+    const lower = videoTitles[i].toLowerCase();
+    if (nicheKeywords.some(kw => lower.includes(kw.toLowerCase()))) matching++;
+  }
+  if (matching >= 4 || (count <= 3 && matching === count)) return "SPECIALIST";
+  if (matching >= Math.ceil(count * 0.5)) return "MIXED";
+  return "GENERALIST";
+}
+
+// Calculate view consistency (0-100) — low coefficient of variation = high consistency
+function calcViewConsistency(views: number[]): number {
+  if (views.length < 2) return 50;
+  const mean = views.reduce((a, b) => a + b, 0) / views.length;
+  if (mean === 0) return 0;
+  const variance = views.reduce((s, v) => s + (v - mean) ** 2, 0) / views.length;
+  const cv = Math.sqrt(variance) / mean; // coefficient of variation
+  // cv=0 → 100 (perfectly consistent), cv>=2 → 0 (wildly inconsistent)
+  return Math.round(Math.max(0, Math.min(100, (1 - cv / 2) * 100)));
+}
+
+// Composite content quality score (0-100)
+function calcContentScore(profile: InfluencerProfile): number {
+  let score = 0;
+  // Likes per view (25 pts) — higher = more engaged audience
+  const lpv = profile.likes_per_view || 0;
+  if (lpv >= 0.08) score += 25;
+  else if (lpv >= 0.05) score += 20;
+  else if (lpv >= 0.03) score += 15;
+  else if (lpv >= 0.01) score += 8;
+
+  // Views per sub (25 pts) — higher = loyal audience
+  const vps = profile.views_per_sub || 0;
+  if (vps >= 0.5) score += 25;
+  else if (vps >= 0.3) score += 20;
+  else if (vps >= 0.15) score += 15;
+  else if (vps >= 0.05) score += 8;
+
+  // Niche depth (30 pts)
+  if (profile.niche_depth === "SPECIALIST") score += 30;
+  else if (profile.niche_depth === "MIXED") score += 15;
+
+  // View consistency (20 pts)
+  score += Math.round((profile.view_consistency || 0) / 100 * 20);
+
+  return score;
+}
+
 // Calculate niche match % from descriptions/titles
 function calcNicheMatch(texts: string[], nicheKeywords: string[]): number {
   if (!texts.length || !nicheKeywords.length) return 50;
@@ -656,10 +723,11 @@ function formatInfluencerOutput(
   });
 
   if (format === "csv") {
-    const header = "handle,name,tier,reach,conversion,partnership,subscribers,ig_followers,engagement_rate,youtube_url,instagram_url,email";
+    const header = "handle,name,tier,reach,conversion,partnership,subscribers,ig_followers,engagement_rate,niche_depth,views_per_sub,likes_per_view,view_consistency,youtube_url,instagram_url,email";
     const rows = influencers.map(i =>
       [i.handle, i.name, i.tier, i.scores.reach, i.scores.conversion, i.scores.partnership,
        i.subscribers || "", i.ig_followers || "", i.engagement_rate?.toFixed(1) || "",
+       i.niche_depth || "", i.views_per_sub ?? "", i.likes_per_view ?? "", i.view_consistency ?? "",
        i.youtube_url || "", i.instagram_url || "", i.email || ""].join(",")
     );
     return header + "\n" + rows.join("\n");
@@ -669,14 +737,18 @@ function formatInfluencerOutput(
     const tierBadge = { GOLDEN: "🥇", SILVER: "🥈", BRONZE: "🥉", UNRANKED: "⬜" };
     let md = `# Influencer Discovery: ${meta.niche}\n\n`;
     md += `**Workflow**: ${meta.workflow} | **Threshold**: ${meta.threshold} | **Found**: ${influencers.length}\n\n`;
-    md += `| Tier | Handle | Subscribers | IG Followers | Engagement | Reach | Conv | Partner | Contact |\n`;
-    md += `|------|--------|-------------|-------------|-----------|-------|------|---------|--------|\n`;
+    md += `| Tier | Handle | Subscribers | IG Followers | Engagement | Niche | V/Sub | L/View | Consist | Reach | Conv | Partner | Contact |\n`;
+    md += `|------|--------|-------------|-------------|-----------|-------|-------|--------|---------|-------|------|---------|--------|\n`;
     for (const i of influencers) {
       const subs = i.subscribers ? formatNum(i.subscribers) : "-";
       const igf = i.ig_followers ? formatNum(i.ig_followers) : "-";
       const er = i.engagement_rate ? `${i.engagement_rate.toFixed(1)}%` : "-";
+      const nd = i.niche_depth || "-";
+      const vps = i.views_per_sub !== undefined ? i.views_per_sub.toFixed(2) : "-";
+      const lpv = i.likes_per_view !== undefined ? i.likes_per_view.toFixed(3) : "-";
+      const vc = i.view_consistency !== undefined ? String(i.view_consistency) : "-";
       const contact = i.email ? "📧" : i.website ? "🌐" : i.has_business_contact ? "💼" : "-";
-      md += `| ${tierBadge[i.tier]} ${i.tier} | ${i.handle} | ${subs} | ${igf} | ${er} | ${i.scores.reach} | ${i.scores.conversion} | ${i.scores.partnership} | ${contact} |\n`;
+      md += `| ${tierBadge[i.tier]} ${i.tier} | ${i.handle} | ${subs} | ${igf} | ${er} | ${nd} | ${vps} | ${lpv} | ${vc} | ${i.scores.reach} | ${i.scores.conversion} | ${i.scores.partnership} | ${contact} |\n`;
     }
     return md;
   }
@@ -1117,6 +1189,253 @@ async function runCompetitorSpy(
   return influencers;
 }
 
+// --- Workflow: content_scout ---
+
+async function runContentScout(
+  config: InfluencerDiscoverySkillConfig,
+  input: RunSkillInput,
+): Promise<InfluencerProfile[]> {
+  const niche = input.niche || config.niche;
+  const location = input.location || "";
+  const nicheKeywords = niche.split(/[\s,]+/).filter(Boolean);
+  const minSubs = input.min_subscribers ?? 300;
+  const maxSubs = input.max_subscribers ?? 100_000;
+  const igMaxCalls = config.ig_max_calls ?? 5;
+
+  // --- Phase 1: DISCOVERY (Brave + YouTube) ---
+  const channelUrls = new Map<string, string>(); // url → name
+
+  // Brave queries
+  const braveQueries = [
+    `site:youtube.com "${niche}" vlog|review|guide`,
+    location ? `site:youtube.com "${niche}" "${location}"` : `site:youtube.com "${niche}" tips`,
+    `site:youtube.com "${niche}" collab|partner small creator`,
+    `"underrated channel" "${niche}" youtube`,
+    `site:youtube.com "${niche}" -"million subscribers"`,
+  ];
+
+  const bravePromises = braveQueries.map(q => braveSearch(q, 10));
+  const braveResults = await Promise.all(bravePromises);
+
+  for (const data of braveResults) {
+    const results = (data as any)?.web?.results || [];
+    for (const r of results) {
+      const url = r.url || "";
+      // Extract channel URLs directly
+      const channelMatch = url.match(/youtube\.com\/(@[\w.-]+|c\/[\w.-]+|channel\/[\w-]+)/);
+      if (channelMatch && !channelUrls.has(channelMatch[0])) {
+        channelUrls.set(`https://www.${channelMatch[0]}`, r.title || "");
+        continue;
+      }
+      // Video URLs — we'll resolve to channels in phase 2
+      if (url.includes("youtube.com/watch")) {
+        channelUrls.set(url, r.title || "");
+      }
+    }
+  }
+
+  // YouTube searches (sort by date for fresh content)
+  const ytQueries = [
+    `${niche} ${location || ""}`.trim(),
+    `${niche} review`,
+    `${niche} vlog 2026`,
+  ];
+
+  for (const q of ytQueries) {
+    const data = await ytExecute("search", { query: q, sort: "date" }) as any;
+    if (data?.results) {
+      for (const v of data.results) {
+        if (v.author_url && !channelUrls.has(v.author_url)) {
+          channelUrls.set(v.author_url, v.author || "");
+        }
+      }
+    }
+  }
+
+  // Resolve video URLs to channel URLs
+  const resolvedChannels = new Map<string, string>();
+  for (const [url, name] of channelUrls) {
+    if (url.includes("youtube.com/watch")) {
+      const vd = await ytExecute("video", { url }) as any;
+      if (vd?.author_url && !resolvedChannels.has(vd.author_url)) {
+        resolvedChannels.set(vd.author_url, vd.author || name);
+      }
+    } else {
+      if (!resolvedChannels.has(url)) resolvedChannels.set(url, name);
+    }
+  }
+
+  // --- Phase 2: SIZE GATE ---
+  const qualifiedChannels: Array<{ url: string; name: string; subscribers: number; description: string }> = [];
+  const channelEntries = Array.from(resolvedChannels.entries()).slice(0, 40);
+
+  for (const [channelUrl, authorName] of channelEntries) {
+    const channel = await ytExecute("channel", { channel_url: channelUrl }) as any;
+    if (!channel || channel.error) continue;
+    const subs = channel.subscribers || 0;
+    if (subs < minSubs || subs > maxSubs) continue;
+    qualifiedChannels.push({
+      url: channelUrl,
+      name: channel.name || authorName,
+      subscribers: subs,
+      description: channel.description || "",
+    });
+  }
+
+  // --- Phase 3: CONTENT DEPTH ---
+  const influencers: InfluencerProfile[] = [];
+
+  for (const ch of qualifiedChannels) {
+    // Get 5 recent videos
+    const recentSearch = await ytExecute("search", { query: ch.name, sort: "date" }) as any;
+    const recentResults = (recentSearch?.results || []).slice(0, 5);
+
+    const videoDetails: Array<{ title: string; views?: number; likes?: number; published?: string }> = [];
+    for (const v of recentResults) {
+      if (v.url) {
+        const vd = await ytExecute("video", { url: v.url }) as any;
+        if (vd && !vd.error) {
+          videoDetails.push({
+            title: vd.title || v.title,
+            views: vd.views,
+            likes: vd.likes,
+            published: vd.published,
+          });
+        }
+      }
+    }
+
+    if (videoDetails.length === 0) continue;
+
+    // Calculate content quality metrics
+    const views = videoDetails.map(v => v.views || 0).filter(v => v > 0);
+    const likes = videoDetails.map(v => v.likes || 0).filter(v => v > 0);
+    const avgViews = views.length > 0 ? views.reduce((a, b) => a + b, 0) / views.length : 0;
+    const avgLikes = likes.length > 0 ? likes.reduce((a, b) => a + b, 0) / likes.length : 0;
+
+    const viewsPerSub = ch.subscribers > 0 ? avgViews / ch.subscribers : 0;
+    const likesPerView = avgViews > 0 ? avgLikes / avgViews : 0;
+    const viewConsistency = calcViewConsistency(views);
+    const nicheDepth = calcNicheDepth(videoDetails.map(v => v.title), nicheKeywords);
+
+    // Skip GENERALIST channels
+    if (nicheDepth === "GENERALIST") continue;
+
+    const contactInfo = extractContactInfo(ch.description);
+    const igHandles = parseIgHandles(ch.description);
+    const engagementRate = calcEngagement(avgViews, avgLikes, ch.subscribers);
+    const nicheMatchPct = calcNicheMatch(
+      [ch.description, ...videoDetails.map(v => v.title)],
+      nicheKeywords,
+    );
+
+    // Brave Search for IG followers
+    let igFollowers: number | undefined;
+    let igUrl: string | undefined;
+    if (igHandles.length > 0) {
+      const braveResult = await braveSearch(`"${igHandles[0]}" instagram`, 3) as any;
+      if (braveResult?.web?.results) {
+        for (const r of braveResult.web.results) {
+          const f = parseFollowersFromSnippet(r.description || "");
+          if (f) { igFollowers = f; igUrl = `https://instagram.com/${igHandles[0]}`; break; }
+        }
+      }
+    }
+
+    const platformCount = 1 + (igFollowers ? 1 : 0);
+
+    const profile: InfluencerProfile = {
+      handle: ch.url.replace("https://www.youtube.com", "") || ch.name,
+      name: ch.name,
+      youtube_url: ch.url,
+      instagram_url: igUrl,
+      subscribers: ch.subscribers,
+      ig_followers: igFollowers,
+      description: ch.description.substring(0, 300),
+      engagement_rate: Math.round(engagementRate * 10) / 10,
+      avg_views: avgViews ? Math.round(avgViews) : undefined,
+      avg_likes: avgLikes ? Math.round(avgLikes) : undefined,
+      recent_videos: videoDetails,
+      email: contactInfo.email,
+      website: contactInfo.website,
+      has_business_contact: contactInfo.hasBusiness,
+      has_collab_signals: contactInfo.hasCollab,
+      niche_match_pct: nicheMatchPct,
+      posting_frequency: estimateFrequency(videoDetails),
+      niche_depth: nicheDepth,
+      views_per_sub: Math.round(viewsPerSub * 1000) / 1000,
+      likes_per_view: Math.round(likesPerView * 1000) / 1000,
+      view_consistency: viewConsistency,
+      platform_count: platformCount,
+      scores: { reach: 0, conversion: 0, partnership: 0 },
+      tier: "UNRANKED",
+    };
+
+    // Custom scoring for content_scout:
+    // reach ← Content Quality Score
+    // conversion ← Partnership Readiness
+    // partnership ← Reach + Authenticity
+    const contentScore = calcContentScore(profile);
+
+    // Partnership readiness: email, collab signals, business account, posting frequency
+    let partnershipReady = 0;
+    if (contactInfo.email) partnershipReady += 30;
+    if (contactInfo.hasCollab) partnershipReady += 20;
+    if (contactInfo.hasBusiness) partnershipReady += 15;
+    if (profile.posting_frequency === "weekly") partnershipReady += 20;
+    else if (profile.posting_frequency === "biweekly") partnershipReady += 10;
+    if (igFollowers) partnershipReady += 15;
+
+    // Reach + Authenticity: audience size, multi-platform, views/subs sanity
+    let reachAuth = 0;
+    if (ch.subscribers >= 10_000) reachAuth += 25;
+    else if (ch.subscribers >= 1_000) reachAuth += 15;
+    else reachAuth += 5;
+    if (platformCount >= 2) reachAuth += 20;
+    if (viewsPerSub >= 0.15) reachAuth += 25;
+    else if (viewsPerSub >= 0.05) reachAuth += 15;
+    reachAuth += Math.round(viewConsistency / 100 * 30);
+
+    profile.scores = {
+      reach: Math.min(100, contentScore),
+      conversion: Math.min(100, partnershipReady),
+      partnership: Math.min(100, reachAuth),
+    };
+    profile.tier = classifyTier(profile.scores, input.threshold ?? config.threshold ?? 60);
+    influencers.push(profile);
+  }
+
+  // --- Phase 4: IG ENRICHMENT (top 5 only) ---
+  const sorted = [...influencers].sort((a, b) => {
+    const scoreA = (a.scores.reach + a.scores.conversion + a.scores.partnership) / 3;
+    const scoreB = (b.scores.reach + b.scores.conversion + b.scores.partnership) / 3;
+    return scoreB - scoreA;
+  });
+
+  let igCallsUsed = 0;
+  for (const profile of sorted) {
+    if (igCallsUsed >= igMaxCalls) break;
+    const igHandle = profile.instagram_url?.replace("https://instagram.com/", "");
+    if (!igHandle) continue;
+
+    try {
+      const igData = await igExecute("profile", { username: igHandle }) as any;
+      if (igData && !igData.error) {
+        if (igData.followers !== undefined) profile.ig_followers = igData.followers;
+        if (igData.engagement_rate !== undefined) profile.ig_engagement_rate = igData.engagement_rate;
+        if (igData.posts_count !== undefined) profile.ig_posts_count = igData.posts_count;
+        if (igData.business_email) profile.email = profile.email || igData.business_email;
+        profile.platform_count = Math.max(profile.platform_count, 2);
+      }
+    } catch {
+      // IG enrichment is bonus — skip on failure
+    }
+    igCallsUsed++;
+  }
+
+  return influencers;
+}
+
 // --- Main influencer discovery dispatcher ---
 
 async function runInfluencerDiscovery(
@@ -1134,6 +1453,9 @@ async function runInfluencerDiscovery(
       break;
     case "competitor_spy":
       influencers = await runCompetitorSpy(config, input);
+      break;
+    case "content_scout":
+      influencers = await runContentScout(config, input);
       break;
     default:
       return toolResult({ error: `Unknown influencer discovery workflow: ${(config as any).workflow}` });

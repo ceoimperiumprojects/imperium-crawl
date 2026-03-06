@@ -68,7 +68,7 @@ export interface WebSocketSkillConfig extends SkillConfigBase {
 
 export interface InfluencerDiscoverySkillConfig extends SkillConfigBase {
   tool: "influencer_discovery";
-  workflow: "niche_discovery" | "hashtag_scout" | "competitor_spy";
+  workflow: "niche_discovery" | "hashtag_scout" | "competitor_spy" | "content_scout";
   niche: string;
   platforms?: ("youtube" | "instagram" | "brave")[];
   output_format?: "json" | "markdown" | "csv";

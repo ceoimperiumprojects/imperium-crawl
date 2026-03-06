@@ -1,6 +1,6 @@
 {
   "name": "imperium-crawl",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Open-source CLI tool for web scraping, crawling, search, and custom skills",
   "type": "module",
   "bin": {
