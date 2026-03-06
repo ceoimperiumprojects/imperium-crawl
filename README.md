@@ -294,7 +294,7 @@ Second visit to cloudflare.com:
 
 | Tool | What It Does |
 |------|-------------|
-| **youtube** | Search videos, get video details, comments, transcripts, and channel info. Parses `ytInitialData` — no API key needed. |
+| **youtube** | Search videos, get video details, comments, transcripts, and channel info. Parses `ytInitialData` — no API key needed. Add `OPENAI_API_KEY` to unlock Whisper AI transcription for videos without captions. |
 | **reddit** | Search Reddit, browse subreddits, get posts and comments via Reddit's public JSON API. |
 
 ### 📦 Batch Processing (no API key needed)
@@ -323,6 +323,7 @@ Full configuration with all optional environment variables:
         "TWOCAPTCHA_API_KEY": "your-2captcha-api-key",
         "LLM_API_KEY": "your-api-key",
         "LLM_PROVIDER": "anthropic",
+        "OPENAI_API_KEY": "your-openai-key-for-whisper",
         "SESSION_ENCRYPTION_KEY": "your-64-char-hex-key",
         "PROXY_URL": "http://user:pass@proxy:8080",
         "PROXY_URLS": "http://proxy1:8080,socks5://proxy2:1080"
@@ -339,6 +340,7 @@ Full configuration with all optional environment variables:
 | `BRAVE_API_KEY` | 4 search tools (web, news, image, video) | [brave.com/search/api](https://brave.com/search/api/) (free tier available) |
 | `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving (reCAPTCHA v2/v3, hCaptcha, Turnstile) | [2captcha.com](https://2captcha.com/) |
 | `LLM_API_KEY` | AI-powered data extraction (`ai_extract` tool) | Anthropic or OpenAI API key |
+| `OPENAI_API_KEY` | Whisper AI transcription — transcribe any YouTube video, even without captions | [platform.openai.com](https://platform.openai.com/) |
 | `CHROME_PROFILE_PATH` | Authenticated browser sessions (use your Chrome cookies) | Path to Chrome user data dir |
 | `PROXY_URL` | Route all requests through a proxy (http/https/socks4/socks5) | Any proxy provider |
 
@@ -546,6 +548,7 @@ Every tool tested against production websites with real anti-bot defenses:
 | `LLM_API_KEY` | No | Anthropic or OpenAI API key (enables `ai_extract`) |
 | `LLM_PROVIDER` | No | `anthropic`, `openai`, or `minimax` (default: `anthropic`) |
 | `LLM_MODEL` | No | Override default LLM model |
+| `OPENAI_API_KEY` | No | OpenAI API key for Whisper transcription (transcribe any YouTube video without captions) |
 | `SESSION_ENCRYPTION_KEY` | No | 32-byte hex key for encrypting session files at rest |
 | `TRANSPORT` | No | `stdio` (default) or `http` |
 | `PORT` | No | HTTP port (default: 3000) |
