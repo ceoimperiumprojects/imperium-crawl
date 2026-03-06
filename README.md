@@ -4,7 +4,7 @@
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
-25 tools. Zero API keys required. One `npx` command.
+26 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -31,7 +31,7 @@ npx -y imperium-crawl scrape --url https://example.com
 npm install -g imperium-crawl
 ```
 
-> That's it. 20 of 25 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 20 of 26 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -115,7 +115,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **25 Tools, 2 Modes**
+🧰 **26 Tools, 2 Modes**
 CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **10 Built-in Recipes**
@@ -131,7 +131,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
 |---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
 | Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
-| Total tools | **25** | 5 | 2 | 4 | N/A |
+| Total tools | **26** | 5 | 2 | 4 | N/A |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
 | Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -224,7 +224,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 25 Tools
+## All 26 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -281,6 +281,7 @@ Second visit to cloudflare.com:
 |------|-------------|
 | **youtube** | Search videos, get video details, comments, transcripts, and channel info. Parses `ytInitialData` — no API key needed. Add `OPENAI_API_KEY` to unlock Whisper AI transcription for videos without captions. |
 | **reddit** | Search Reddit, browse subreddits, get posts and comments via Reddit's public JSON API. |
+| **instagram** | Search profiles, get detailed profile info with engagement metrics, and discover influencers by niche/location. Search/discover require `BRAVE_API_KEY`. |
 
 ### 📦 Batch Processing (no API key needed)
 
@@ -423,7 +424,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 25 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 26 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Two Ways to Connect
 
@@ -486,8 +487,9 @@ Every tool tested against production websites with real anti-bot defenses:
 | 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
 | 🎬 **youtube** | "web scraping tutorial" | Search results, video details, comments, transcripts — no API key |
 | 💬 **reddit** | r/webscraping | Subreddit posts, comments, search — public JSON API |
+| 📸 **instagram** | @nike profile | Profile details, engagement rate, recent posts — internal API |
 
-> **25/25 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **26/26 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 

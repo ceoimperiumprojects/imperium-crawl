@@ -1,6 +1,6 @@
 # imperium-crawl — Agent Skill Guide
 
-Comprehensive guide for AI agents using imperium-crawl's 25 CLI tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing.
+Comprehensive guide for AI agents using imperium-crawl's 26 CLI tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing.
 
 **Progressive disclosure:** This file is the overview hub. Each skill and reference topic has a dedicated file with full details — read them when you need depth.
 
@@ -16,7 +16,7 @@ Comprehensive guide for AI agents using imperium-crawl's 25 CLI tools. Covers sc
 | [site-intel.md](site-intel.md) | ~206 | Full site-intel: 5-step workflow, report template, depth guidelines |
 | [research.md](research.md) | ~199 | Full research: search → scrape → synthesize, depth guidelines |
 | [api-recon.md](api-recon.md) | ~218 | Full API recon: discovery, categorization, WebSocket, report template |
-| [tool-reference.md](tool-reference.md) | ~500 | All 25 tools — params, types, defaults, gotchas |
+| [tool-reference.md](tool-reference.md) | ~500 | All 26 tools — params, types, defaults, gotchas |
 | [pipelines.md](pipelines.md) | ~310 | 10 pipeline patterns with full CLI examples |
 | [recipes.md](recipes.md) | ~151 | 10 built-in recipes + custom skill JSON format |
 

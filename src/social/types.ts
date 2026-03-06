@@ -1,5 +1,5 @@
 /**
- * Shared types for social media tools (YouTube, Reddit).
+ * Shared types for social media tools (YouTube, Reddit, Instagram).
  */
 
 export interface SocialVideo {
@@ -53,7 +53,37 @@ export interface SocialProfile {
 
 export interface SocialSearchResult<T> {
   query?: string;
-  platform: "youtube" | "reddit";
+  platform: "youtube" | "reddit" | "instagram";
   results: T[];
   total?: number;
+}
+
+export interface InstagramProfile extends SocialProfile {
+  username: string;
+  followers: number;
+  following: number;
+  posts_count: number;
+  is_business: boolean;
+  business_email?: string;
+  engagement_rate: number;
+  recent_posts: InstagramPost[];
+}
+
+export interface InstagramPost {
+  id: string;
+  url: string;
+  likes: number;
+  comments: number;
+  caption?: string;
+  timestamp: string;
+  is_video: boolean;
+}
+
+export interface InstagramDiscoverResult {
+  query: string;
+  location?: string;
+  filters: { min_followers: number; max_followers: number; min_engagement: number };
+  profiles: InstagramProfile[];
+  total_scanned: number;
+  total_matched: number;
 }

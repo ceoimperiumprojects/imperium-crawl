@@ -23,7 +23,8 @@ import type { SocialVideo, SocialPost, SocialComment, SocialProfile } from "./ty
 export type SocialAction =
   | "youtube:search" | "youtube:video" | "youtube:comments"
   | "youtube:transcript" | "youtube:channel"
-  | "reddit:search" | "reddit:posts" | "reddit:comments" | "reddit:subreddit";
+  | "reddit:search" | "reddit:posts" | "reddit:comments" | "reddit:subreddit"
+  | "instagram:profile";
 
 // ── Schemas for LLM extraction ──
 
@@ -37,6 +38,7 @@ const SOCIAL_SCHEMAS: Record<SocialAction, string> = {
   "reddit:posts": `{ "posts": [{ "title": "string", "url": "permalink", "author": "string", "score": "number or text", "comments_count": "number", "published": "relative time", "flair": "flair text or null" }] }`,
   "reddit:comments": `{ "post": { "title": "string", "author": "string", "score": "number" }, "comments": [{ "author": "string", "text": "comment body", "score": "number", "published": "relative time" }] }`,
   "reddit:subreddit": `{ "name": "subreddit name", "description": "description text", "subscribers": "subscriber count text", "created": "creation date" }`,
+  "instagram:profile": `{ "username": "string", "full_name": "string", "bio": "string", "followers": "follower count text", "following": "following count text", "posts_count": "post count text", "is_verified": true/false, "is_business": true/false, "business_email": "email or null" }`,
 };
 
 // ── Main fallback function ──

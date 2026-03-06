@@ -1,4 +1,4 @@
-# Tool Reference — All 25 imperium-crawl Tools
+# Tool Reference — All 26 imperium-crawl Tools
 
 Complete catalog with CLI commands, parameters, and gotchas.
 
@@ -457,7 +457,7 @@ Delete a batch job and all saved results.
 
 ---
 
-## Social Media Tools (2)
+## Social Media Tools (3)
 
 ### youtube
 **CLI:** `imperium-crawl youtube`
@@ -497,5 +497,31 @@ Search Reddit, browse subreddits, get posts and comments via public JSON API.
 **Returns:** Post list, post with comments, or subreddit profile.
 **Gotcha:** Reddit appends `.json` to URLs — zero HTML parsing needed.
 **CLI:** `--action posts --subreddit programming --sort top --time week`
+
+---
+
+### instagram
+**CLI:** `imperium-crawl instagram`
+
+Search Instagram profiles, get profile details with engagement metrics, discover influencers.
+
+| Param | Type | Default | Required |
+|-------|------|---------|----------|
+| `action` | `"search"` \| `"profile"` \| `"discover"` | — | YES |
+| `query` | string (max 2000) | — | for search |
+| `niche` | string (max 500) | — | for discover |
+| `location` | string (max 200) | — | no |
+| `username` | string (max 200) | — | for profile (single) |
+| `usernames` | array of strings (max 100) | — | for profile (batch) |
+| `min_followers` | number | 1000 | no (discover filter) |
+| `max_followers` | number | 80000 | no (discover filter) |
+| `min_engagement` | number | 3 | no (discover filter, %) |
+| `max_days_since_post` | number | 30 | no (discover filter) |
+| `limit` | number (1-1000) | 20 | no |
+| `sort` | `"engagement"` \| `"followers"` | `"engagement"` | no |
+
+**Returns:** Usernames list (search), profile with engagement data (profile), or filtered/sorted influencer list (discover).
+**Gotcha:** `search` and `discover` require `BRAVE_API_KEY` for Brave Search. `profile` uses Instagram's internal API — no key needed. Rate limited to 1 req/sec for profile fetches. Private accounts are skipped. 429 responses stop batch and return partial results.
+**CLI:** `--action profile --username nike` or `--action discover --niche "travel hotel" --location "beograd" --min_followers 1000`
 
 ---

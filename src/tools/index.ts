@@ -25,6 +25,7 @@ import * as jobStatus from "./job-status.js";
 import * as deleteJob from "./delete-job.js";
 import * as youtube from "./youtube.js";
 import * as reddit from "./reddit.js";
+import * as instagram from "./instagram.js";
 
 export interface ToolDefinition {
   name: string;
@@ -68,4 +69,5 @@ export const allTools: ToolDefinition[] = [
   // Social media tools (no API key needed)
   youtube as ToolDefinition,
   reddit as ToolDefinition,
+  instagram as ToolDefinition,
 ];

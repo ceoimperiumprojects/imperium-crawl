@@ -138,4 +138,9 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     description:
       "Search Reddit, browse subreddits, get posts and comments. No API key needed.",
   },
+  {
+    cmd: "instagram",
+    description:
+      "Search Instagram profiles, get profile details with engagement metrics, and discover influencers by niche/location. Search/discover require BRAVE_API_KEY.",
+  },
 ];

@@ -133,6 +133,183 @@ You can edit skill JSON files directly:
 
 ---
 
+---
+
+## Workflow: Multi-Platform Influencer Discovery
+
+Find influencers by combining Instagram, YouTube, Brave Search, and Reddit.
+Each step uses an existing imperium-crawl tool. The AI agent orchestrates steps and cross-references results in memory.
+
+**When to use:** Influencer outreach, partnership scouting, competitive analysis, creator discovery.
+
+### Overview
+
+```
+Sources (parallel)           Enrich               Score & Rank
+─────────────────           ───────               ────────────
+Brave → IG usernames  ─┐
+                        ├─→ IG profiles  ─┐
+Brave → YT channels   ─┤                  ├─→ Cross-reference → Unified ranked list
+                        ├─→ YT channels  ─┤
+YouTube search        ──┘                  │
+                          Reddit search  ──┘
+```
+
+### Step 1 — Collect candidates from multiple sources
+
+Run these searches to build a candidate pool. More sources = more candidates.
+
+**Source A: Brave → Instagram profiles**
+```bash
+imperium-crawl search --query "site:instagram.com travel serbia" --count 20
+imperium-crawl search --query "site:instagram.com hotel beograd influencer" --count 20
+imperium-crawl search --query "site:instagram.com food blogger serbia" --count 20
+```
+From results, extract Instagram usernames from URLs matching `instagram.com/{username}`.
+Skip non-profile paths: `/p/`, `/reel/`, `/explore/`, `/accounts/`.
+
+**Source B: Brave → YouTube channels**
+```bash
+imperium-crawl search --query "site:youtube.com travel serbia channel" --count 20
+imperium-crawl search --query "site:youtube.com hotel beograd vlog" --count 20
+```
+Extract channel handles from URLs matching `youtube.com/@{handle}` or `youtube.com/c/{name}`.
+
+**Source C: YouTube search (no API key needed)**
+```bash
+imperium-crawl youtube --action search --query "travel serbia vlog" --limit 20
+imperium-crawl youtube --action search --query "beograd hotel review" --limit 20
+```
+Collect unique `author` and `author_url` fields from video results — these are channel handles.
+
+**Or use the instagram tool's built-in search:**
+```bash
+imperium-crawl instagram --action search --query "travel serbia" --limit 20
+```
+Returns deduplicated usernames directly.
+
+> **Rate limits:** Brave Free plan = 1 req/sec. Space search queries 1.5s apart.
+> YouTube search uses smartFetch (no rate limit, but don't spam).
+
+### Step 2 — Fetch profiles from each platform
+
+**Instagram profiles** (browser-based, ~15s per profile):
+```bash
+# Single profile
+imperium-crawl instagram --action profile --username explore_serbia
+
+# Batch (1.5s rate limit between fetches)
+imperium-crawl instagram --action profile \
+  --usernames explore_serbia \
+  --usernames serbiatourism \
+  --usernames visit_belgrade
+```
+Returns: `followers`, `following`, `posts_count`, `verified`, `engagement_rate`.
+
+**YouTube channels** (fast, no browser needed):
+```bash
+imperium-crawl youtube --action channel --channel-url "youtube.com/@explore_serbia"
+imperium-crawl youtube --action channel --channel-url "youtube.com/@serbiatourism"
+```
+Returns: `name`, `subscribers`, `verified`, `description`.
+
+> **Speed difference:** YouTube channel fetch = ~2s (HTTP only). Instagram profile = ~15s (needs browser).
+> Fetch all YouTube channels first, then Instagram profiles for matched candidates only.
+
+### Step 3 — Cross-reference across platforms
+
+For each candidate, check if they exist on the other platform:
+
+**IG influencer → check YouTube:**
+```bash
+imperium-crawl youtube --action channel --channel-url "youtube.com/@{ig_username}"
+```
+If 404/not found, try searching:
+```bash
+imperium-crawl youtube --action search --query "{full_name} {niche}" --limit 3
+```
+Match by name similarity in results.
+
+**YouTube creator → check Instagram:**
+```bash
+imperium-crawl instagram --action profile --username {yt_handle}
+```
+
+**Optional — Reddit signal:**
+```bash
+imperium-crawl reddit --action search --query "{username}" --limit 5
+```
+Reddit activity = authenticity signal (real person, not just a brand page).
+
+### Step 4 — Score and rank
+
+Build a unified score per influencer using data from all platforms:
+
+```
+Score = (ig_score × 0.5) + (yt_score × 0.3) + (reddit_score × 0.2)
+
+ig_score:
+  - followers 1K-10K = 5pts, 10K-50K = 10pts, 50K+ = 15pts
+  - engagement_rate > 3% = +5pts
+  - is_business = +2pts
+  - has business_email = +3pts
+
+yt_score:
+  - subscribers 1K-10K = 5pts, 10K-100K = 10pts, 100K+ = 15pts
+  - verified = +3pts
+  - recent video activity = +5pts
+
+reddit_score:
+  - found in niche subreddits = 5pts per subreddit
+  - high karma posts = +3pts
+
+Multipliers:
+  - Present on 2 platforms = score × 1.3
+  - Present on 3 platforms = score × 1.5
+  - Has contact info (email) = priority flag
+```
+
+Sort by score DESC. Output top N.
+
+### Step 5 — Output format
+
+Final output per influencer:
+```json
+{
+  "rank": 1,
+  "name": "Explore Serbia",
+  "score": 42.5,
+  "platforms": {
+    "instagram": {
+      "username": "explore_serbia",
+      "url": "https://instagram.com/explore_serbia/",
+      "followers": 19000,
+      "engagement_rate": 4.2
+    },
+    "youtube": {
+      "handle": "@explore_serbia",
+      "url": "https://youtube.com/@explore_serbia",
+      "subscribers": 8500
+    },
+    "reddit": { "mentions": 3 }
+  },
+  "contact": { "email": "info@exploreserbia.com" },
+  "cross_platform": true,
+  "tags": ["travel", "serbia", "tourism"]
+}
+```
+
+### Practical tips
+
+- **Start with YouTube** — faster to fetch (no browser), gives you channel handles to check on IG
+- **Use Brave query variations** — "influencer", "blogger", "vlog", "guide", "content creator" find different people
+- **Location matters** — add city names, not just country: "beograd", "novi sad", "nis"
+- **Small influencers** (1K-50K followers) have higher engagement rates and are more reachable
+- **Batch smartly** — fetch all YT channels first (~2s each), then only fetch IG for top candidates (~15s each)
+- **Rate limit Brave** — 1.5s between requests on Free plan. YouTube/Instagram have their own limits
+
+---
+
 ## Tips
 
 - **Check recipes first** — before building a custom skill, run `list_skills` to see if a recipe already covers the use case
