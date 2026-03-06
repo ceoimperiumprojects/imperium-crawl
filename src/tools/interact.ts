@@ -553,7 +553,7 @@ export async function execute(input: InteractInput) {
           actionResults.push({ type: action.type, success: false, error: `Action '${action.type}' denied by policy` });
           continue;
         }
-        // "confirm" is treated as "allow" in MCP context (no interactive prompt available)
+        // "confirm" is treated as "allow" (no interactive prompt available)
       }
 
       // Human-like delay between actions

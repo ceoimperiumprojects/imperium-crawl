@@ -6,25 +6,24 @@ Extract the right content from any URL using the optimal tool and settings.
 
 ---
 
-## Mode Detection
+## Tool Invocation
 
-| Mode | Tool format | Param format |
-|------|-------------|--------------|
-| **MCP** | `mcp__imperium-crawl__scrape` | snake_case JSON: `{ stealth_level: 3 }` |
-| **CLI** | `imperium-crawl scrape --url URL` | --kebab-case flags: `--stealth-level 3` |
+| Tool format | Param format |
+|-------------|--------------|
+| `imperium-crawl scrape --url URL` | --kebab-case flags: `--stealth-level 3` |
 
 ---
 
-## Available Tools — Dual Mode
+## Available Tools
 
-| Action | MCP Tool | CLI Command | When to use |
-|--------|----------|-------------|-------------|
-| Clean article | `mcp__imperium-crawl__readability` | `imperium-crawl readability --url URL` | Articles, blogs, news |
-| General scrape | `mcp__imperium-crawl__scrape` | `imperium-crawl scrape --url URL` | General pages, product pages |
-| CSS extract | `mcp__imperium-crawl__extract` | `imperium-crawl extract --url URL --selectors '{}'` | Structured data with known selectors |
-| AI extract | `mcp__imperium-crawl__ai_extract` | `imperium-crawl ai-extract --url URL --schema "..."` | Unknown structure, let LLM figure it out |
-| Visual capture | `mcp__imperium-crawl__screenshot` | `imperium-crawl screenshot --url URL` | Visual inspection, debugging |
-| Page structure | `mcp__imperium-crawl__snapshot` | `imperium-crawl snapshot --url URL` | ARIA tree with interactive element refs — inspect before scraping |
+| Action | CLI Command | When to use |
+|--------|-------------|-------------|
+| Clean article | `imperium-crawl readability --url URL` | Articles, blogs, news |
+| General scrape | `imperium-crawl scrape --url URL` | General pages, product pages |
+| CSS extract | `imperium-crawl extract --url URL --selectors '{}'` | Structured data with known selectors |
+| AI extract | `imperium-crawl ai-extract --url URL --schema "..."` | Unknown structure, let LLM figure it out |
+| Visual capture | `imperium-crawl screenshot --url URL` | Visual inspection, debugging |
+| Page structure | `imperium-crawl snapshot --url URL` | ARIA tree with interactive element refs — inspect before scraping |
 
 ---
 
@@ -46,8 +45,7 @@ Extract the right content from any URL using the optimal tool and settings.
 2. If good content (title present, text > 200 chars) → present it
 3. If empty/garbage → fallback to `scrape` with `format: "markdown"`, `include: ["metadata"]`
 
-**MCP:** `{ "url": "...", "format": "markdown" }`
-**CLI:** `imperium-crawl readability --url "URL"`
+`imperium-crawl readability --url "URL"`
 
 #### Structured Data Path
 
@@ -57,8 +55,7 @@ Extract the right content from any URL using the optimal tool and settings.
 4. If selectors return empty → enable `llm_fallback: true` (hybrid cascade)
 5. If you don't know selectors → use `ai_extract` with natural language or `"auto"`
 
-**MCP:** `{ "url": "...", "selectors": {"name": ".title", "price": ".cost"}, "items_selector": ".product", "llm_fallback": true }`
-**CLI:** `imperium-crawl extract --url "URL" --selectors '{"name":".title","price":".cost"}' --items-selector ".product" --llm-fallback`
+`imperium-crawl extract --url "URL" --selectors '{"name":".title","price":".cost"}' --items-selector ".product" --llm-fallback`
 
 #### AI Auto-Discover Path (NEW)
 
@@ -68,8 +65,7 @@ When you don't know the page structure at all:
 2. Or use natural language: `schema: "extract all products with name, price, and rating"`
 3. Review results — if good, present them
 
-**MCP:** `{ "url": "...", "schema": "auto" }`
-**CLI:** `imperium-crawl ai-extract --url "URL" --schema auto`
+`imperium-crawl ai-extract --url "URL" --schema auto`
 
 **Requires:** `LLM_API_KEY` env var. If not set, suggest `imperium-crawl setup`.
 
@@ -79,16 +75,14 @@ When you don't know the page structure at all:
 2. Present clean summary
 3. Offer to extract specific data or run readability
 
-**MCP:** `{ "url": "...", "format": "markdown", "include": ["metadata", "links"] }`
-**CLI:** `imperium-crawl scrape --url "URL" --include metadata,links`
+`imperium-crawl scrape --url "URL" --include metadata,links`
 
 #### Visual Path
 
 1. Call `screenshot` — set `full_page: true` for full captures
 2. Present screenshot, offer to scrape content
 
-**MCP:** `{ "url": "...", "full_page": true }`
-**CLI:** `imperium-crawl screenshot --url "URL" --full-page`
+`imperium-crawl screenshot --url "URL" --full-page`
 
 ---
 
@@ -103,8 +97,7 @@ The stealth engine auto-escalates (Level 1 → 2 → 3), but you can skip ahead:
 | JavaScript SPA (React, Angular, Vue) | `stealth_level: 3` | Content requires browser rendering |
 | After getting empty/blocked results | `stealth_level: 3` + `proxy` | Full stealth with proxy rotation |
 
-**MCP:** `{ "url": "...", "stealth_level": 3 }`
-**CLI:** `imperium-crawl scrape --url "URL" --stealth-level 3`
+`imperium-crawl scrape --url "URL" --stealth-level 3`
 
 ---
 

@@ -1,8 +1,8 @@
 # Tool Reference — All 25 imperium-crawl Tools
 
-Complete catalog with MCP + CLI names, parameters, and gotchas.
+Complete catalog with CLI commands, parameters, and gotchas.
 
-**Convention:** MCP uses underscore (`ai_extract`), CLI uses hyphen (`ai-extract`).
+**Convention:** CLI uses hyphen-case for commands (e.g., `ai-extract`, `batch-scrape`).
 
 **Common optional params** (most scraping/browser tools): `proxy` (string), `chrome_profile` (string, max 1000).
 
@@ -11,7 +11,7 @@ Complete catalog with MCP + CLI names, parameters, and gotchas.
 ## Scraping Tools (6)
 
 ### scrape
-**MCP:** `mcp__imperium-crawl__scrape` | **CLI:** `imperium-crawl scrape`
+**CLI:** `imperium-crawl scrape`
 
 Scrape a URL, return Markdown (default), HTML, structured data, links, metadata.
 
@@ -31,7 +31,7 @@ Scrape a URL, return Markdown (default), HTML, structured data, links, metadata.
 ---
 
 ### crawl
-**MCP:** `mcp__imperium-crawl__crawl` | **CLI:** `imperium-crawl crawl`
+**CLI:** `imperium-crawl crawl`
 
 Priority-based multi-page crawl. Returns Markdown per page.
 
@@ -49,7 +49,7 @@ Priority-based multi-page crawl. Returns Markdown per page.
 ---
 
 ### map
-**MCP:** `mcp__imperium-crawl__map` | **CLI:** `imperium-crawl map`
+**CLI:** `imperium-crawl map`
 
 Discover all URLs on a site (sitemap.xml + link crawling).
 
@@ -67,7 +67,7 @@ Discover all URLs on a site (sitemap.xml + link crawling).
 ---
 
 ### extract
-**MCP:** `mcp__imperium-crawl__extract` | **CLI:** `imperium-crawl extract`
+**CLI:** `imperium-crawl extract`
 
 Extract structured data using CSS selectors. Hybrid cascade: if selectors return empty + `llm_fallback: true`, automatically falls back to AI extraction.
 
@@ -87,7 +87,7 @@ Extract structured data using CSS selectors. Hybrid cascade: if selectors return
 ---
 
 ### readability
-**MCP:** `mcp__imperium-crawl__readability` | **CLI:** `imperium-crawl readability`
+**CLI:** `imperium-crawl readability`
 
 Extract main article content using Mozilla Readability algorithm.
 
@@ -104,7 +104,7 @@ Extract main article content using Mozilla Readability algorithm.
 ---
 
 ### screenshot
-**MCP:** `mcp__imperium-crawl__screenshot` | **CLI:** `imperium-crawl screenshot`
+**CLI:** `imperium-crawl screenshot`
 
 Take a PNG screenshot of a page. Requires Playwright.
 
@@ -115,7 +115,7 @@ Take a PNG screenshot of a page. Requires Playwright.
 | `proxy` | string | — | no |
 | `chrome_profile` | string | — | no |
 
-**Returns:** Base64 PNG image (MCP image content type).
+**Returns:** Base64 PNG image.
 **CLI:** `--full-page` (boolean flag). Outputs base64 or saves to `--output file.png`.
 
 ---
@@ -123,7 +123,7 @@ Take a PNG screenshot of a page. Requires Playwright.
 ## Search Tools (4) — Require `BRAVE_API_KEY`
 
 ### search
-**MCP:** `mcp__imperium-crawl__search` | **CLI:** `imperium-crawl search`
+**CLI:** `imperium-crawl search`
 
 Web search via Brave Search API.
 
@@ -140,7 +140,7 @@ Web search via Brave Search API.
 ---
 
 ### news_search
-**MCP:** `mcp__imperium-crawl__news_search` | **CLI:** `imperium-crawl news-search`
+**CLI:** `imperium-crawl news-search`
 
 News search via Brave Search API.
 
@@ -156,7 +156,7 @@ News search via Brave Search API.
 ---
 
 ### image_search
-**MCP:** `mcp__imperium-crawl__image_search` | **CLI:** `imperium-crawl image-search`
+**CLI:** `imperium-crawl image-search`
 
 Image search via Brave Search API.
 
@@ -171,7 +171,7 @@ Image search via Brave Search API.
 ---
 
 ### video_search
-**MCP:** `mcp__imperium-crawl__video_search` | **CLI:** `imperium-crawl video-search`
+**CLI:** `imperium-crawl video-search`
 
 Video search via Brave Search API.
 
@@ -189,7 +189,7 @@ Video search via Brave Search API.
 ## Skill Tools (3)
 
 ### create_skill
-**MCP:** `mcp__imperium-crawl__create_skill` | **CLI:** `imperium-crawl create-skill`
+**CLI:** `imperium-crawl create-skill`
 
 Analyze a page, auto-detect extraction patterns, save as reusable skill.
 
@@ -207,7 +207,7 @@ Analyze a page, auto-detect extraction patterns, save as reusable skill.
 ---
 
 ### run_skill
-**MCP:** `mcp__imperium-crawl__run_skill` | **CLI:** `imperium-crawl run-skill`
+**CLI:** `imperium-crawl run-skill`
 
 Execute a saved skill or built-in recipe.
 
@@ -227,7 +227,7 @@ Execute a saved skill or built-in recipe.
 ---
 
 ### list_skills
-**MCP:** `mcp__imperium-crawl__list_skills` | **CLI:** `imperium-crawl list-skills`
+**CLI:** `imperium-crawl list-skills`
 
 List all saved skills and built-in recipes.
 
@@ -242,7 +242,7 @@ List all saved skills and built-in recipes.
 ## API Discovery Tools (3)
 
 ### discover_apis
-**MCP:** `mcp__imperium-crawl__discover_apis` | **CLI:** `imperium-crawl discover-apis`
+**CLI:** `imperium-crawl discover-apis`
 
 Navigate to page and capture all API calls (XHR/fetch). Requires Playwright.
 
@@ -262,7 +262,7 @@ Navigate to page and capture all API calls (XHR/fetch). Requires Playwright.
 ---
 
 ### query_api
-**MCP:** `mcp__imperium-crawl__query_api` | **CLI:** `imperium-crawl query-api`
+**CLI:** `imperium-crawl query-api`
 
 Direct HTTP request to an API endpoint. Ideal after `discover_apis`.
 
@@ -283,7 +283,7 @@ Direct HTTP request to an API endpoint. Ideal after `discover_apis`.
 ---
 
 ### monitor_websocket
-**MCP:** `mcp__imperium-crawl__monitor_websocket` | **CLI:** `imperium-crawl monitor-websocket`
+**CLI:** `imperium-crawl monitor-websocket`
 
 Monitor WebSocket traffic on a page. Requires Playwright.
 
@@ -305,7 +305,7 @@ Monitor WebSocket traffic on a page. Requires Playwright.
 ## AI Extraction (1) — Requires `LLM_API_KEY`
 
 ### ai_extract
-**MCP:** `mcp__imperium-crawl__ai_extract` | **CLI:** `imperium-crawl ai-extract`
+**CLI:** `imperium-crawl ai-extract`
 
 AI/LLM-powered structured data extraction.
 
@@ -331,7 +331,7 @@ AI/LLM-powered structured data extraction.
 ## Interaction (2)
 
 ### interact
-**MCP:** `mcp__imperium-crawl__interact` | **CLI:** `imperium-crawl interact`
+**CLI:** `imperium-crawl interact`
 
 Browser automation with action sequences, session persistence, and encryption. Requires Playwright.
 
@@ -376,7 +376,7 @@ Browser automation with action sequences, session persistence, and encryption. R
 ---
 
 ### snapshot
-**MCP:** `mcp__imperium-crawl__snapshot` | **CLI:** `imperium-crawl snapshot`
+**CLI:** `imperium-crawl snapshot`
 
 ARIA-based page snapshot with interactive element refs. Use refs in interact for precise targeting.
 
@@ -398,7 +398,7 @@ ARIA-based page snapshot with interactive element refs. Use refs in interact for
 ## Batch Processing (4)
 
 ### batch_scrape
-**MCP:** `mcp__imperium-crawl__batch_scrape` | **CLI:** `imperium-crawl batch-scrape`
+**CLI:** `imperium-crawl batch-scrape`
 
 Parallel scraping of multiple URLs with optional AI extraction and resume support.
 
@@ -419,7 +419,7 @@ Parallel scraping of multiple URLs with optional AI extraction and resume suppor
 ---
 
 ### list_jobs
-**MCP:** `mcp__imperium-crawl__list_jobs` | **CLI:** `imperium-crawl list-jobs`
+**CLI:** `imperium-crawl list-jobs`
 
 List all batch scrape jobs with status and progress.
 
@@ -432,7 +432,7 @@ List all batch scrape jobs with status and progress.
 ---
 
 ### job_status
-**MCP:** `mcp__imperium-crawl__job_status` | **CLI:** `imperium-crawl job-status`
+**CLI:** `imperium-crawl job-status`
 
 Get full status and results for a specific batch job.
 
@@ -445,7 +445,7 @@ Get full status and results for a specific batch job.
 ---
 
 ### delete_job
-**MCP:** `mcp__imperium-crawl__delete_job` | **CLI:** `imperium-crawl delete-job`
+**CLI:** `imperium-crawl delete-job`
 
 Delete a batch job and all saved results.
 
@@ -460,7 +460,7 @@ Delete a batch job and all saved results.
 ## Social Media Tools (2)
 
 ### youtube
-**MCP:** `mcp__imperium-crawl__youtube` | **CLI:** `imperium-crawl youtube`
+**CLI:** `imperium-crawl youtube`
 
 Search YouTube videos, get video details, comments, transcripts, and channel info.
 
@@ -480,7 +480,7 @@ Search YouTube videos, get video details, comments, transcripts, and channel inf
 ---
 
 ### reddit
-**MCP:** `mcp__imperium-crawl__reddit` | **CLI:** `imperium-crawl reddit`
+**CLI:** `imperium-crawl reddit`
 
 Search Reddit, browse subreddits, get posts and comments via public JSON API.
 

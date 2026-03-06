@@ -6,25 +6,24 @@ Search, select authoritative sources, extract key info, synthesize a structured 
 
 ---
 
-## Mode Detection
+## Tool Invocation
 
-| Mode | Tool format | Param format |
-|------|-------------|--------------|
-| **MCP** | `mcp__imperium-crawl__search` | snake_case JSON |
-| **CLI** | `imperium-crawl search --query "..."` | --kebab-case flags |
+| Tool format | Param format |
+|-------------|--------------|
+| `imperium-crawl search --query "..."` | --kebab-case flags |
 
 ---
 
-## Available Tools — Dual Mode
+## Available Tools
 
-| Action | MCP Tool | CLI Command | Key Params |
-|--------|----------|-------------|------------|
-| Web search | `mcp__imperium-crawl__search` | `imperium-crawl search --query "..."` | `query`, `count`, `freshness` |
-| News search | `mcp__imperium-crawl__news_search` | `imperium-crawl news-search --query "..."` | `query`, `count`, `freshness` |
-| Clean article | `mcp__imperium-crawl__readability` | `imperium-crawl readability --url URL` | `format` |
-| General scrape | `mcp__imperium-crawl__scrape` | `imperium-crawl scrape --url URL` | `format`, `include`, `stealth_level` |
-| Batch scrape | `mcp__imperium-crawl__batch_scrape` | `imperium-crawl batch-scrape --urls "..."` | `urls`, `concurrency`, `extraction_schema` |
-| AI extract | `mcp__imperium-crawl__ai_extract` | `imperium-crawl ai-extract --url URL --schema "..."` | `schema`, `format` |
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| Web search | `imperium-crawl search --query "..."` | `query`, `count`, `freshness` |
+| News search | `imperium-crawl news-search --query "..."` | `query`, `count`, `freshness` |
+| Clean article | `imperium-crawl readability --url URL` | `format` |
+| General scrape | `imperium-crawl scrape --url URL` | `format`, `include`, `stealth_level` |
+| Batch scrape | `imperium-crawl batch-scrape --urls "..."` | `urls`, `concurrency`, `extraction_schema` |
+| AI extract | `imperium-crawl ai-extract --url URL --schema "..."` | `schema`, `format` |
 
 ---
 
@@ -47,13 +46,11 @@ Create 2-3 targeted queries from different angles:
 
 ### Step 3: Execute Search
 
-**MCP:** `{ "query": "topic query", "count": 10 }`
-**CLI:** `imperium-crawl search --query "topic query" --count 10`
+`imperium-crawl search --query "topic query" --count 10`
 
 **For time-sensitive topics:** Also run news search:
 
-**MCP:** `{ "query": "topic", "count": 10, "freshness": "pw" }`
-**CLI:** `imperium-crawl news-search --query "topic" --count 10 --freshness pw`
+`imperium-crawl news-search --query "topic" --count 10 --freshness pw`
 
 **Freshness values:** `pd` (past day), `pw` (past week), `pm` (past month), `py` (past year)
 
@@ -77,8 +74,7 @@ For each URL, scrape sequentially:
 2. If empty → fallback to `scrape` with `format: "markdown"`
 3. For data tables → `scrape` with `include: ["structured_data"]`
 
-**MCP:** `{ "url": "...", "format": "markdown" }`
-**CLI:** `imperium-crawl readability --url "URL"`
+`imperium-crawl readability --url "URL"`
 
 Note per source: key facts, data points, expert opinions, contradictions.
 
@@ -86,12 +82,10 @@ Note per source: key facts, data points, expert opinions, contradictions.
 
 For bulk research, use batch_scrape instead of sequential scraping:
 
-**MCP:** `{ "urls": ["url1", "url2", "url3", "url4", "url5"], "return_content": true, "concurrency": 3 }`
-**CLI:** `imperium-crawl batch-scrape --urls "url1,url2,url3,url4,url5" --return-content --concurrency 3`
+`imperium-crawl batch-scrape --urls "url1,url2,url3,url4,url5" --return-content --concurrency 3`
 
 With AI extraction for structured summaries:
-**MCP:** `{ "urls": [...], "extraction_schema": "extract key findings, facts, statistics, and conclusions" }`
-**CLI:** `imperium-crawl batch-scrape --urls "..." --extraction-schema "extract key findings, facts, statistics, and conclusions"`
+`imperium-crawl batch-scrape --urls "..." --extraction-schema "extract key findings, facts, statistics, and conclusions"`
 
 ### Step 6: Synthesize Report
 

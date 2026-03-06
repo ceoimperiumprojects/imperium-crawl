@@ -19,14 +19,6 @@ These are pre-made skills shipped with imperium-crawl. Run them without creating
 
 ### Running a Recipe
 
-**MCP:**
-```json
-{ "name": "hn-top-stories" }
-{ "name": "ecommerce-product", "url": "https://shop.example.com/product/123" }
-{ "name": "crypto-websocket", "duration_seconds": 30, "max_messages": 50 }
-```
-
-**CLI:**
 ```bash
 imperium-crawl run-skill --name "hn-top-stories"
 imperium-crawl run-skill --name "ecommerce-product" --url "https://shop.example.com/product/123"
@@ -35,8 +27,7 @@ imperium-crawl run-skill --name "crypto-websocket" --duration-seconds 30 --max-m
 
 ### Listing All Recipes + Custom Skills
 
-**MCP:** `mcp__imperium-crawl__list_skills`
-**CLI:** `imperium-crawl list-skills`
+`imperium-crawl list-skills`
 
 Output shows both built-in recipes and user-created skills with source indicator.
 

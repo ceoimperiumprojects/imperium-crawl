@@ -4,44 +4,41 @@ Create, test, and iterate reusable extraction skills that work across pages with
 
 > **Reference files** (read when you need detail):
 > - [tool-reference.md](tool-reference.md) — All 25 tools with params, returns, gotchas
-> - [pipelines.md](pipelines.md) — 10 pipeline patterns with dual-mode examples
+> - [pipelines.md](pipelines.md) — 10 pipeline patterns with examples
 > - [recipes.md](recipes.md) — 10 built-in recipes + custom skill JSON format
 
 ---
 
-## Mode Detection
+## Tool Invocation
 
-Detect your execution environment and use the correct tool invocation format:
+All tools are invoked via CLI:
 
-| Mode | How to detect | Tool format | Param format |
-|------|--------------|-------------|--------------|
-| **MCP** | You have `mcp__imperium-crawl__*` tools | `mcp__imperium-crawl__scrape` | snake_case JSON: `{ url: "...", stealth_level: 3 }` |
-| **CLI** | User says "CLI", "command line", or no MCP tools available | `imperium-crawl scrape --url URL` | --kebab-case flags: `--stealth-level 3` |
+| Tool format | Param format |
+|-------------|--------------|
+| `imperium-crawl scrape --url URL` | --kebab-case flags: `--stealth-level 3` |
 
-**Naming convention:**
-- MCP tool names: underscore → `create_skill`, `ai_extract`, `discover_apis`
-- CLI commands: hyphen → `create-skill`, `ai-extract`, `discover-apis`
+**Naming convention:** CLI commands use hyphens: `create-skill`, `ai-extract`, `discover-apis`
 
 ---
 
-## Available Tools — Dual Mode
+## Available Tools
 
-| Action | MCP Tool | CLI Command | Key Params |
-|--------|----------|-------------|------------|
-| Inspect page | `mcp__imperium-crawl__scrape` | `imperium-crawl scrape --url URL` | `include`, `stealth_level`, `format` |
-| Visual inspect | `mcp__imperium-crawl__screenshot` | `imperium-crawl screenshot --url URL` | `full_page` |
-| CSS extract | `mcp__imperium-crawl__extract` | `imperium-crawl extract --url URL --selectors '{}'` | `selectors`, `items_selector`, `llm_fallback` |
-| AI extract | `mcp__imperium-crawl__ai_extract` | `imperium-crawl ai-extract --url URL --schema "..."` | `schema` (string/object/"auto"), `format` |
-| Create skill | `mcp__imperium-crawl__create_skill` | `imperium-crawl create-skill --url URL --name NAME --description "..."` | `url`, `name`, `description`, `max_pages` |
-| Run skill | `mcp__imperium-crawl__run_skill` | `imperium-crawl run-skill --name NAME` | `name`, `url` (override), `max_items` |
-| List skills | `mcp__imperium-crawl__list_skills` | `imperium-crawl list-skills` | *(none)* |
-| Clean article | `mcp__imperium-crawl__readability` | `imperium-crawl readability --url URL` | `format` |
-| Discover APIs | `mcp__imperium-crawl__discover_apis` | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers` |
-| Query API | `mcp__imperium-crawl__query_api` | `imperium-crawl query-api --url URL` | `method`, `headers`, `body`, `params` |
-| Batch scrape | `mcp__imperium-crawl__batch_scrape` | `imperium-crawl batch-scrape --urls "url1,url2"` | `urls`, `extraction_schema`, `concurrency` |
-| Site map | `mcp__imperium-crawl__map` | `imperium-crawl map --url URL` | `max_urls`, `include_sitemap` |
-| Interact | `mcp__imperium-crawl__interact` | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id`, `return_screenshot` |
-| Monitor WS | `mcp__imperium-crawl__monitor_websocket` | `imperium-crawl monitor-websocket --url URL` | `duration_seconds`, `max_messages` |
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| Inspect page | `imperium-crawl scrape --url URL` | `include`, `stealth_level`, `format` |
+| Visual inspect | `imperium-crawl screenshot --url URL` | `full_page` |
+| CSS extract | `imperium-crawl extract --url URL --selectors '{}'` | `selectors`, `items_selector`, `llm_fallback` |
+| AI extract | `imperium-crawl ai-extract --url URL --schema "..."` | `schema` (string/object/"auto"), `format` |
+| Create skill | `imperium-crawl create-skill --url URL --name NAME --description "..."` | `url`, `name`, `description`, `max_pages` |
+| Run skill | `imperium-crawl run-skill --name NAME` | `name`, `url` (override), `max_items` |
+| List skills | `imperium-crawl list-skills` | *(none)* |
+| Clean article | `imperium-crawl readability --url URL` | `format` |
+| Discover APIs | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers` |
+| Query API | `imperium-crawl query-api --url URL` | `method`, `headers`, `body`, `params` |
+| Batch scrape | `imperium-crawl batch-scrape --urls "url1,url2"` | `urls`, `extraction_schema`, `concurrency` |
+| Site map | `imperium-crawl map --url URL` | `max_urls`, `include_sitemap` |
+| Interact | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id`, `return_screenshot` |
+| Monitor WS | `imperium-crawl monitor-websocket --url URL` | `duration_seconds`, `max_messages` |
 
 ---
 
@@ -95,19 +92,7 @@ scrape(url, include: ["structured_data", "links"]) → understand page structure
       → run_skill(name, url: different_page) → verify on another page
 ```
 
-MCP example:
-```json
-// Step 1: Inspect
-{ "url": "https://example.com/products", "include": ["structured_data", "links"] }
-// Step 2: Extract
-{ "url": "https://example.com/products", "selectors": {"name": ".product-title", "price": ".price"}, "items_selector": ".product-card" }
-// Step 3: Create skill
-{ "url": "https://example.com/products", "name": "example-products", "description": "Extract product listings" }
-// Step 4: Verify
-{ "name": "example-products", "url": "https://example.com/products?page=2" }
-```
-
-CLI example:
+Example:
 ```bash
 imperium-crawl scrape --url "https://example.com/products" --include structured_data,links
 imperium-crawl extract --url "https://example.com/products" --selectors '{"name":".product-title","price":".price"}' --items-selector ".product-card"
@@ -196,8 +181,7 @@ create_skill(url, name, description) → first draft
 ### Step 2: Page Inspection
 **Goal:** Understand the page structure before building anything.
 
-MCP: `mcp__imperium-crawl__scrape` with `include: ["structured_data", "links", "metadata"]`
-CLI: `imperium-crawl scrape --url URL --include structured_data,links,metadata`
+`imperium-crawl scrape --url URL --include structured_data,links,metadata`
 
 **Decision point:**
 - Has structured_data (JSON-LD, microdata)? → Extract directly from it
@@ -209,26 +193,21 @@ CLI: `imperium-crawl scrape --url URL --include structured_data,links,metadata`
 Try the fastest approach first:
 
 **Option A — CSS Selectors (fastest, most reliable):**
-MCP: `mcp__imperium-crawl__extract` with `selectors` + `items_selector`
-CLI: `imperium-crawl extract --url URL --selectors '{"title":"h2.name","price":".price"}' --items-selector ".product-card"`
+`imperium-crawl extract --url URL --selectors '{"title":"h2.name","price":".price"}' --items-selector ".product-card"`
 
 **Option B — AI Extraction (when structure is unknown):**
-MCP: `mcp__imperium-crawl__ai_extract` with `schema: "auto"` or natural language
-CLI: `imperium-crawl ai-extract --url URL --schema "extract all products with name, price, rating"`
+`imperium-crawl ai-extract --url URL --schema "extract all products with name, price, rating"`
 
 **Option C — Hybrid (CSS first, LLM fallback):**
-MCP: `mcp__imperium-crawl__extract` with `llm_fallback: true`
-CLI: `imperium-crawl extract --url URL --selectors '...' --llm-fallback`
+`imperium-crawl extract --url URL --selectors '...' --llm-fallback`
 
 ### Step 4: Create Skill
-MCP: `mcp__imperium-crawl__create_skill` with `url`, `name`, `description`
-CLI: `imperium-crawl create-skill --url URL --name "my-skill" --description "What it extracts"`
+`imperium-crawl create-skill --url URL --name "my-skill" --description "What it extracts"`
 
 Skill names: alphanumeric + hyphens/underscores only (`^[a-zA-Z0-9_-]+$`)
 
 ### Step 5: Verify — MANDATORY
-MCP: `mcp__imperium-crawl__run_skill` with the skill name
-CLI: `imperium-crawl run-skill --name "my-skill"`
+`imperium-crawl run-skill --name "my-skill"`
 
 Test on a DIFFERENT page with same structure if possible:
 ```
@@ -239,11 +218,11 @@ run_skill(name: "my-skill", url: "https://example.com/products?page=2")
 
 ### Step 6: Educate User
 Tell the user:
-- How to run their skill: `run_skill` (MCP) or `imperium-crawl run-skill --name NAME` (CLI)
-- How to override URL: pass `url` param
-- How to limit items: pass `max_items` param
+- How to run their skill: `imperium-crawl run-skill --name NAME`
+- How to override URL: pass `--url` flag
+- How to limit items: pass `--max-items` flag
 - Where skills are stored: `~/.imperium-crawl/skills/`
-- Check `list_skills` / `imperium-crawl list-skills` to see all saved + built-in recipes
+- Check `imperium-crawl list-skills` to see all saved + built-in recipes
 
 ---
 

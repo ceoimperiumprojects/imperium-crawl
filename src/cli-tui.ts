@@ -5,7 +5,7 @@
  * readline for main prompt, @clack/prompts for param collection only.
  *
  * Activated when: no CLI args AND process.stdout.isTTY.
- * Non-TTY mode (pipe/CI/agents) is unaffected — MCP server runs as before.
+ * Non-TTY mode (pipe/CI/agents) shows --help output.
  * CLI subcommands (scrape, crawl, etc.) are unaffected — they bypass this.
  */
 

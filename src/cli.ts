@@ -326,7 +326,7 @@ export async function buildCli(): Promise<Command> {
   program
     .name("imperiumcrawl")
     .description(
-      "22-tool web scraping, crawling, search, and API discovery CLI.\nRun without arguments to start as MCP server.",
+      "25-tool web scraping, crawling, search, and API discovery CLI.\nRun without arguments in TTY for interactive TUI.",
     )
     .version(PACKAGE_VERSION)
     .addOption(

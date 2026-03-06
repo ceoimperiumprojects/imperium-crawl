@@ -6,26 +6,25 @@ Map, crawl, and analyze a website to produce a site intelligence report.
 
 ---
 
-## Mode Detection
+## Tool Invocation
 
-| Mode | Tool format | Param format |
-|------|-------------|--------------|
-| **MCP** | `mcp__imperium-crawl__map` | snake_case JSON |
-| **CLI** | `imperium-crawl map --url URL` | --kebab-case flags |
+| Tool format | Param format |
+|-------------|--------------|
+| `imperium-crawl map --url URL` | --kebab-case flags |
 
 ---
 
-## Available Tools — Dual Mode
+## Available Tools
 
-| Action | MCP Tool | CLI Command | Key Params |
-|--------|----------|-------------|------------|
-| Discover URLs | `mcp__imperium-crawl__map` | `imperium-crawl map --url URL` | `max_urls`, `include_sitemap` |
-| Multi-page crawl | `mcp__imperium-crawl__crawl` | `imperium-crawl crawl --url URL` | `max_depth`, `max_pages`, `concurrency` |
-| Deep page analysis | `mcp__imperium-crawl__scrape` | `imperium-crawl scrape --url URL` | `include`, `stealth_level` |
-| Visual capture | `mcp__imperium-crawl__screenshot` | `imperium-crawl screenshot --url URL` | `full_page` |
-| Batch harvest | `mcp__imperium-crawl__batch_scrape` | `imperium-crawl batch-scrape --urls "..."` | `urls`, `concurrency`, `return_content` |
-| API discovery | `mcp__imperium-crawl__discover_apis` | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers` |
-| CSS extract | `mcp__imperium-crawl__extract` | `imperium-crawl extract --url URL --selectors '{}'` | `selectors`, `items_selector` |
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| Discover URLs | `imperium-crawl map --url URL` | `max_urls`, `include_sitemap` |
+| Multi-page crawl | `imperium-crawl crawl --url URL` | `max_depth`, `max_pages`, `concurrency` |
+| Deep page analysis | `imperium-crawl scrape --url URL` | `include`, `stealth_level` |
+| Visual capture | `imperium-crawl screenshot --url URL` | `full_page` |
+| Batch harvest | `imperium-crawl batch-scrape --urls "..."` | `urls`, `concurrency`, `return_content` |
+| API discovery | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers` |
+| CSS extract | `imperium-crawl extract --url URL --selectors '{}'` | `selectors`, `items_selector` |
 
 ---
 
@@ -35,8 +34,7 @@ Map, crawl, and analyze a website to produce a site intelligence report.
 
 Discover the site structure first.
 
-**MCP:** `{ "url": "...", "max_urls": 100, "include_sitemap": true }`
-**CLI:** `imperium-crawl map --url "URL" --max-urls 100 --include-sitemap`
+`imperium-crawl map --url "URL" --max-urls 100 --include-sitemap`
 
 Analyze the URL list:
 - **Group by section:** `/blog/`, `/products/`, `/docs/`, `/api/`
@@ -48,8 +46,7 @@ Analyze the URL list:
 
 Scrape homepage for identity and tech signals.
 
-**MCP:** `{ "url": "...", "include": ["structured_data", "metadata", "links"] }`
-**CLI:** `imperium-crawl scrape --url "URL" --include structured_data,metadata,links`
+`imperium-crawl scrape --url "URL" --include structured_data,metadata,links`
 
 Extract: site identity, tech stack (Next.js, WordPress, Shopify), structured data (JSON-LD), navigation structure, external services.
 
@@ -57,8 +54,7 @@ Extract: site identity, tech stack (Next.js, WordPress, Shopify), structured dat
 
 Sample the site content.
 
-**MCP:** `{ "url": "...", "max_depth": 2, "max_pages": 10, "concurrency": 3 }`
-**CLI:** `imperium-crawl crawl --url "URL" --max-depth 2 --max-pages 10`
+`imperium-crawl crawl --url "URL" --max-depth 2 --max-pages 10`
 
 Analyze: content types, quality, update frequency, content patterns, internal linking.
 
@@ -66,8 +62,7 @@ Analyze: content types, quality, update frequency, content patterns, internal li
 
 Screenshot the homepage.
 
-**MCP:** `{ "url": "...", "full_page": false }`
-**CLI:** `imperium-crawl screenshot --url "URL"`
+`imperium-crawl screenshot --url "URL"`
 
 ### Step 5: Compile Report
 
@@ -115,8 +110,7 @@ Screenshot the homepage.
 
 After mapping, batch scrape key sections:
 
-**MCP:** `{ "urls": ["url1", "url2", ...], "concurrency": 5, "return_content": true }`
-**CLI:** `imperium-crawl batch-scrape --urls "url1,url2,url3" --concurrency 5 --return-content`
+`imperium-crawl batch-scrape --urls "url1,url2,url3" --concurrency 5 --return-content`
 
 Then check results: `job_status(job_id)` / `imperium-crawl job-status --job-id "ID"`
 
@@ -124,8 +118,7 @@ Then check results: `job_status(job_id)` / `imperium-crawl job-status --job-id "
 
 If the site is JS-heavy, check for hidden APIs:
 
-**MCP:** `{ "url": "...", "wait_seconds": 10, "include_headers": true }`
-**CLI:** `imperium-crawl discover-apis --url "URL" --wait-seconds 10 --include-headers`
+`imperium-crawl discover-apis --url "URL" --wait-seconds 10 --include-headers`
 
 Add discovered APIs to the report's Technology section.
 
@@ -133,8 +126,7 @@ Add discovered APIs to the report's Technology section.
 
 Use `snapshot` to analyze interactive elements on key pages:
 
-**MCP:** `{ "url": "...", "return_screenshot": true }`
-**CLI:** `imperium-crawl snapshot --url "URL" --return-screenshot`
+`imperium-crawl snapshot --url "URL" --return-screenshot`
 
 Reveals forms, buttons, navigation, and interactive widgets with ARIA refs — useful for understanding site functionality.
 
@@ -142,8 +134,7 @@ Reveals forms, buttons, navigation, and interactive widgets with ARIA refs — u
 
 Extract SEO data from individual pages:
 
-**MCP:** `{ "url": "...", "selectors": {"title": "title", "h1": "h1", "meta_desc": "meta[name=description]@content"} }`
-**CLI:** `imperium-crawl extract --url "URL" --selectors '{"title":"title","h1":"h1","meta_desc":"meta[name=description]@content"}'`
+`imperium-crawl extract --url "URL" --selectors '{"title":"title","h1":"h1","meta_desc":"meta[name=description]@content"}'`
 
 ---
 

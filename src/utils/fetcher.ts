@@ -1,7 +1,6 @@
 import { smartFetch, StealthError, type FetchResult, type StealthOptions } from "../stealth/index.js";
 import { isAllowed } from "./robots.js";
 import { getDomain } from "./url.js";
-import { getOptions } from "../config.js";
 import { DEFAULT_CONCURRENCY } from "../constants.js";
 
 // ── Concurrency Limiter ──
@@ -127,8 +126,7 @@ export interface SmartFetchOptions extends StealthOptions {
 }
 
 export async function fetchPage(url: string, options?: SmartFetchOptions): Promise<FetchResult> {
-  const config = getOptions();
-  const respectRobots = options?.respectRobots ?? config.respectRobots;
+  const respectRobots = options?.respectRobots ?? (process.env.RESPECT_ROBOTS !== "false");
 
   if (respectRobots) {
     const allowed = await isAllowed(url);

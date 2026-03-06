@@ -2,7 +2,7 @@
 
 # imperium-crawl
 
-**The most powerful open-source MCP server for web scraping, crawling, and data extraction.**
+**The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
 25 tools. Zero API keys required. One `npx` command.
 
@@ -18,19 +18,6 @@
 ## Quick Start
 
 Get running in 30 seconds.
-
-**MCP client** (Claude Code, Cursor, VS Code, Windsurf):
-
-```json
-{
-  "mcpServers": {
-    "imperium-crawl": {
-      "command": "npx",
-      "args": ["-y", "imperium-crawl"]
-    }
-  }
-}
-```
 
 **CLI** (zero install):
 
@@ -128,8 +115,8 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **25 Tools, 3 Modes**
-MCP server, CLI tool, or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
+🧰 **25 Tools, 2 Modes**
+CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **10 Built-in Recipes**
 Pre-built workflows for common tasks — news extraction, e-commerce scraping, API reverse engineering, and more.
@@ -141,12 +128,12 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 
 ## vs. The Competition
 
-| Feature | **imperium-crawl** | Firecrawl MCP | fetch MCP | Crawl4AI MCP | Browserbase MCP |
-|---------|:------------------:|:-------------:|:---------:|:------------:|:---------------:|
-| Price | **Free forever** | $19+/month | Free | Free | $0.01/min |
-| Total tools | **25** | 5 | 2 | 2 | 4 |
-| Stealth levels | **3 (auto-escalate)** | Cloud-based | None | 1 | Cloud-based |
-| Anti-bot detection | **7 systems** | Partial | None | Partial | Partial |
+| Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
+|---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
+| Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
+| Total tools | **25** | 5 | 2 | 4 | N/A |
+| Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
+| Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
 | CAPTCHA auto-solving | **Yes** | No | No | No | No |
 | API discovery | **Yes** | No | No | No | No |
@@ -156,10 +143,8 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Batch processing | **Yes** | No | No | No | No |
 | ARIA Snapshots | **Yes** | No | No | No | No |
 | Session Encryption | **Yes** | No | No | No | No |
-| Action Policy | **Yes** | No | No | No | No |
-| Domain Sandboxing | **Yes** | No | No | No | No |
-| Self-hosted | **Yes** | No | N/A | Yes | No |
-| Requires external service | **No** | Yes | No | No | Yes |
+| Self-hosted | **Yes** | No | Yes | No | Yes |
+| Requires external service | **No** | Yes | No | Yes | No |
 
 ---
 
@@ -308,30 +293,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## MCP Setup — Detailed
-
-Full configuration with all optional environment variables:
-
-```json
-{
-  "mcpServers": {
-    "imperium-crawl": {
-      "command": "npx",
-      "args": ["-y", "imperium-crawl"],
-      "env": {
-        "BRAVE_API_KEY": "your-brave-api-key",
-        "TWOCAPTCHA_API_KEY": "your-2captcha-api-key",
-        "LLM_API_KEY": "your-api-key",
-        "LLM_PROVIDER": "anthropic",
-        "OPENAI_API_KEY": "your-openai-key-for-whisper",
-        "SESSION_ENCRYPTION_KEY": "your-64-char-hex-key",
-        "PROXY_URL": "http://user:pass@proxy:8080",
-        "PROXY_URLS": "http://proxy1:8080,socks5://proxy2:1080"
-      }
-    }
-  }
-}
-```
+## Setup
 
 ### API Keys
 
@@ -351,20 +313,11 @@ npm i rebrowser-playwright
 npx playwright install chromium
 ```
 
-### Per-Client Notes
-
-| Client | Config Location |
-|--------|----------------|
-| **Claude Code** | `.mcp.json` in project root or `~/.claude/settings.json` global |
-| **Cursor** | Settings → MCP Servers |
-| **VS Code** | `.vscode/mcp.json` or user settings |
-| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` |
-
 ---
 
-## CLI Mode
+## CLI Usage
 
-**No arguments** = starts as MCP server. **With subcommand** = runs as CLI tool. **`tui`** = interactive terminal.
+**With subcommand** = runs that tool. **No args in TTY** = interactive TUI. **No args in pipe** = shows help.
 
 ```bash
 # Scrape a website to markdown
@@ -472,12 +425,11 @@ Turn any website into an API. No documentation needed.
 
 imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 25 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
-### Three Ways to Connect
+### Two Ways to Connect
 
 | Method | Setup | Works With |
 |--------|-------|-----------|
-| **MCP + SKILL/** | Add as MCP server + SKILL.md in agent context | Claude Code, Cursor, Windsurf, any MCP client |
-| **CLI + SKILL/** | `npm i -g imperium-crawl` + SKILL.md in agent context | **Any agent with bash access** — OpenClaw, ChatGPT, GPT agents, custom agents |
+| **CLI + SKILL/** | `npm i -g imperium-crawl` + SKILL.md in agent context | **Any agent with bash access** — Claude Code, Cursor, OpenClaw, ChatGPT, custom agents |
 | **TUI** | `imperium-crawl tui` — interactive terminal | Direct human use, demos, debugging |
 
 ### Per-Agent Setup
@@ -550,8 +502,6 @@ Every tool tested against production websites with real anti-bot defenses:
 | `LLM_MODEL` | No | Override default LLM model |
 | `OPENAI_API_KEY` | No | OpenAI API key for Whisper transcription (transcribe any YouTube video without captions) |
 | `SESSION_ENCRYPTION_KEY` | No | 32-byte hex key for encrypting session files at rest |
-| `TRANSPORT` | No | `stdio` (default) or `http` |
-| `PORT` | No | HTTP port (default: 3000) |
 | `PROXY_URL` | No | Single proxy URL (http/https/socks4/socks5) |
 | `PROXY_URLS` | No | Comma-separated proxy URLs for rotation |
 | `BROWSER_POOL_SIZE` | No | Max pooled browser instances (default: 3) |
@@ -571,7 +521,7 @@ npm install
 npm run build
 npm run dev         # Watch mode (rebuild on changes)
 npm test            # 370 tests
-npm start           # Start MCP server
+npm start           # Start CLI (shows help or TUI)
 ```
 
 ---

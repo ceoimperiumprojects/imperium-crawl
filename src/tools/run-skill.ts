@@ -39,7 +39,7 @@ export type RunSkillInput = z.infer<typeof schema>;
 
 // --- Helpers ---
 
-function mcpResult(data: unknown) {
+function toolResult(data: unknown) {
   return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
 }
 
@@ -104,7 +104,7 @@ async function runExtract(
     }
   }
 
-  return mcpResult({
+  return toolResult({
     skill: config.name,
     description: config.description,
     tool: "extract",
@@ -128,7 +128,7 @@ async function runAiExtract(
   const { htmlToMarkdown } = await import("../utils/markdown.js");
 
   if (!hasLLMConfigured()) {
-    return mcpResult({
+    return toolResult({
       error: "LLM not configured",
       message: "Set the LLM_API_KEY environment variable to enable AI extraction. Run `imperium-crawl setup` for guided configuration.",
     });
@@ -157,7 +157,7 @@ async function runAiExtract(
   const client = await createLLMClient();
   const result = await extractWithLLM(client, markdown, config.schema, config.max_tokens ?? 2000);
 
-  return mcpResult({
+  return toolResult({
     skill: config.name,
     description: config.description,
     tool: "ai_extract",
@@ -186,7 +186,7 @@ async function runReadability(
   const article = reader.parse();
 
   if (!article) {
-    return mcpResult({ error: "Could not extract article content", url: result.url });
+    return toolResult({ error: "Could not extract article content", url: result.url });
   }
 
   const format = config.format ?? "markdown";
@@ -203,7 +203,7 @@ async function runReadability(
       content = htmlToMarkdown(article.content);
   }
 
-  return mcpResult({
+  return toolResult({
     skill: config.name,
     description: config.description,
     tool: "readability",
@@ -279,7 +279,7 @@ async function runScrape(
     const { data: truncated, truncated: wasTruncated } = truncateJsonData(parsed, input.max_items);
     data = truncated;
     format = "json";
-    return mcpResult({
+    return toolResult({
       skill: config.name,
       description: config.description,
       tool: "scrape",
@@ -295,7 +295,7 @@ async function runScrape(
     format = "markdown";
   }
 
-  return mcpResult({
+  return toolResult({
     skill: config.name,
     description: config.description,
     tool: "scrape",
@@ -318,7 +318,7 @@ async function runMonitorWebsocket(
   const { resolveProxy } = await import("../stealth/proxy.js");
 
   if (!(await isPlaywrightAvailable())) {
-    return mcpResult({
+    return toolResult({
       error: "rebrowser-playwright is required for WebSocket monitoring. Install with: npm i rebrowser-playwright",
     });
   }
@@ -379,7 +379,7 @@ async function runMonitorWebsocket(
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
     await page.waitForTimeout(durationSeconds * 1000);
 
-    return mcpResult({
+    return toolResult({
       skill: config.name,
       description: config.description,
       tool: "monitor_websocket",
@@ -1136,7 +1136,7 @@ async function runInfluencerDiscovery(
       influencers = await runCompetitorSpy(config, input);
       break;
     default:
-      return mcpResult({ error: `Unknown influencer discovery workflow: ${(config as any).workflow}` });
+      return toolResult({ error: `Unknown influencer discovery workflow: ${(config as any).workflow}` });
   }
 
   const outputFormat = input.output_format ?? config.output_format ?? "json";
@@ -1150,7 +1150,7 @@ async function runInfluencerDiscovery(
   if (typeof data === "string") {
     return { content: [{ type: "text" as const, text: data }] };
   }
-  return mcpResult(data);
+  return toolResult(data);
 }
 
 // --- Main execute ---
@@ -1160,7 +1160,7 @@ export async function execute(input: RunSkillInput) {
   const config = await manager.loadWithRecipes(input.name);
   if (!config) {
     const skills = await manager.listAll();
-    return mcpResult({
+    return toolResult({
       error: `Skill '${input.name}' not found.`,
       available_skills: skills.map((s) => ({
         name: s.name,
@@ -1186,6 +1186,6 @@ export async function execute(input: RunSkillInput) {
     case "influencer_discovery":
       return runInfluencerDiscovery(config as InfluencerDiscoverySkillConfig, input);
     default:
-      return mcpResult({ error: `Unknown skill tool type: ${tool}` });
+      return toolResult({ error: `Unknown skill tool type: ${tool}` });
   }
 }

@@ -15,7 +15,7 @@ export interface FormatOptions {
 // ── Helpers ──────────────────────────────────────────────────────────
 
 /**
- * Parse the first text content block from an MCP tool result.
+ * Parse the first text content block from a tool result.
  */
 export function parseToolOutput(
   result: { content: Array<{ type: string; text?: string }> },
@@ -31,7 +31,7 @@ export function parseToolOutput(
 }
 
 /**
- * Parse the first image content block from an MCP tool result.
+ * Parse the first image content block from a tool result.
  * Returns base64 data + mimeType, or null if no image block found.
  */
 export function parseImageOutput(

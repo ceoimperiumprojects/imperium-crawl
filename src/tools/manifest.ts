@@ -8,7 +8,6 @@
  * The actual tool module (schema + execute) is loaded lazily,
  * only when the user actually runs that specific command.
  *
- * MCP server mode still uses allTools from tools/index.ts (eager load is fine there).
  */
 
 export interface ManifestEntry {

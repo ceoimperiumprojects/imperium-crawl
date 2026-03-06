@@ -6,24 +6,23 @@ Discover, categorize, and document APIs that websites use behind the scenes.
 
 ---
 
-## Mode Detection
+## Tool Invocation
 
-| Mode | Tool format | Param format |
-|------|-------------|--------------|
-| **MCP** | `mcp__imperium-crawl__discover_apis` | snake_case JSON |
-| **CLI** | `imperium-crawl discover-apis --url URL` | --kebab-case flags |
+| Tool format | Param format |
+|-------------|--------------|
+| `imperium-crawl discover-apis --url URL` | --kebab-case flags |
 
 ---
 
-## Available Tools — Dual Mode
+## Available Tools
 
-| Action | MCP Tool | CLI Command | Key Params |
-|--------|----------|-------------|------------|
-| Capture API calls | `mcp__imperium-crawl__discover_apis` | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers`, `filter_content_type` |
-| Test endpoint | `mcp__imperium-crawl__query_api` | `imperium-crawl query-api --url URL` | `method`, `headers`, `body`, `params` |
-| Monitor WebSocket | `mcp__imperium-crawl__monitor_websocket` | `imperium-crawl monitor-websocket --url URL` | `duration_seconds`, `max_messages`, `filter_url` |
-| Browser interact | `mcp__imperium-crawl__interact` | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id` |
-| Scrape (fallback) | `mcp__imperium-crawl__scrape` | `imperium-crawl scrape --url URL` | `include`, `stealth_level` |
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| Capture API calls | `imperium-crawl discover-apis --url URL` | `wait_seconds`, `include_headers`, `filter_content_type` |
+| Test endpoint | `imperium-crawl query-api --url URL` | `method`, `headers`, `body`, `params` |
+| Monitor WebSocket | `imperium-crawl monitor-websocket --url URL` | `duration_seconds`, `max_messages`, `filter_url` |
+| Browser interact | `imperium-crawl interact --url URL --actions '[...]'` | `actions`, `session_id` |
+| Scrape (fallback) | `imperium-crawl scrape --url URL` | `include`, `stealth_level` |
 
 ---
 
@@ -33,8 +32,7 @@ Discover, categorize, and document APIs that websites use behind the scenes.
 
 Capture all network requests during page load.
 
-**MCP:** `{ "url": "...", "wait_seconds": 8, "include_headers": true }`
-**CLI:** `imperium-crawl discover-apis --url "URL" --wait-seconds 8 --include-headers`
+`imperium-crawl discover-apis --url "URL" --wait-seconds 8 --include-headers`
 
 **Tuning `wait_seconds`:**
 
@@ -69,17 +67,14 @@ Capture all network requests during page load.
 Test promising first-party endpoints.
 
 **GET requests:**
-**MCP:** `{ "url": "https://api.example.com/data", "method": "GET", "headers": {"Accept": "application/json"} }`
-**CLI:** `imperium-crawl query-api --url "https://api.example.com/data" --method GET`
+`imperium-crawl query-api --url "https://api.example.com/data" --method GET`
 
 **GraphQL introspection:**
-**MCP:** `{ "url": "https://example.com/graphql", "method": "POST", "headers": {"Content-Type": "application/json"}, "body": "{\"query\": \"{ __schema { types { name fields { name type { name } } } } }\"}" }`
-**CLI:** `imperium-crawl query-api --url "https://example.com/graphql" --method POST --body '{"query":"{ __schema { types { name fields { name } } } }"}'`
+`imperium-crawl query-api --url "https://example.com/graphql" --method POST --body '{"query":"{ __schema { types { name fields { name } } } }"}'`
 
 **Pagination testing:** Try `?page=2`, `?offset=10`, `?cursor=...`, `?limit=20`
 
-**MCP:** `{ "url": "https://api.example.com/data?page=2&limit=20", "method": "GET" }`
-**CLI:** `imperium-crawl query-api --url "https://api.example.com/data?page=2&limit=20"`
+`imperium-crawl query-api --url "https://api.example.com/data?page=2&limit=20"`
 
 **Important:** Only query GET or safe operations. Don't POST/PUT/DELETE unless user explicitly asks.
 
@@ -87,14 +82,12 @@ Test promising first-party endpoints.
 
 If WebSocket connections found, or user specifically asks:
 
-**MCP:** `{ "url": "https://example.com", "duration_seconds": 15, "max_messages": 100 }`
-**CLI:** `imperium-crawl monitor-websocket --url "https://example.com" --duration-seconds 15 --max-messages 100`
+`imperium-crawl monitor-websocket --url "https://example.com" --duration-seconds 15 --max-messages 100`
 
 For trading/chat/live feeds: increase to `30-60` seconds.
 
 Filter specific connections:
-**MCP:** `{ "url": "...", "filter_url": "wss://specific-endpoint", "duration_seconds": 30 }`
-**CLI:** `imperium-crawl monitor-websocket --url "URL" --filter-url "wss://specific-endpoint" --duration-seconds 30`
+`imperium-crawl monitor-websocket --url "URL" --filter-url "wss://specific-endpoint" --duration-seconds 30`
 
 Analyze messages: format (JSON/binary), types (subscribe/heartbeat/data), channels, auth.
 
@@ -156,17 +149,12 @@ interact(login_url, actions: [login steps], session_id: "recon") → authenticat
 
 **When:** APIs behind login wall. Session cookies from interact carry over.
 
-**MCP:**
-```json
-// 1. Login
-{ "url": "https://example.com/login", "session_id": "recon", "actions": [
-  {"type": "type", "selector": "#email", "text": "user@example.com"},
-  {"type": "type", "selector": "#password", "text": "pass"},
-  {"type": "click", "selector": "button[type=submit]"},
-  {"type": "wait", "duration": 3000}
-]}
-// 2. Discover authenticated APIs
-{ "url": "https://example.com/dashboard", "wait_seconds": 10, "include_headers": true }
+```bash
+# 1. Login
+imperium-crawl interact --url "https://example.com/login" --session-id "recon" --actions '[{"type":"type","selector":"#email","text":"user@example.com"},{"type":"type","selector":"#password","text":"pass"},{"type":"click","selector":"button[type=submit]"},{"type":"wait","duration":3000}]'
+
+# 2. Discover authenticated APIs
+imperium-crawl discover-apis --url "https://example.com/dashboard" --wait-seconds 10 --include-headers
 ```
 
 ### snapshot → interact (Ref Login) → discover (Precise Auth)

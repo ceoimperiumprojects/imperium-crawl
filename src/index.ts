@@ -5,20 +5,6 @@ import { applyCliConfig } from "./cli-config.js";
 import { initProxyRotator } from "./stealth/proxy.js";
 import { getPool } from "./stealth/browser-pool.js";
 
-/**
- * Route: CLI mode vs MCP server mode.
- *
- * CLI mode activates when argv[2] is a known subcommand or --help/--version.
- * Otherwise (no args, or --transport), start as MCP server.
- */
-function shouldRunCli(): boolean {
-  const arg = process.argv[2];
-  if (!arg) return false;
-  if (arg === "--transport") return false;
-  // --help, --version, -h, -V, or any tool subcommand
-  return true;
-}
-
 // ── Graceful Shutdown ──
 function setupShutdownHandlers(): void {
   const shutdown = async () => {
@@ -44,11 +30,12 @@ function setupShutdownHandlers(): void {
 
 async function main() {
   applyCliConfig(); // load ~/.imperium-crawl/config.json → process.env (system env takes priority)
-  // Init proxy rotator from env vars (both modes)
   initProxyRotator();
   setupShutdownHandlers();
 
-  if (shouldRunCli()) {
+  const hasSubcommand = !!process.argv[2];
+
+  if (hasSubcommand) {
     const { runCli } = await import("./cli.js");
     await runCli();
   } else if (process.stdout.isTTY) {
@@ -56,18 +43,10 @@ async function main() {
     const { runTui } = await import("./cli-tui.js");
     await runTui();
   } else {
-    const { createMcpServer } = await import("./server.js");
-    const { getOptions } = await import("./config.js");
-    const { startStdio, startHttp } = await import("./protocols/index.js");
-
-    const options = getOptions();
-    const server = createMcpServer();
-
-    if (options.transport === "http") {
-      await startHttp(server, options.port);
-    } else {
-      await startStdio(server);
-    }
+    // Non-TTY + no args → show help
+    const { runCli } = await import("./cli.js");
+    process.argv.push("--help");
+    await runCli();
   }
 }
 
