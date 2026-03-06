@@ -301,7 +301,7 @@ Second visit to cloudflare.com:
 |-----|----------------|-----------------|
 | `BRAVE_API_KEY` | 4 search tools (web, news, image, video) | [brave.com/search/api](https://brave.com/search/api/) (free tier available) |
 | `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving (reCAPTCHA v2/v3, hCaptcha, Turnstile) | [2captcha.com](https://2captcha.com/) |
-| `LLM_API_KEY` | AI-powered data extraction (`ai_extract` tool) | Anthropic or OpenAI API key |
+| `LLM_API_KEY` | AI-powered data extraction (`ai_extract` tool) | Anthropic, OpenAI, or MiniMax API key |
 | `OPENAI_API_KEY` | Whisper AI transcription — transcribe any YouTube video, even without captions | [platform.openai.com](https://platform.openai.com/) |
 | `CHROME_PROFILE_PATH` | Authenticated browser sessions (use your Chrome cookies) | Path to Chrome user data dir |
 | `PROXY_URL` | Route all requests through a proxy (http/https/socks4/socks5) | Any proxy provider |
@@ -497,8 +497,8 @@ Every tool tested against production websites with real anti-bot defenses:
 |----------|----------|-------------|
 | `BRAVE_API_KEY` | No | Brave Search API key (enables 4 search tools) |
 | `TWOCAPTCHA_API_KEY` | No | 2Captcha API key (enables auto CAPTCHA solving) |
-| `LLM_API_KEY` | No | Anthropic or OpenAI API key (enables `ai_extract`) |
-| `LLM_PROVIDER` | No | `anthropic`, `openai`, or `minimax` (default: `anthropic`) |
+| `LLM_API_KEY` | No | Anthropic, OpenAI, or MiniMax API key (enables `ai_extract`) |
+| `LLM_PROVIDER` | No | `anthropic`, `openai`, or `minimax` (default: `anthropic`). **Recommended: `minimax` with MiniMax-M1** — best price/performance for extraction |
 | `LLM_MODEL` | No | Override default LLM model |
 | `OPENAI_API_KEY` | No | OpenAI API key for Whisper transcription (transcribe any YouTube video without captions) |
 | `SESSION_ENCRYPTION_KEY` | No | 32-byte hex key for encrypting session files at rest |
