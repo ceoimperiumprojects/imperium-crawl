@@ -6,14 +6,16 @@ import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../constants.js";
 import { extractScriptJson, parseCompactNumber, sanitizeText } from "../social/parsers.js";
 import { hasWhisperConfigured, transcribeAudio } from "../social/whisper.js";
 import { socialAiFallback } from "../social/ai-fallback.js";
+import { toolResult, errorResult } from "../utils/tool-response.js";
+import { debugLog } from "../utils/debug.js";
 import type { SocialVideo, SocialComment, SocialProfile, SocialSearchResult } from "../social/types.js";
 
 export const name = "youtube";
 
 export const description =
-  "Search YouTube videos, get video details, comments, transcripts, and channel info. No API key needed.";
+  "Search YouTube videos, get video details, comments, transcripts, chapters, and channel info. No API key needed.";
 
-const ActionEnum = z.enum(["search", "video", "comments", "transcript", "channel"]);
+const ActionEnum = z.enum(["search", "video", "comments", "transcript", "chapters", "channel"]);
 
 export const schema = z.object({
   action: ActionEnum.describe("Action to perform"),
@@ -84,8 +86,8 @@ function extractSearchResults(data: unknown, limit: number): SocialVideo[] {
         });
       }
     }
-  } catch {
-    // Malformed data
+  } catch (err) {
+    debugLog("youtube", "extractSearchResults failed", err);
   }
   return results;
 }
@@ -139,7 +141,8 @@ function extractVideoDetails(data: unknown): SocialVideo | null {
       published,
       description: description.substring(0, 2000),
     };
-  } catch {
+  } catch (err) {
+    debugLog("youtube", "extractVideoDetails failed", err);
     return null;
   }
 }
@@ -188,7 +191,8 @@ function extractChannelInfo(data: unknown): SocialProfile | null {
       avatar: metadata.avatar?.thumbnails?.slice(-1)?.[0]?.url,
       verified,
     };
-  } catch {
+  } catch (err) {
+    debugLog("youtube", "extractChannelInfo failed", err);
     return null;
   }
 }
@@ -202,8 +206,8 @@ function extractTranscriptUrl(data: unknown): string | null {
       const en = captions.find((c: any) => c.languageCode === "en");
       return (en || captions[0])?.baseUrl || null;
     }
-  } catch {
-    // No captions
+  } catch (err) {
+    debugLog("youtube", "extractTranscriptUrl failed", err);
   }
   return null;
 }
@@ -314,15 +318,53 @@ async function getComments(videoUrl: string, limit: number): Promise<SocialComme
   }
 }
 
+function parseTimedTextXml(xml: string): Array<{ start: string; text: string }> {
+  const segments: Array<{ start: string; text: string }> = [];
+  const regex = /<text\s+start="([^"]+)"[^>]*>([\s\S]*?)<\/text>/g;
+  let match;
+  while ((match = regex.exec(xml)) !== null) {
+    const startSec = parseFloat(match[1]);
+    const text = match[2]
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&#39;/g, "'")
+      .replace(/&quot;/g, '"')
+      .replace(/<[^>]+>/g, "")
+      .trim();
+    if (text) {
+      segments.push({ start: formatSeconds(startSec), text });
+    }
+  }
+  return segments;
+}
+
 async function getTranscript(
   videoUrl: string,
 ): Promise<{ segments: Array<{ start: string; text: string }>; total: number; source: "captions" | "whisper" } | null> {
   const videoId = extractVideoId(videoUrl);
   if (!videoId) return null;
 
-  // YouTube transcript requires Playwright — click "Show transcript" and parse DOM.
+  // Strategy 1: Try timedtext API via smartFetch (no Playwright needed)
+  try {
+    const pageResult = await smartFetch(`https://www.youtube.com/watch?v=${videoId}`, { maxLevel: 2 });
+    const playerData = extractScriptJson(pageResult.html, "ytInitialPlayerResponse");
+    const captionUrl = playerData ? extractTranscriptUrl(playerData) : null;
+
+    if (captionUrl) {
+      const captionResult = await smartFetch(captionUrl, { forceLevel: 1 });
+      const segments = parseTimedTextXml(captionResult.html);
+      if (segments.length > 0) {
+        return { segments, total: segments.length, source: "captions" };
+      }
+    }
+  } catch (err) {
+    debugLog("youtube", "timedtext API failed, trying Playwright fallback", err);
+  }
+
+  // Strategy 2: Playwright — click "Show transcript" button
   if (!(await isPlaywrightAvailable())) {
-    throw new Error("rebrowser-playwright is required for YouTube transcripts. Install with: npm i rebrowser-playwright");
+    return null;
   }
 
   const handle = await acquirePage();
@@ -455,6 +497,52 @@ async function getTranscript(
   }
 }
 
+interface Chapter {
+  timestamp: string;
+  seconds: number;
+  title: string;
+}
+
+async function getChapters(videoUrl: string): Promise<Chapter[]> {
+  const videoId = extractVideoId(videoUrl);
+  if (!videoId) return [];
+
+  const result = await smartFetch(`https://www.youtube.com/watch?v=${videoId}`, { maxLevel: 2 });
+  const data = extractScriptJson(result.html, "ytInitialData");
+  const video = data ? extractVideoDetails(data) : null;
+
+  if (!video?.description) {
+    const fb = await socialAiFallback<SocialVideo>({ action: "youtube:video", url: `https://www.youtube.com/watch?v=${videoId}` });
+    if (fb?.data?.description) {
+      return parseChaptersFromDescription(fb.data.description);
+    }
+    return [];
+  }
+
+  return parseChaptersFromDescription(video.description);
+}
+
+function parseChaptersFromDescription(description: string): Chapter[] {
+  const chapters: Chapter[] = [];
+  const regex = /(\d{1,2}:\d{2}(?::\d{2})?)\s+(.+)/g;
+  let match;
+
+  while ((match = regex.exec(description)) !== null) {
+    const timestamp = match[1];
+    const title = match[2].trim();
+    const parts = timestamp.split(":").map(Number);
+    let seconds: number;
+    if (parts.length === 3) {
+      seconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+    } else {
+      seconds = parts[0] * 60 + parts[1];
+    }
+    chapters.push({ timestamp, seconds, title });
+  }
+
+  return chapters;
+}
+
 function formatSeconds(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
@@ -489,14 +577,14 @@ export async function execute(input: YoutubeInput) {
     switch (input.action) {
       case "search": {
         if (!input.query) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "query is required for search action" }) }] };
+          return errorResult("query is required for search action");
         }
         result = await searchYouTube(input.query, input.limit, input.sort);
         break;
       }
       case "video": {
         if (!input.url) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "url is required for video action" }) }] };
+          return errorResult("url is required for video action");
         }
         const video = await getVideoDetails(input.url);
         result = video || { error: "Could not extract video details" };
@@ -504,7 +592,7 @@ export async function execute(input: YoutubeInput) {
       }
       case "comments": {
         if (!input.url) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "url is required for comments action" }) }] };
+          return errorResult("url is required for comments action");
         }
         const comments = await getComments(input.url, input.limit);
         result = { video_url: input.url, comments_count: comments.length, comments };
@@ -512,7 +600,7 @@ export async function execute(input: YoutubeInput) {
       }
       case "transcript": {
         if (!input.url) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "url is required for transcript action" }) }] };
+          return errorResult("url is required for transcript action");
         }
         const transcript = await getTranscript(input.url);
         result = transcript || {
@@ -523,10 +611,20 @@ export async function execute(input: YoutubeInput) {
         };
         break;
       }
+      case "chapters": {
+        if (!input.url) {
+          return errorResult("url is required for chapters action");
+        }
+        const chapters = await getChapters(input.url);
+        result = chapters.length > 0
+          ? { video_url: input.url, chapters_count: chapters.length, chapters }
+          : { error: "No chapters found in video description" };
+        break;
+      }
       case "channel": {
         const url = input.channel_url || input.url;
         if (!url) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "channel_url or url is required for channel action" }) }] };
+          return errorResult("channel_url or url is required for channel action");
         }
         const channel = await getChannel(url);
         result = channel || { error: "Could not extract channel info" };
@@ -534,12 +632,8 @@ export async function execute(input: YoutubeInput) {
       }
     }
 
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
-    };
+    return toolResult(result);
   } catch (err) {
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify({ error: err instanceof Error ? err.message : String(err) }) }],
-    };
+    return errorResult(err instanceof Error ? err.message : String(err));
   }
 }

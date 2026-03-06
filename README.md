@@ -4,11 +4,11 @@
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
-26 tools. Zero API keys required. One `npx` command.
+28 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-370%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-466%20passing-brightgreen.svg)]()
 [![npm downloads](https://img.shields.io/npm/dm/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 
 </div>
@@ -31,7 +31,7 @@ npx -y imperium-crawl scrape --url https://example.com
 npm install -g imperium-crawl
 ```
 
-> That's it. 20 of 26 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 22 of 28 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -107,7 +107,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-20 of 25 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+22 of 28 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -115,10 +115,10 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **26 Tools, 2 Modes**
+🧰 **28 Tools, 2 Modes**
 CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
-📜 **10 Built-in Recipes**
+📜 **14 Built-in Recipes**
 Pre-built workflows for common tasks — news extraction, e-commerce scraping, API reverse engineering, and more.
 
 ⚡ **Skills System**
@@ -131,7 +131,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
 |---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
 | Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
-| Total tools | **26** | 5 | 2 | 4 | N/A |
+| Total tools | **28** | 5 | 2 | 4 | N/A |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
 | Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -224,7 +224,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 26 Tools
+## All 28 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -279,9 +279,16 @@ Second visit to cloudflare.com:
 
 | Tool | What It Does |
 |------|-------------|
-| **youtube** | Search videos, get video details, comments, transcripts, and channel info. Parses `ytInitialData` — no API key needed. Add `OPENAI_API_KEY` to unlock Whisper AI transcription for videos without captions. |
+| **youtube** | Search videos, get video details, comments, transcripts, chapters, and channel info. Parses `ytInitialData` — no API key needed. Add `OPENAI_API_KEY` to unlock Whisper AI transcription for videos without captions. |
 | **reddit** | Search Reddit, browse subreddits, get posts and comments via Reddit's public JSON API. |
 | **instagram** | Search profiles, get detailed profile info with engagement metrics, and discover influencers by niche/location. Search/discover require `BRAVE_API_KEY`. |
+
+### 📥 Media & Feeds (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **download** | Download media files from any URL — images, video, YouTube, TikTok, bulk. Auto-detects URL type and applies optimal strategy. |
+| **rss** | Fetch and parse RSS/Atom feeds. Filter by date, output as JSON or Markdown. |
 
 ### 📦 Batch Processing (no API key needed)
 
@@ -386,16 +393,20 @@ Skills are saved in `~/.imperium-crawl/skills/` as JSON files — human-readable
 
 | Recipe | What It Does |
 |--------|-------------|
-| `news-extraction` | Extract article title, author, date, content from news sites |
-| `ecommerce-scrape` | Product name, price, rating, reviews, images |
-| `social-media` | Posts, engagement metrics, user profiles |
-| `job-listings` | Title, company, salary, location, description |
-| `real-estate` | Property listings with price, address, features |
-| `api-reverse-engineer` | Discover → query → monitor workflow |
-| `competitor-monitor` | Track pricing and product changes |
-| `lead-generation` | Extract business contact info |
-| `content-aggregator` | Multi-source content collection |
-| `data-pipeline` | Batch scrape → extract → export workflow |
+| `hn-top-stories` | Hacker News front page — titles, scores, comment counts |
+| `github-trending` | GitHub trending repos — stars, language, description |
+| `job-listings-greenhouse` | Greenhouse job boards — title, team, location |
+| `ecommerce-product` | Product name, price, rating, reviews, images |
+| `product-reviews` | Review text, ratings, author, date from product pages |
+| `crypto-websocket` | Live crypto prices via WebSocket monitoring |
+| `news-article-reader` | Article title, author, date, content from news sites |
+| `reddit-posts` | Subreddit posts — title, score, comments, flair |
+| `seo-page-audit` | SEO signals — meta tags, headings, structured data |
+| `social-media-mentions` | Brand mentions across social platforms |
+| `influencer-niche-discovery` | Find influencers by niche + location via Instagram |
+| `influencer-hashtag-scout` | Discover influencers through hashtag analysis |
+| `influencer-competitor-spy` | Find influencers from competitor brand mentions |
+| `influencer-content-scout` | Analyze content patterns of niche influencers |
 
 See [`SKILL/`](./SKILL/) for detailed workflow guides and agent integration.
 
@@ -424,7 +435,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 26 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 28 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Two Ways to Connect
 
@@ -488,8 +499,10 @@ Every tool tested against production websites with real anti-bot defenses:
 | 🎬 **youtube** | "web scraping tutorial" | Search results, video details, comments, transcripts — no API key |
 | 💬 **reddit** | r/webscraping | Subreddit posts, comments, search — public JSON API |
 | 📸 **instagram** | @nike profile | Profile details, engagement rate, recent posts — internal API |
+| 📥 **download** | YouTube video, web page images | Auto-detect URL type, download media files — images, video, og:image |
+| 📡 **rss** | Hacker News RSS | Parsed feed items with title, link, date, author, categories |
 
-> **26/26 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **28/28 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 
@@ -522,7 +535,7 @@ cd imperium-crawl
 npm install
 npm run build
 npm run dev         # Watch mode (rebuild on changes)
-npm test            # 370 tests
+npm test            # 466 tests
 npm start           # Start CLI (shows help or TUI)
 ```
 

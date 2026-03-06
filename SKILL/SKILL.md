@@ -1,6 +1,6 @@
 # imperium-crawl — Agent Skill Guide
 
-Comprehensive guide for AI agents using imperium-crawl's 26 CLI tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing.
+Comprehensive guide for AI agents using imperium-crawl's 28 CLI tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing.
 
 **Progressive disclosure:** This file is the overview hub. Each skill and reference topic has a dedicated file with full details — read them when you need depth.
 
@@ -16,15 +16,15 @@ Comprehensive guide for AI agents using imperium-crawl's 26 CLI tools. Covers sc
 | [site-intel.md](site-intel.md) | ~206 | Full site-intel: 5-step workflow, report template, depth guidelines |
 | [research.md](research.md) | ~199 | Full research: search → scrape → synthesize, depth guidelines |
 | [api-recon.md](api-recon.md) | ~218 | Full API recon: discovery, categorization, WebSocket, report template |
-| [tool-reference.md](tool-reference.md) | ~500 | All 26 tools — params, types, defaults, gotchas |
+| [tool-reference.md](tool-reference.md) | ~580 | All 28 tools — params, types, defaults, gotchas |
 | [pipelines.md](pipelines.md) | ~310 | 10 pipeline patterns with full CLI examples |
-| [recipes.md](recipes.md) | ~151 | 10 built-in recipes + custom skill JSON format |
+| [recipes.md](recipes.md) | ~320 | 14 built-in recipes + custom skill JSON format + influencer workflow |
 
 ---
 
 ## Table of Contents
 
-1. [All 25 Tools](#all-25-tools)
+1. [All 28 Tools](#all-28-tools)
 2. [Master Decision Tree](#master-decision-tree)
 3. [Tool Combinations — 10 Patterns](#tool-combinations--10-patterns)
 4. [Smart Scrape](#smart-scrape)
@@ -38,7 +38,7 @@ Comprehensive guide for AI agents using imperium-crawl's 26 CLI tools. Covers sc
 
 ---
 
-## All 25 Tools
+## All 28 Tools
 
 Full parameter details per tool → [tool-reference.md](tool-reference.md)
 
@@ -102,6 +102,21 @@ Full parameter details per tool → [tool-reference.md](tool-reference.md)
 | Job status | `imperium-crawl job-status --job-id ID` | `job_id` |
 | Delete job | `imperium-crawl delete-job --job-id ID` | `job_id` |
 
+### Social Media (3) — No API key needed (search/discover need `BRAVE_API_KEY`)
+
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| YouTube | `imperium-crawl youtube --action ACTION` | `action` (search/video/comments/transcript/chapters/channel), `query`, `url`, `channel_url`, `limit` |
+| Reddit | `imperium-crawl reddit --action ACTION` | `action` (search/posts/comments/subreddit), `query`, `subreddit`, `post_url`, `sort`, `limit` |
+| Instagram | `imperium-crawl instagram --action ACTION` | `action` (search/profile/discover), `query`, `username`, `niche`, `location`, `limit` |
+
+### Media & Feeds (2) — No API key needed
+
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| Download media | `imperium-crawl download --url URL --output DIR` | `url`, `urls`, `file`, `output`, `images`, `og_only`, `video`, `all` |
+| RSS/Atom feed | `imperium-crawl rss --url URL` | `url`, `limit`, `format`, `since` |
+
 ---
 
 ## Master Decision Tree
@@ -152,6 +167,13 @@ User has a web data task
 │
 ├─ "Bulk URLs (10+)"
 │  └─ batch_scrape (parallel, resumable, soft-fail)
+│
+├─ "Download images/video/media from page"
+│  └─ download (--images, --video, --og-only, --all)
+│     └─ YouTube/TikTok URLs auto-detected → ytdl-core
+│
+├─ "Read RSS/Atom feed"
+│  └─ rss (--url FEED_URL --since YYYY-MM-DD)
 │
 └─ "Full site harvest"
    └─ map → batch_scrape (parallel fetch)
@@ -455,6 +477,7 @@ imperium-crawl interact --url URL --actions '[{"type":"click","selector":"button
 | `TWOCAPTCHA_API_KEY` | Auto CAPTCHA solving | 2Captcha API |
 | `PROXY_URL` | — | Single proxy URL |
 | `PROXY_URLS` | — | Comma-separated proxy rotation |
+| `OPENAI_API_KEY` | youtube transcript (Whisper fallback) | OpenAI API for Whisper transcription |
 | `CHROME_PROFILE_PATH` | — | Chrome user data dir for authenticated sessions |
 | `RESPECT_ROBOTS` | — | Honor robots.txt (default: `true`) |
 

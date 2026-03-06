@@ -1,4 +1,4 @@
-# Tool Reference — All 26 imperium-crawl Tools
+# Tool Reference — All 28 imperium-crawl Tools
 
 Complete catalog with CLI commands, parameters, and gotchas.
 
@@ -466,15 +466,15 @@ Search YouTube videos, get video details, comments, transcripts, and channel inf
 
 | Param | Type | Default | Required |
 |-------|------|---------|----------|
-| `action` | `"search"` \| `"video"` \| `"comments"` \| `"transcript"` \| `"channel"` | — | YES |
+| `action` | `"search"` \| `"video"` \| `"comments"` \| `"transcript"` \| `"chapters"` \| `"channel"` | — | YES |
 | `query` | string (max 2000) | — | for search |
 | `url` | string (max 8192) | — | for video/comments/transcript |
 | `channel_url` | string (max 8192) | — | for channel |
 | `limit` | number (1-1000) | 10 | no |
 | `sort` | `"relevance"` \| `"date"` \| `"views"` | `"relevance"` | no |
 
-**Returns:** Video list, video details, comments array, transcript segments, or channel profile.
-**Gotcha:** `comments` and `transcript` actions require Playwright. Other actions use smartFetch. Transcript tries YouTube captions first; if none exist and `OPENAI_API_KEY` is set, falls back to Whisper AI transcription (downloads audio, sends to OpenAI). Source field indicates `"captions"` or `"whisper"`.
+**Returns:** Video list, video details, comments array, transcript segments, chapters array, or channel profile.
+**Gotcha:** `comments` and `transcript` actions require Playwright. Other actions use smartFetch. Transcript tries timedtext XML API first (no browser needed), then falls back to page scraping. If no captions exist and `OPENAI_API_KEY` is set, falls back to Whisper AI transcription. Source field indicates `"captions"` or `"whisper"`. `chapters` parses timestamps from video description — no browser or API key needed.
 **CLI:** `--action search --query "AI news" --limit 5`
 
 ---
@@ -523,5 +523,51 @@ Search Instagram profiles, get profile details with engagement metrics, discover
 **Returns:** Usernames list (search), profile with engagement data (profile), or filtered/sorted influencer list (discover).
 **Gotcha:** `search` and `discover` require `BRAVE_API_KEY` for Brave Search. `profile` uses Instagram's internal API — no key needed. Rate limited to 1 req/sec for profile fetches. Private accounts are skipped. 429 responses stop batch and return partial results.
 **CLI:** `--action profile --username nike` or `--action discover --niche "travel hotel" --location "beograd" --min_followers 1000`
+
+---
+
+## Media & Feeds (2)
+
+### download
+**CLI:** `imperium-crawl download`
+
+Download media files from URLs. Supports direct files, page media extraction (images, video, og:image), YouTube, TikTok, and bulk downloads from URL list.
+
+| Param | Type | Default | Required |
+|-------|------|---------|----------|
+| `url` | string (max 8192) | — | one of url/urls/file |
+| `urls` | string (comma-separated) | — | one of url/urls/file |
+| `file` | string (path to URL list) | — | one of url/urls/file |
+| `output` | string (directory path) | — | YES |
+| `images` | boolean | false | no |
+| `og_only` | boolean | false | no |
+| `video` | boolean | false | no |
+| `all` | boolean | false | no |
+
+**Returns:** Array of `{ path, size, source }` for each downloaded file.
+**Modes:**
+- **Direct file:** URL points to an image/video file — downloads it directly
+- **YouTube/TikTok:** Auto-detects video platform URLs, downloads via ytdl-core
+- **Page media:** `--images` extracts all `<img>` from page, `--og-only` gets only og:image/twitter:image, `--video` gets `<video>` elements, `--all` gets everything
+- **Bulk:** `--urls "url1,url2"` or `--file urls.txt` for batch download
+**CLI:** `imperium-crawl download --url "https://example.com/photo.jpg" --output ./media`
+
+---
+
+### rss
+**CLI:** `imperium-crawl rss`
+
+Fetch and parse RSS/Atom feeds. Returns structured items with title, link, date, author, summary, categories, and image.
+
+| Param | Type | Default | Required |
+|-------|------|---------|----------|
+| `url` | string (max 8192) | — | YES |
+| `limit` | number (1-100) | 20 | no |
+| `format` | `"json"` \| `"markdown"` | `"json"` | no |
+| `since` | string (YYYY-MM-DD) | — | no |
+
+**Returns:** Feed metadata + array of `{ title, link, date, author, summary, categories, image }`.
+**Gotcha:** `since` filters items by `pubDate` — only returns items published after the given date. Works with both RSS 2.0 and Atom feeds. No browser or API key needed — pure HTTP.
+**CLI:** `imperium-crawl rss --url "https://hnrss.org/frontpage" --limit 10 --since 2024-01-01`
 
 ---

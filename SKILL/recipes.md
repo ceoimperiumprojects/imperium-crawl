@@ -1,6 +1,6 @@
 # Built-in Recipes & Custom Skill Format
 
-## Built-in Recipes (10)
+## Built-in Recipes (14)
 
 These are pre-made skills shipped with imperium-crawl. Run them without creating anything.
 

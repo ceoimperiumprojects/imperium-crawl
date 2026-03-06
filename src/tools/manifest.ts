@@ -136,7 +136,7 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
   {
     cmd: "youtube",
     description:
-      "Search YouTube videos, get video details, comments, transcripts, and channel info. No API key needed.",
+      "Search YouTube videos, get video details, comments, transcripts, chapters, and channel info. No API key needed.",
   },
   {
     cmd: "reddit",
@@ -147,5 +147,16 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     cmd: "instagram",
     description:
       "Search Instagram profiles, get profile details with engagement metrics, and discover influencers by niche/location. Search/discover require BRAVE_API_KEY.",
+  },
+  // Media & feeds
+  {
+    cmd: "download",
+    description:
+      "Download media files (images, videos) from URLs. Supports direct files, page media extraction (og:image, all images), YouTube, TikTok, and bulk downloads.",
+  },
+  {
+    cmd: "rss",
+    description:
+      "Fetch and parse RSS/Atom feeds. Returns structured items with title, link, date, author, content, and categories.",
   },
 ];

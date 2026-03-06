@@ -2,6 +2,7 @@ import { z } from "zod";
 import { issueRequest } from "../brave-api/index.js";
 import { hasBraveApiKey } from "../config.js";
 import { MAX_QUERY_LENGTH } from "../constants.js";
+import { toolResult, errorResult } from "../utils/tool-response.js";
 
 export const name = "video_search";
 
@@ -21,14 +22,7 @@ export type VideoSearchInput = z.infer<typeof schema>;
 
 export async function execute(input: VideoSearchInput) {
   if (!hasBraveApiKey()) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify({ error: "BRAVE_API_KEY is required for video search." }),
-        },
-      ],
-    };
+    return errorResult("BRAVE_API_KEY is required for video search.");
   }
 
   const data = await issueRequest(process.env.BRAVE_API_KEY!, "/videos/search", {
@@ -38,7 +32,5 @@ export async function execute(input: VideoSearchInput) {
     freshness: input.freshness,
   });
 
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
-  };
+  return toolResult(data);
 }

@@ -12,6 +12,7 @@ import type {
   InfluencerDiscoverySkillConfig,
 } from "../skills/manager.js";
 import { MAX_URL_LENGTH, MAX_ITEMS } from "../constants.js";
+import { toolResult } from "../utils/tool-response.js";
 
 export const name = "run_skill";
 
@@ -40,10 +41,6 @@ export const schema = z.object({
 export type RunSkillInput = z.infer<typeof schema>;
 
 // --- Helpers ---
-
-function toolResult(data: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
 
 function extractField(
   $: cheerio.CheerioAPI,

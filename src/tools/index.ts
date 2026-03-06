@@ -26,6 +26,8 @@ import * as deleteJob from "./delete-job.js";
 import * as youtube from "./youtube.js";
 import * as reddit from "./reddit.js";
 import * as instagram from "./instagram.js";
+import * as download from "./download.js";
+import * as rss from "./rss.js";
 
 export interface ToolDefinition {
   name: string;
@@ -70,4 +72,7 @@ export const allTools: ToolDefinition[] = [
   youtube as ToolDefinition,
   reddit as ToolDefinition,
   instagram as ToolDefinition,
+  // Media & feeds
+  download as ToolDefinition,
+  rss as ToolDefinition,
 ];

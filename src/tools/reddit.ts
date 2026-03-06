@@ -3,6 +3,8 @@ import { smartFetch } from "../stealth/index.js";
 import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../constants.js";
 import { sanitizeText } from "../social/parsers.js";
 import { socialAiFallback } from "../social/ai-fallback.js";
+import { toolResult, errorResult } from "../utils/tool-response.js";
+import { debugLog } from "../utils/debug.js";
 import type { SocialPost, SocialComment, SocialProfile, SocialSearchResult } from "../social/types.js";
 
 export const name = "reddit";
@@ -39,7 +41,8 @@ async function redditJson(path: string): Promise<unknown> {
   // Reddit returns JSON directly
   try {
     return JSON.parse(result.html);
-  } catch {
+  } catch (err) {
+    debugLog("reddit", `Failed to parse JSON from ${path}`, err);
     throw new Error(`Failed to parse Reddit JSON from ${path}`);
   }
 }
@@ -83,7 +86,8 @@ async function searchReddit(query: string, sort: string, time: string, limit: nu
     const children = (data as any)?.data?.children || [];
     const posts = children.map(mapPost).slice(0, limit);
     return { query, platform: "reddit", results: posts, total: (data as any)?.data?.dist };
-  } catch {
+  } catch (err) {
+    debugLog("reddit", "searchReddit JSON fetch failed, trying AI fallback", err);
     const fb = await socialAiFallback<SocialSearchResult<SocialPost>>({ action: "reddit:search", url: `${OLD_REDDIT}/search?q=${encoded}&sort=${sort}&t=${time}` });
     if (fb?.data?.results) return { query, platform: "reddit", results: fb.data.results.slice(0, limit) };
     throw new Error("Reddit search failed and AI fallback unavailable");
@@ -97,7 +101,8 @@ async function getPosts(subreddit: string, sort: string, time: string, limit: nu
     const children = (data as any)?.data?.children || [];
     const posts = children.map(mapPost).slice(0, limit);
     return { platform: "reddit", results: posts, total: (data as any)?.data?.dist };
-  } catch {
+  } catch (err) {
+    debugLog("reddit", `getPosts failed for r/${subreddit}`, err);
     const fb = await socialAiFallback<SocialSearchResult<SocialPost>>({ action: "reddit:posts", url: `${OLD_REDDIT}/r/${subreddit}/${sort}?t=${time}` });
     if (fb?.data?.results) return { platform: "reddit", results: fb.data.results.slice(0, limit) };
     throw new Error("Reddit posts fetch failed and AI fallback unavailable");
@@ -126,7 +131,8 @@ async function getComments(postUrl: string, limit: number): Promise<{ post: Soci
       .map((c: any) => mapComment(c))
       .slice(0, limit);
     return { post, comments };
-  } catch {
+  } catch (err) {
+    debugLog("reddit", "getComments JSON fetch failed", err);
     const fullUrl = `${OLD_REDDIT}${path}`;
     const fb = await socialAiFallback<{ post: SocialPost; comments: SocialComment[] }>({ action: "reddit:comments", url: fullUrl });
     if (fb?.data) return fb.data;
@@ -147,7 +153,8 @@ async function getSubredditInfo(subreddit: string): Promise<SocialProfile | null
       avatar: d.icon_img || d.community_icon?.split("?")?.[0] || undefined,
       created: d.created_utc ? new Date(d.created_utc * 1000).toISOString() : undefined,
     };
-  } catch {
+  } catch (err) {
+    debugLog("reddit", `getSubredditInfo failed for r/${subreddit}`, err);
     const fb = await socialAiFallback<SocialProfile>({ action: "reddit:subreddit", url: `${OLD_REDDIT}/r/${subreddit}` });
     return fb?.data ?? null;
   }
@@ -162,28 +169,28 @@ export async function execute(input: RedditInput) {
     switch (input.action) {
       case "search": {
         if (!input.query) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "query is required for search action" }) }] };
+          return errorResult("query is required for search action");
         }
         result = await searchReddit(input.query, input.sort, input.time, input.limit);
         break;
       }
       case "posts": {
         if (!input.subreddit) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "subreddit is required for posts action" }) }] };
+          return errorResult("subreddit is required for posts action");
         }
         result = await getPosts(input.subreddit, input.sort, input.time, input.limit);
         break;
       }
       case "comments": {
         if (!input.post_url) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "post_url is required for comments action" }) }] };
+          return errorResult("post_url is required for comments action");
         }
         result = await getComments(input.post_url, input.limit);
         break;
       }
       case "subreddit": {
         if (!input.subreddit) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "subreddit is required for subreddit action" }) }] };
+          return errorResult("subreddit is required for subreddit action");
         }
         const info = await getSubredditInfo(input.subreddit);
         result = info || { error: "Could not fetch subreddit info" };
@@ -191,12 +198,8 @@ export async function execute(input: RedditInput) {
       }
     }
 
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
-    };
+    return toolResult(result);
   } catch (err) {
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify({ error: err instanceof Error ? err.message : String(err) }) }],
-    };
+    return errorResult(err instanceof Error ? err.message : String(err));
   }
 }

@@ -28,6 +28,11 @@ describe("YouTube tool", () => {
       expect(result.success).toBe(true);
     });
 
+    it("accepts valid chapters input", () => {
+      const result = schema.safeParse({ action: "chapters", url: "https://youtube.com/watch?v=abc123defgh" });
+      expect(result.success).toBe(true);
+    });
+
     it("rejects invalid action", () => {
       const result = schema.safeParse({ action: "invalid" });
       expect(result.success).toBe(false);

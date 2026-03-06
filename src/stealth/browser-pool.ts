@@ -94,7 +94,8 @@ export class BrowserPool {
     const evictable = this.entries.find((e) => !e.busy && !e.temporary);
     if (evictable) {
       await evictable.browser.close().catch(() => {});
-      this.entries = this.entries.filter((e) => e !== evictable);
+      const idx = this.entries.indexOf(evictable);
+      if (idx !== -1) this.entries.splice(idx, 1);
       const browser = await this.launchBrowser(proxyUrl);
       this.entries.push({
         browser,
@@ -128,7 +129,8 @@ export class BrowserPool {
 
     if (entry.temporary) {
       // Overflow — close and remove
-      this.entries = this.entries.filter((e) => e !== entry);
+      const idx = this.entries.indexOf(entry);
+      if (idx !== -1) this.entries.splice(idx, 1);
       browser.close().catch(() => {});
     } else {
       entry.busy = false;
@@ -139,12 +141,12 @@ export class BrowserPool {
   /** Close browsers idle for longer than idleTimeoutMs. */
   private evictIdle(): void {
     const now = Date.now();
-    const toEvict = this.entries.filter(
-      (e) => !e.busy && !e.temporary && now - e.lastUsed > this.idleTimeoutMs,
-    );
-    for (const entry of toEvict) {
-      this.entries = this.entries.filter((e) => e !== entry);
-      entry.browser.close().catch(() => {});
+    for (let i = this.entries.length - 1; i >= 0; i--) {
+      const e = this.entries[i];
+      if (!e.busy && !e.temporary && now - e.lastUsed > this.idleTimeoutMs) {
+        this.entries.splice(i, 1);
+        e.browser.close().catch(() => {});
+      }
     }
   }
 

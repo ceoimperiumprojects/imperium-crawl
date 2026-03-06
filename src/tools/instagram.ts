@@ -4,6 +4,8 @@ import { issueRequest } from "../brave-api/index.js";
 import { hasBraveApiKey } from "../config.js";
 import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../constants.js";
 import { parseCompactNumber, sanitizeText, extractScriptJson } from "../social/parsers.js";
+import { toolResult, errorResult } from "../utils/tool-response.js";
+import { debugLog } from "../utils/debug.js";
 import type { InstagramProfile, InstagramPost, InstagramDiscoverResult } from "../social/types.js";
 
 export const name = "instagram";
@@ -105,8 +107,8 @@ async function searchProfiles(query: string, location?: string, limit = 20): Pro
       });
       const results = (data as any)?.web?.results || [];
       allUrls.push(...results.map((r: any) => r.url).filter(Boolean));
-    } catch {
-      // Rate limit or other error — continue with what we have
+    } catch (err) {
+      debugLog("instagram", `Brave search query failed: ${q}`, err);
     }
 
     // Respect Brave rate limit (Free: 1 req/sec)
@@ -141,7 +143,7 @@ async function fetchProfileViaApi(username: string): Promise<InstagramProfile | 
   if (!res.ok) return null;
 
   let data: any;
-  try { data = await res.json(); } catch { return null; }
+  try { data = await res.json(); } catch (err) { debugLog("instagram", `API JSON parse failed for @${username}`, err); return null; }
 
   if (data?.status === "fail" || !data?.data?.user) return null;
   return parseApiUser(data.data.user, username);
@@ -174,7 +176,8 @@ async function fetchProfileViaWeb(username: string): Promise<InstagramProfile | 
     }
 
     return null;
-  } catch {
+  } catch (err) {
+    debugLog("instagram", `Web scrape failed for @${username}`, err);
     return null;
   }
 }
@@ -330,16 +333,16 @@ async function fetchProfile(username: string): Promise<InstagramProfile | null> 
   try {
     const profile = await fetchProfileViaApi(username);
     if (profile) return profile;
-  } catch {
-    // API failed, try web fallback
+  } catch (err) {
+    debugLog("instagram", `API fetch failed for @${username}, trying web`, err);
   }
 
   // Fallback: web scrape profile page
   try {
     const profile = await fetchProfileViaWeb(username);
     if (profile) return profile;
-  } catch {
-    // Web also failed
+  } catch (err) {
+    debugLog("instagram", `Web fetch also failed for @${username}`, err);
   }
 
   return null;
@@ -477,7 +480,7 @@ export async function execute(input: InstagramInput) {
     switch (input.action) {
       case "search": {
         if (!input.query) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "query is required for search action" }) }] };
+          return errorResult("query is required for search action");
         }
         const usernames = await searchProfiles(input.query, input.location, input.limit);
         result = {
@@ -493,7 +496,7 @@ export async function execute(input: InstagramInput) {
       case "profile": {
         const targets = input.usernames?.length ? input.usernames : (input.username ? [input.username] : []);
         if (targets.length === 0) {
-          return { content: [{ type: "text" as const, text: JSON.stringify({ error: "username or usernames is required for profile action" }) }] };
+          return errorResult("username or usernames is required for profile action");
         }
 
         if (targets.length === 1) {
@@ -526,12 +529,8 @@ export async function execute(input: InstagramInput) {
       }
     }
 
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
-    };
+    return toolResult(result);
   } catch (err) {
-    return {
-      content: [{ type: "text" as const, text: JSON.stringify({ error: err instanceof Error ? err.message : String(err) }) }],
-    };
+    return errorResult(err instanceof Error ? err.message : String(err));
   }
 }

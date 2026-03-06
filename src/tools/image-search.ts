@@ -2,6 +2,7 @@ import { z } from "zod";
 import { issueRequest } from "../brave-api/index.js";
 import { hasBraveApiKey } from "../config.js";
 import { MAX_QUERY_LENGTH } from "../constants.js";
+import { toolResult, errorResult } from "../utils/tool-response.js";
 
 export const name = "image_search";
 
@@ -17,14 +18,7 @@ export type ImageSearchInput = z.infer<typeof schema>;
 
 export async function execute(input: ImageSearchInput) {
   if (!hasBraveApiKey()) {
-    return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify({ error: "BRAVE_API_KEY is required for image search." }),
-        },
-      ],
-    };
+    return errorResult("BRAVE_API_KEY is required for image search.");
   }
 
   const data = await issueRequest(process.env.BRAVE_API_KEY!, "/images/search", {
@@ -33,7 +27,5 @@ export async function execute(input: ImageSearchInput) {
     country: input.country,
   });
 
-  return {
-    content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }],
-  };
+  return toolResult(data);
 }
