@@ -16,7 +16,7 @@ import { getEnhancedSnapshot } from "../snapshot/extractor.js";
 import { smartFetch } from "../stealth/index.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { parseCompactNumber } from "./parsers.js";
-import type { SocialVideo, SocialPost, SocialComment, SocialProfile } from "./types.js";
+import type { SocialVideo, SocialPost, SocialComment, SocialProfile, InstagramProfile } from "./types.js";
 
 // ── Action types ──
 
@@ -96,6 +96,7 @@ function normalizeResult(action: SocialAction, raw: Record<string, unknown>): un
   }
 
   if (type === "video") return normalizeVideo(raw);
+  if (type === "profile") return normalizeInstagramProfile(raw);
   if (type === "user" || type === "channel" || type === "subreddit") return normalizeProfile(raw);
   if (type === "comments") {
     const comments = ((raw.comments || []) as any[]).map(normalizeComment);
@@ -157,6 +158,23 @@ function normalizeProfile(raw: any): SocialProfile {
     verified: raw.verified ?? false,
     video_count: typeof raw.video_count === "number" ? raw.video_count : parseNum(raw.video_count),
     created: raw.created,
+  };
+}
+
+function normalizeInstagramProfile(raw: any): InstagramProfile {
+  return {
+    name: raw.full_name || raw.username || "",
+    username: raw.username || "",
+    url: raw.url || (raw.username ? `https://www.instagram.com/${raw.username}/` : ""),
+    description: raw.bio?.substring(0, 1000),
+    verified: raw.is_verified ?? false,
+    followers: typeof raw.followers === "number" ? raw.followers : (parseNum(raw.followers) ?? 0),
+    following: typeof raw.following === "number" ? raw.following : (parseNum(raw.following) ?? 0),
+    posts_count: typeof raw.posts_count === "number" ? raw.posts_count : (parseNum(raw.posts_count) ?? 0),
+    is_business: raw.is_business ?? false,
+    business_email: raw.business_email || undefined,
+    engagement_rate: 0,
+    recent_posts: [],
   };
 }
 

@@ -108,6 +108,11 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     description:
       "Open a browser, execute a sequence of actions (click, type, scroll, screenshot, evaluate JS) and optionally persist sessions between calls.",
   },
+  {
+    cmd: "snapshot",
+    description:
+      "Take an ARIA-based accessibility snapshot of a web page. Returns a structured tree with interactive element refs (e.g. [ref=e1]) that can be used in the interact tool for precise element targeting. Workflow: snapshot → analyze refs → interact with ref targeting → snapshot again to verify.",
+  },
   // Batch
   {
     cmd: "batch-scrape",
