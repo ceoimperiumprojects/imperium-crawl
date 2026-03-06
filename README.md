@@ -530,6 +530,8 @@ Every tool tested against production websites with real anti-bot defenses:
 | 📋 **list_jobs** | — | Batch jobs with status and progress |
 | 📊 **job_status** | Batch job | Full per-URL results with timing |
 | 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
+| 🎬 **youtube** | "web scraping tutorial" | Search results, video details, comments, transcripts — no API key |
+| 💬 **reddit** | r/webscraping | Subreddit posts, comments, search — public JSON API |
 
 > **25/25 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
