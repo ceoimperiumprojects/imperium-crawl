@@ -10,6 +10,9 @@ import newsArticleReader from "./news-article-reader.json" with { type: "json" }
 import redditPosts from "./reddit-posts.json" with { type: "json" };
 import seoPageAudit from "./seo-page-audit.json" with { type: "json" };
 import socialMediaMentions from "./social-media-mentions.json" with { type: "json" };
+import influencerNicheDiscovery from "./influencer-niche-discovery.json" with { type: "json" };
+import influencerHashtagScout from "./influencer-hashtag-scout.json" with { type: "json" };
+import influencerCompetitorSpy from "./influencer-competitor-spy.json" with { type: "json" };
 
 export const builtinRecipes: SkillConfig[] = [
   hnTopStories,
@@ -22,4 +25,7 @@ export const builtinRecipes: SkillConfig[] = [
   redditPosts,
   seoPageAudit,
   socialMediaMentions,
+  influencerNicheDiscovery,
+  influencerHashtagScout,
+  influencerCompetitorSpy,
 ] as SkillConfig[];

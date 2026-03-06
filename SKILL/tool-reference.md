@@ -1,4 +1,4 @@
-# Tool Reference — All 23 imperium-crawl Tools
+# Tool Reference — All 25 imperium-crawl Tools
 
 Complete catalog with MCP + CLI names, parameters, and gotchas.
 
@@ -454,3 +454,48 @@ Delete a batch job and all saved results.
 | `job_id` | string (max 200) | — | YES |
 
 **Returns:** Confirmation message.
+
+---
+
+## Social Media Tools (2)
+
+### youtube
+**MCP:** `mcp__imperium-crawl__youtube` | **CLI:** `imperium-crawl youtube`
+
+Search YouTube videos, get video details, comments, transcripts, and channel info.
+
+| Param | Type | Default | Required |
+|-------|------|---------|----------|
+| `action` | `"search"` \| `"video"` \| `"comments"` \| `"transcript"` \| `"channel"` | — | YES |
+| `query` | string (max 2000) | — | for search |
+| `url` | string (max 8192) | — | for video/comments/transcript |
+| `channel_url` | string (max 8192) | — | for channel |
+| `limit` | number (1-1000) | 10 | no |
+| `sort` | `"relevance"` \| `"date"` \| `"views"` | `"relevance"` | no |
+
+**Returns:** Video list, video details, comments array, transcript segments, or channel profile.
+**Gotcha:** `comments` and `transcript` actions require Playwright. Other actions use smartFetch. Transcript tries YouTube captions first; if none exist and `OPENAI_API_KEY` is set, falls back to Whisper AI transcription (downloads audio, sends to OpenAI). Source field indicates `"captions"` or `"whisper"`.
+**CLI:** `--action search --query "AI news" --limit 5`
+
+---
+
+### reddit
+**MCP:** `mcp__imperium-crawl__reddit` | **CLI:** `imperium-crawl reddit`
+
+Search Reddit, browse subreddits, get posts and comments via public JSON API.
+
+| Param | Type | Default | Required |
+|-------|------|---------|----------|
+| `action` | `"search"` \| `"posts"` \| `"comments"` \| `"subreddit"` | — | YES |
+| `query` | string (max 2000) | — | for search |
+| `subreddit` | string (max 200) | — | for posts/subreddit |
+| `post_url` | string (max 8192) | — | for comments |
+| `sort` | `"hot"` \| `"new"` \| `"top"` \| `"rising"` | `"hot"` | no |
+| `time` | `"hour"` \| `"day"` \| `"week"` \| `"month"` \| `"year"` \| `"all"` | `"week"` | no |
+| `limit` | number (1-1000) | 25 | no |
+
+**Returns:** Post list, post with comments, or subreddit profile.
+**Gotcha:** Reddit appends `.json` to URLs — zero HTML parsing needed.
+**CLI:** `--action posts --subreddit programming --sort top --time week`
+
+---

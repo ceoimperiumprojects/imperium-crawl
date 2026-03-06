@@ -23,6 +23,8 @@ import * as batchScrape from "./batch-scrape.js";
 import * as listJobs from "./list-jobs.js";
 import * as jobStatus from "./job-status.js";
 import * as deleteJob from "./delete-job.js";
+import * as youtube from "./youtube.js";
+import * as reddit from "./reddit.js";
 
 export interface ToolDefinition {
   name: string;
@@ -63,4 +65,7 @@ export const allTools: ToolDefinition[] = [
   listJobs as ToolDefinition,
   jobStatus as ToolDefinition,
   deleteJob as ToolDefinition,
+  // Social media tools (no API key needed)
+  youtube as ToolDefinition,
+  reddit as ToolDefinition,
 ];

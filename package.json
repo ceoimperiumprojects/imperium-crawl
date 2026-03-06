@@ -1,6 +1,6 @@
 {
   "name": "imperium-crawl",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Open-source MCP server with Firecrawl-like scraping, crawling, search, and custom skills",
   "type": "module",
   "bin": {

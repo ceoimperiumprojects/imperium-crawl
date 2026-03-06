@@ -1,6 +1,6 @@
 # imperium-crawl — Agent Skill Guide
 
-Comprehensive guide for AI agents using imperium-crawl's 23 MCP tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing — in both MCP and CLI modes.
+Comprehensive guide for AI agents using imperium-crawl's 25 MCP tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing — in both MCP and CLI modes.
 
 **Progressive disclosure:** This file is the overview hub. Each skill and reference topic has a dedicated file with full details — read them when you need depth.
 
@@ -16,7 +16,7 @@ Comprehensive guide for AI agents using imperium-crawl's 23 MCP tools. Covers sc
 | [site-intel.md](site-intel.md) | ~206 | Full site-intel: 5-step workflow, report template, depth guidelines |
 | [research.md](research.md) | ~199 | Full research: search → scrape → synthesize, depth guidelines |
 | [api-recon.md](api-recon.md) | ~218 | Full API recon: discovery, categorization, WebSocket, report template |
-| [tool-reference.md](tool-reference.md) | ~500 | All 23 tools — params, types, defaults, gotchas |
+| [tool-reference.md](tool-reference.md) | ~500 | All 25 tools — params, types, defaults, gotchas |
 | [pipelines.md](pipelines.md) | ~310 | 10 pipeline patterns with full MCP + CLI examples |
 | [recipes.md](recipes.md) | ~151 | 10 built-in recipes + custom skill JSON format |
 
@@ -25,7 +25,7 @@ Comprehensive guide for AI agents using imperium-crawl's 23 MCP tools. Covers sc
 ## Table of Contents
 
 1. [Mode Detection](#mode-detection)
-2. [All 23 Tools — Dual Mode](#all-22-tools--dual-mode)
+2. [All 25 Tools — Dual Mode](#all-25-tools--dual-mode)
 3. [Master Decision Tree](#master-decision-tree)
 4. [Tool Combinations — 10 Patterns](#tool-combinations--10-patterns)
 5. [Smart Scrape](#smart-scrape)
@@ -54,7 +54,7 @@ Detect your execution environment and use the correct invocation format:
 
 ---
 
-## All 23 Tools — Dual Mode
+## All 25 Tools — Dual Mode
 
 Full parameter details per tool → [tool-reference.md](tool-reference.md)
 

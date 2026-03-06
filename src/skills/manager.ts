@@ -23,7 +23,7 @@ export interface SkillPagination {
 
 // --- Discriminated union for skill configs ---
 
-export type RecipeTool = "extract" | "ai_extract" | "readability" | "scrape" | "monitor_websocket";
+export type RecipeTool = "extract" | "ai_extract" | "readability" | "scrape" | "monitor_websocket" | "influencer_discovery";
 
 interface SkillConfigBase {
   name: string;
@@ -66,12 +66,23 @@ export interface WebSocketSkillConfig extends SkillConfigBase {
   filter_url?: string;
 }
 
+export interface InfluencerDiscoverySkillConfig extends SkillConfigBase {
+  tool: "influencer_discovery";
+  workflow: "niche_discovery" | "hashtag_scout" | "competitor_spy";
+  niche: string;
+  platforms?: ("youtube" | "instagram" | "brave")[];
+  output_format?: "json" | "markdown" | "csv";
+  threshold?: number;
+  ig_max_calls?: number;
+}
+
 export type SkillConfig =
   | ExtractSkillConfig
   | AiExtractSkillConfig
   | ReadabilitySkillConfig
   | ScrapeSkillConfig
-  | WebSocketSkillConfig;
+  | WebSocketSkillConfig
+  | InfluencerDiscoverySkillConfig;
 
 // --- Storage functions ---
 

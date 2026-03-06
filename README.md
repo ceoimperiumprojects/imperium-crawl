@@ -4,11 +4,11 @@
 
 **The most powerful open-source MCP server for web scraping, crawling, and data extraction.**
 
-23 tools. Zero API keys required. One `npx` command.
+25 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-332%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-370%20passing-brightgreen.svg)]()
 [![npm downloads](https://img.shields.io/npm/dm/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 
 </div>
@@ -44,7 +44,7 @@ npx -y imperium-crawl scrape --url https://example.com
 npm install -g imperium-crawl
 ```
 
-> That's it. 17 of 23 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 20 of 25 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -120,7 +120,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-17 of 23 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+20 of 25 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -128,7 +128,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **23 Tools, 3 Modes**
+🧰 **25 Tools, 3 Modes**
 MCP server, CLI tool, or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **10 Built-in Recipes**
@@ -144,7 +144,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl MCP | fetch MCP | Crawl4AI MCP | Browserbase MCP |
 |---------|:------------------:|:-------------:|:---------:|:------------:|:---------------:|
 | Price | **Free forever** | $19+/month | Free | Free | $0.01/min |
-| Total tools | **23** | 5 | 2 | 2 | 4 |
+| Total tools | **25** | 5 | 2 | 2 | 4 |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | None | 1 | Cloud-based |
 | Anti-bot detection | **7 systems** | Partial | None | Partial | Partial |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -239,7 +239,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 23 Tools
+## All 25 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -289,6 +289,13 @@ Second visit to cloudflare.com:
 |------|-------------|
 | **interact** | Browser automation with 18 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate, drag, upload, storage, cookies, pdf, auth_login). Ref targeting via ARIA snapshot, session encryption, action policy, domain filter, network interception, device emulation. |
 | **snapshot** | ARIA-based page snapshot with interactive element refs. Use refs in interact for precise targeting. Annotated screenshots. |
+
+### 📱 Social Media (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **youtube** | Search videos, get video details, comments, transcripts, and channel info. Parses `ytInitialData` — no API key needed. |
+| **reddit** | Search Reddit, browse subreddits, get posts and comments via Reddit's public JSON API. |
 
 ### 📦 Batch Processing (no API key needed)
 
@@ -461,7 +468,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 23 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 25 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Three Ways to Connect
 
@@ -524,7 +531,7 @@ Every tool tested against production websites with real anti-bot defenses:
 | 📊 **job_status** | Batch job | Full per-URL results with timing |
 | 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
 
-> **23/23 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **25/25 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 
@@ -558,7 +565,7 @@ cd imperium-crawl
 npm install
 npm run build
 npm run dev         # Watch mode (rebuild on changes)
-npm test            # 332 tests
+npm test            # 370 tests
 npm start           # Start MCP server
 ```
 

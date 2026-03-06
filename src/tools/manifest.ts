@@ -128,4 +128,15 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     cmd: "delete-job",
     description: "Delete a batch scrape job and its stored results by job_id.",
   },
+  // Social media
+  {
+    cmd: "youtube",
+    description:
+      "Search YouTube videos, get video details, comments, transcripts, and channel info. No API key needed.",
+  },
+  {
+    cmd: "reddit",
+    description:
+      "Search Reddit, browse subreddits, get posts and comments. No API key needed.",
+  },
 ];
