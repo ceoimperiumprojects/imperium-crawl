@@ -45,7 +45,7 @@ export class SessionManager {
 
     await fs.mkdir(this.dir, { recursive: true });
     const filePath = this.sessionPath(id);
-    const tmpPath = filePath + ".tmp";
+    const tmpPath = `${filePath}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`;
 
     const key = await this.getEncryptionKey();
     const content = key
@@ -53,7 +53,12 @@ export class SessionManager {
       : JSON.stringify(session, null, 2);
 
     await fs.writeFile(tmpPath, content, "utf-8");
-    await fs.rename(tmpPath, filePath);
+    try {
+      await fs.rename(tmpPath, filePath);
+    } catch (err) {
+      await fs.unlink(tmpPath).catch(() => {});
+      throw err;
+    }
   }
 
   async load(id: string): Promise<StoredSession | null> {
