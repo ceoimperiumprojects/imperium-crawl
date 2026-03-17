@@ -29,6 +29,9 @@ export function getSkillsDir(): string {
 }
 
 export function getKnowledgeFilePath(): string {
+  if (process.env.IMPERIUM_DATA_DIR) {
+    return path.join(process.env.IMPERIUM_DATA_DIR, KNOWLEDGE_FILE);
+  }
   return path.join(os.homedir(), SKILLS_DIR_NAME, KNOWLEDGE_FILE);
 }
 

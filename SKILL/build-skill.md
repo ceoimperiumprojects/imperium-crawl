@@ -314,6 +314,66 @@ See all: `list_skills` or `imperium-crawl list-skills`
 
 ---
 
+## Parameterize Your Skill
+
+Make skills reusable across different inputs using template variables — resolved at run time.
+
+### Three Parameter Types
+
+| Type | Syntax | Resolved From |
+|------|--------|--------------|
+| `input` | `{{input:field_name}}` | `--params '{"field_name": "value"}'` at runtime, or interactive prompt |
+| `env` | `{{env:VAR_NAME}}` | Environment variable `VAR_NAME` |
+| `computed` | `{{computed:name}}` | Auto-computed: `date_today`, `date_yesterday`, `date_7_days_ago`, `timestamp`, `random_string`, `year`, `month`, `day` |
+
+### Adding Parameters to a Skill JSON
+
+```json
+{
+  "name": "site-search",
+  "description": "Search example.com for any query",
+  "tool": "interact",
+  "url": "https://example.com",
+  "parameters": {
+    "query": { "type": "input", "description": "Search query to use" },
+    "api_key": { "type": "env", "env_var": "EXAMPLE_API_KEY" }
+  },
+  "config": {
+    "actions": [
+      { "type": "type", "selector": "#search", "text": "{{input:query}}" },
+      { "type": "click", "selector": "#submit" }
+    ]
+  }
+}
+```
+
+### Running with Params
+
+```bash
+# Pass params explicitly
+imperium-crawl run-skill site-search --params '{"query": "web scraping"}'
+
+# Multiple params
+imperium-crawl run-skill my-skill --params '{"query": "AI", "limit": "10"}'
+```
+
+### Using `explore` to Auto-Detect Parameters
+
+The `explore` REPL auto-detects parameter candidates when you run `save-skill`:
+- Password/secret inputs → suggested as `{{env:...}}`
+- Search/query inputs → suggested as `{{input:...}}`
+- Date fields → suggested as `{{computed:date_today}}`
+
+```bash
+imperium-crawl explore https://example.com
+# > type "#password" "mysecret"
+# > type "#search" "query here"
+# > save-skill my-skill
+# ✅ Detected: password → {{env:EXAMPLE_PASSWORD}}, search → {{input:query}}
+```
+
+---
+
 ## Pipeline Quick Reference
 
 See [pipelines.md](pipelines.md) for full details. Top patterns:

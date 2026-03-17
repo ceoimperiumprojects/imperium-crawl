@@ -4,11 +4,11 @@
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
-28 tools. Zero API keys required. One `npx` command.
+29 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-466%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-546%20passing-brightgreen.svg)]()
 [![npm downloads](https://img.shields.io/npm/dm/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 
 </div>
@@ -31,7 +31,7 @@ npx -y imperium-crawl scrape --url https://example.com
 npm install -g imperium-crawl
 ```
 
-> That's it. 22 of 28 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 23 of 29 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -107,7 +107,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-22 of 28 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+23 of 29 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -115,7 +115,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **28 Tools, 2 Modes**
+🧰 **29 Tools, 2 Modes**
 CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **14 Built-in Recipes**
@@ -131,7 +131,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
 |---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
 | Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
-| Total tools | **28** | 5 | 2 | 4 | N/A |
+| Total tools | **29** | 5 | 2 | 4 | N/A |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
 | Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -224,7 +224,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 28 Tools
+## All 29 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -272,7 +272,7 @@ Second visit to cloudflare.com:
 
 | Tool | What It Does |
 |------|-------------|
-| **interact** | Browser automation with 18 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate, drag, upload, storage, cookies, pdf, auth_login). Ref targeting via ARIA snapshot, session encryption, action policy, domain filter, network interception, device emulation. |
+| **interact** | Browser automation with 19 action types (click, type, scroll, wait, screenshot, evaluate, select, hover, press, navigate, drag, upload, storage, cookies, pdf, auth_login, refresh). Ref targeting via ARIA snapshot, session encryption, action policy, domain filter, network interception, device emulation. |
 | **snapshot** | ARIA-based page snapshot with interactive element refs. Use refs in interact for precise targeting. Annotated screenshots. |
 
 ### 📱 Social Media (no API key needed)
@@ -298,6 +298,12 @@ Second visit to cloudflare.com:
 | **list_jobs** | List all batch jobs with status and progress. |
 | **job_status** | Full results for a specific batch job including per-URL outcomes. |
 | **delete_job** | Clean up completed or failed batch jobs. |
+
+### 🧠 Knowledge Engine (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **knowledge** | Dump adaptive knowledge engine stats — per-domain success rates, optimal stealth levels, anti-bot detection history, rate limits. Use to debug scraping issues and understand problematic domains. |
 
 ---
 
@@ -366,6 +372,26 @@ imperium-crawl tui
 
 Interactive slash-command terminal with parameter prompts, table rendering, markdown display, and session state. Use `/save` to export results and `/again` to re-run the last command.
 
+### Explore REPL
+
+Interactively explore a site in a headed browser, then save the session as a reusable skill:
+
+```bash
+imperium-crawl explore https://example.com
+```
+
+```
+> navigate https://example.com/login
+> type "#email" "user@example.com"
+> type "#password" "{{env:MY_PASSWORD}}"
+> click "#submit"
+> snapshot
+> save-skill my-login
+✅ Saved skill: my-login (4 actions, 1 parameter detected)
+```
+
+Commands: `navigate`, `click`, `type`, `select`, `hover`, `press`, `scroll`, `wait`, `screenshot`, `snapshot`, `evaluate`, `save-skill`, `history`, `undo`, `status`, `help`, `exit`
+
 ---
 
 ## Skills & Recipes
@@ -388,6 +414,37 @@ run_skill({ name: "tc-ai-news" })
 ```
 
 Skills are saved in `~/.imperium-crawl/skills/` as JSON files — human-readable, editable, portable.
+
+### Skill Parameters
+
+Use template variables in skills — resolved at run time:
+
+```bash
+# In skill JSON actions:
+{ "value": "{{input:query}}" }           # passed via --params or prompted
+{ "value": "{{env:SITE_PASSWORD}}" }     # from environment variable
+{ "value": "{{computed:date_today}}" }   # auto-computed (date_today, timestamp, random_string, year, month, day)
+
+# Run with params:
+imperium-crawl run-skill my-search --params '{"query": "machine learning"}'
+```
+
+### Skill Chains
+
+Chain skills together — output of one step becomes input to the next:
+
+```json
+{
+  "type": "chain",
+  "name": "search-and-extract",
+  "steps": [
+    { "skill": "search-results", "output": "search" },
+    { "skill": "extract-details", "input": { "url": "$search.results[0].url" }, "output": "details" }
+  ]
+}
+```
+
+Variable syntax: `$step_name.field.nested[0]` — simple dot-path access, no eval.
 
 ### Built-in Recipes
 
@@ -435,7 +492,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 28 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 29 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Two Ways to Connect
 
@@ -496,13 +553,14 @@ Every tool tested against production websites with real anti-bot defenses:
 | 📋 **list_jobs** | — | Batch jobs with status and progress |
 | 📊 **job_status** | Batch job | Full per-URL results with timing |
 | 🗑️ **delete_job** | Completed job | Cleaned up job data from disk |
+| 🧠 **knowledge** | Local knowledge file | Per-domain stats: stealth levels, success rates, anti-bot systems detected |
 | 🎬 **youtube** | "web scraping tutorial" | Search results, video details, comments, transcripts — no API key |
 | 💬 **reddit** | r/webscraping | Subreddit posts, comments, search — public JSON API |
 | 📸 **instagram** | @nike profile | Profile details, engagement rate, recent posts — internal API |
 | 📥 **download** | YouTube video, web page images | Auto-detect URL type, download media files — images, video, og:image |
 | 📡 **rss** | Hacker News RSS | Parsed feed items with title, link, date, author, categories |
 
-> **28/28 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **29/29 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 
@@ -535,7 +593,7 @@ cd imperium-crawl
 npm install
 npm run build
 npm run dev         # Watch mode (rebuild on changes)
-npm test            # 466 tests
+npm test            # 546 tests
 npm start           # Start CLI (shows help or TUI)
 ```
 

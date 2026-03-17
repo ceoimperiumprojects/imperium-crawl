@@ -1,4 +1,4 @@
-# Tool Reference — All 28 imperium-crawl Tools
+# Tool Reference — All 29 imperium-crawl Tools
 
 Complete catalog with CLI commands, parameters, and gotchas.
 
@@ -357,7 +357,7 @@ Browser automation with action sequences, session persistence, and encryption. R
 
 | Field | Type | Used by |
 |-------|------|---------|
-| `type` | `"click"` `"type"` `"scroll"` `"wait"` `"screenshot"` `"evaluate"` `"select"` `"hover"` `"press"` `"navigate"` `"drag"` `"upload"` `"storage"` `"cookies"` `"pdf"` `"auth_login"` | ALL |
+| `type` | `"click"` `"type"` `"scroll"` `"wait"` `"screenshot"` `"evaluate"` `"select"` `"hover"` `"press"` `"navigate"` `"drag"` `"upload"` `"storage"` `"cookies"` `"pdf"` `"auth_login"` `"refresh"` | ALL |
 | `selector` | string (CSS) | click, type, select, hover, drag, upload |
 | `ref` | string (ARIA ref from snapshot) | click, type, select, hover — alternative to selector |
 | `text` | string | type |
@@ -454,6 +454,48 @@ Delete a batch job and all saved results.
 | `job_id` | string (max 200) | — | YES |
 
 **Returns:** Confirmation message.
+
+---
+
+## Knowledge Engine (1)
+
+### knowledge
+**CLI:** `imperium-crawl knowledge`
+
+Dump the adaptive knowledge engine's learned domain data.
+
+```bash
+imperium-crawl knowledge
+imperium-crawl knowledge --domain cloudflare.com
+imperium-crawl knowledge --sort success_rate --min-requests 5
+```
+
+| Param | Type | Default | Description |
+|-------|------|---------|-------------|
+| `domain` | string | — | Filter to a domain substring |
+| `sort` | `"domain"` \| `"success_rate"` \| `"fail_count"` \| `"last_updated"` | `"last_updated"` | Sort order |
+| `min_requests` | number | 1 | Minimum total requests to include domain |
+
+**Returns:** `{ summary: { total_domains, domains_with_antibot, domains_needing_proxy, avg_success_rate }, domains: [...] }`
+
+**Gotcha:** Reads `~/.imperium-crawl/knowledge.json` (or `$IMPERIUM_DATA_DIR/knowledge.json`). Empty if you haven't scraped yet.
+
+---
+
+### explore (CLI command)
+
+Interactive headed browser REPL — navigate, interact, and save sessions as skills.
+
+```bash
+imperium-crawl explore https://example.com
+imperium-crawl explore https://example.com --session-id my-session
+```
+
+**REPL commands:** `navigate`, `click`, `type`, `select`, `hover`, `press`, `scroll`, `wait`, `screenshot`, `snapshot`, `evaluate`, `save-skill`, `history`, `undo`, `status`, `help`, `exit`
+
+**save-skill:** Auto-detects parameter candidates (passwords → `{{env:...}}`, search fields → `{{input:...}}`). Saves to `~/.imperium-crawl/skills/`.
+
+**Gotcha:** Requires rebrowser-playwright + Playwright browsers installed (Level 3 stealth).
 
 ---
 

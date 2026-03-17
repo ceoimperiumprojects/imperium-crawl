@@ -148,6 +148,12 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     description:
       "Search Instagram profiles, get profile details with engagement metrics, and discover influencers by niche/location. Search/discover require BRAVE_API_KEY.",
   },
+  // Intelligence
+  {
+    cmd: "knowledge",
+    description:
+      "Show adaptive knowledge engine stats — per-domain success rates, stealth levels, rate limits, and anti-bot detection history. Useful for debugging scraping issues.",
+  },
   // Media & feeds
   {
     cmd: "download",

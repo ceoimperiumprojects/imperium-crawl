@@ -30,6 +30,7 @@ export const schema = z.object({
   timeout: z.number().min(1).max(MAX_TIMEOUT_MS).optional().describe("Timeout in ms"),
   proxy: z.string().max(MAX_URL_LENGTH).optional().describe("Proxy URL (http/https/socks4/socks5). Overrides PROXY_URL env var."),
   chrome_profile: z.string().max(1000).optional().describe("Path to Chrome user data directory for authenticated sessions (cookies, localStorage). Overrides CHROME_PROFILE_PATH env var."),
+  respect_robots: z.boolean().optional().describe("Override robots.txt checking for this request. Default: true (respects robots.txt). Set to false to bypass."),
 });
 
 export type ScrapeInput = z.infer<typeof schema>;
@@ -41,6 +42,7 @@ export async function execute(input: ScrapeInput) {
     timeout: input.timeout,
     proxy: input.proxy,
     chromeProfile: input.chrome_profile,
+    respectRobots: input.respect_robots,
   });
 
   // Determine what to include

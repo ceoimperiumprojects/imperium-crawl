@@ -15,4 +15,6 @@ export interface StoredSession {
   url: string;
   createdAt: string;
   updatedAt: string;
+  /** Number of browser actions executed in this session since last refresh */
+  actionCount?: number;
 }

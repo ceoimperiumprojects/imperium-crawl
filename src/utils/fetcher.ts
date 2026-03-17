@@ -2,6 +2,7 @@ import { smartFetch, StealthError, type FetchResult, type StealthOptions } from 
 import { isAllowed } from "./robots.js";
 import { getDomain } from "./url.js";
 import { DEFAULT_CONCURRENCY } from "../constants.js";
+import { getKnowledgeEngine } from "../knowledge/index.js";
 
 // ── Concurrency Limiter ──
 
@@ -118,6 +119,40 @@ function fullJitterBackoff(attempt: number): number {
   return Math.random() * expDelay;
 }
 
+// ── Per-Domain Rate Limiter ──
+
+const DEFAULT_DOMAIN_RATE_MS = parseInt(process.env.DOMAIN_RATE_LIMIT_MS || "500", 10);
+
+class DomainThrottle {
+  private lastRequest = new Map<string, number>();
+  private defaultDelay: number;
+
+  constructor(defaultDelayMs: number = DEFAULT_DOMAIN_RATE_MS) {
+    this.defaultDelay = defaultDelayMs;
+  }
+
+  /**
+   * Wait until enough time has passed since the last request to this domain.
+   * Uses knowledge engine's safe_rate_limit if available, else default delay.
+   */
+  async throttle(domain: string, knowledgeDelayMs?: number): Promise<void> {
+    const delay = knowledgeDelayMs ?? this.defaultDelay;
+    if (delay <= 0) return;
+
+    const now = Date.now();
+    const last = this.lastRequest.get(domain) ?? 0;
+    const elapsed = now - last;
+
+    if (elapsed < delay) {
+      await new Promise((r) => setTimeout(r, delay - elapsed));
+    }
+
+    this.lastRequest.set(domain, Date.now());
+  }
+}
+
+const domainThrottle = new DomainThrottle();
+
 // ── Fetch Page ──
 
 export interface SmartFetchOptions extends StealthOptions {
@@ -141,6 +176,13 @@ export async function fetchPage(url: string, options?: SmartFetchOptions): Promi
   if (circuit.state === "open") {
     throw new Error(`Circuit breaker open for ${domain} — too many consecutive failures. Retry after cooldown.`);
   }
+
+  // Per-domain rate limiting — use knowledge engine's safe_rate_limit if available
+  const knowledge = await getKnowledgeEngine().get(domain);
+  const knowledgeDelayMs = knowledge?.safe_rate_limit
+    ? Math.round(60_000 / knowledge.safe_rate_limit)
+    : undefined;
+  await domainThrottle.throttle(domain, knowledgeDelayMs);
 
   const retries = options?.retries ?? 2;
   let lastError: Error | undefined;

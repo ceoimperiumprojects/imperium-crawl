@@ -28,6 +28,7 @@ import * as reddit from "./reddit.js";
 import * as instagram from "./instagram.js";
 import * as download from "./download.js";
 import * as rss from "./rss.js";
+import * as knowledge from "./knowledge.js";
 
 export interface ToolDefinition {
   name: string;
@@ -75,4 +76,6 @@ export const allTools: ToolDefinition[] = [
   // Media & feeds
   download as ToolDefinition,
   rss as ToolDefinition,
+  // Intelligence
+  knowledge as ToolDefinition,
 ];

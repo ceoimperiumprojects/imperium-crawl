@@ -285,6 +285,25 @@ function tryRenderTable(toolName: string, data: unknown): string | null {
     return renderTable(headers, rows);
   }
 
+  if (toolName === "knowledge") {
+    const domains = Array.isArray(obj.domains) ? obj.domains : [];
+    if (domains.length === 0) return null;
+    const headers = ["Domain", "Level", "Success%", "Reqs", "Rate/RPM", "AntiBot", "Updated"];
+    const rows = domains.map((d: unknown) => {
+      const dom = d as Record<string, unknown>;
+      return [
+        String(dom.domain ?? ""),
+        `L${dom.optimal_level ?? 1}`,
+        String(dom.success_rate ?? "0%"),
+        String(dom.requests ?? 0),
+        String(dom.rate_limit_rpm ?? 60),
+        String(dom.antibot ?? "none"),
+        String(dom.last_updated ?? ""),
+      ];
+    });
+    return renderTable(headers, rows);
+  }
+
   if (["search", "news_search", "image_search", "video_search"].includes(toolName)) {
     const results = Array.isArray(obj.results) ? obj.results : [];
     if (results.length === 0) return null;
@@ -344,6 +363,16 @@ export async function buildCli(): Promise<Command> {
     .action(async () => {
       const { runSetup } = await import("./cli-onboarding.js");
       await runSetup();
+    });
+
+  // ── Explore REPL — interactive browser session with recording ──
+  program
+    .command("explore <url>")
+    .description("Open an interactive browser REPL. Navigate, click, type — every action is recorded. Run save-skill inside to export the session as a reusable skill.")
+    .option("--session-id <id>", "Restore and save cookies for this session ID")
+    .action(async (url: string, opts: { sessionId?: string }) => {
+      const { runExplore } = await import("./cli-explore.js");
+      await runExplore(url, opts.sessionId);
     });
 
   // ── Tool commands — lazy loaded ──────────────────────────────────

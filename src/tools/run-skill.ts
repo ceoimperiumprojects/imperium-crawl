@@ -10,6 +10,8 @@ import type {
   ReadabilitySkillConfig,
   WebSocketSkillConfig,
   InfluencerDiscoverySkillConfig,
+  InteractSkillConfig,
+  ChainSkillConfig,
 } from "../skills/manager.js";
 import { MAX_URL_LENGTH, MAX_ITEMS } from "../constants.js";
 import { toolResult } from "../utils/tool-response.js";
@@ -36,6 +38,7 @@ export const schema = z.object({
   threshold: z.number().min(0).max(100).optional().describe("Tier qualification threshold (default 60)"),
   min_subscribers: z.number().min(0).optional().describe("Min YouTube subscribers (content_scout, default 300)"),
   max_subscribers: z.number().min(0).optional().describe("Max YouTube subscribers (content_scout, default 100000)"),
+  params: z.record(z.string()).optional().describe("Runtime parameter values for skills that use {{input:...}} templates (e.g. { \"case_number\": \"2024-001\", \"search_term\": \"Smith\" })"),
 });
 
 export type RunSkillInput = z.infer<typeof schema>;
@@ -1472,6 +1475,94 @@ async function runInfluencerDiscovery(
   return toolResult(data);
 }
 
+// --- Dispatch: interact (tool: "interact") ---
+
+async function runInteract(
+  config: InteractSkillConfig,
+  url: string,
+  input: RunSkillInput,
+) {
+  const { execute: interactExecute } = await import("./interact.js");
+  const { resolveActions, resolveString } = await import("../skills/parameters.js");
+
+  // Resolve template parameters in actions before executing
+  const params = config.parameters ?? {};
+  const inputArgs = input.params ?? {};
+  const resolvedActions = resolveActions(
+    config.actions as unknown as Array<Record<string, unknown>>,
+    params,
+    inputArgs,
+  ) as unknown as typeof config.actions;
+
+  // Also resolve URL templates (e.g. url contains {{input:case_id}})
+  const resolvedUrl = resolveString(url, params, inputArgs);
+
+  // Build actions array — include pagination as final action if configured
+  const actions = [...resolvedActions];
+  if (config.pagination) {
+    actions.push({
+      type: "paginate",
+      next_selector: config.pagination.next_selector,
+      extract_script: config.pagination.extract_script,
+      max_pages: config.pagination.max_pages ?? 10,
+      wait_after_click: config.pagination.wait_after_click ?? 2000,
+    });
+  }
+
+  const result = await interactExecute({
+    url: resolvedUrl,
+    actions: actions as Parameters<typeof interactExecute>[0]["actions"],
+    session_id: config.session_id,
+    return_content: true,
+    return_screenshot: false,
+    return_snapshot: false,
+    return_network_log: false,
+    timeout: 30000,
+  });
+
+  // Extract the text content from interact's result
+  const textContent = result.content?.find((c: { type: string }) => c.type === "text");
+  if (textContent && "text" in textContent) {
+    try {
+      const parsed = JSON.parse(textContent.text as string);
+      return toolResult({
+        skill: config.name,
+        description: config.description,
+        tool: "interact",
+        url,
+        ...parsed,
+      });
+    } catch {
+      return toolResult({ skill: config.name, tool: "interact", url, raw: textContent.text });
+    }
+  }
+
+  return result;
+}
+
+// --- Dispatch: Chain (type: "chain") ---
+
+async function runChain(config: ChainSkillConfig, input: RunSkillInput) {
+  const { ChainExecutor } = await import("../skills/chain.js");
+  const executor = new ChainExecutor();
+
+  const result = await executor.execute(
+    { ...config, type: "chain" } as import("../skills/chain.js").ChainConfig,
+    input.params ?? {},
+  );
+
+  return toolResult({
+    skill: config.name,
+    description: config.description,
+    tool: "chain",
+    steps_executed: result.steps_executed,
+    steps_skipped: result.steps_skipped,
+    step_results: result.step_results,
+    ...(result.error && { error: result.error }),
+    output: result.output,
+  });
+}
+
 // --- Main execute ---
 
 export async function execute(input: RunSkillInput) {
@@ -1489,7 +1580,12 @@ export async function execute(input: RunSkillInput) {
   }
 
   const url = input.url || config.url;
-  const tool = config.tool ?? "extract";
+  // Chain skills use `type: "chain"` instead of `tool`
+  if ((config as ChainSkillConfig).type === "chain") {
+    return runChain(config as ChainSkillConfig, input);
+  }
+
+  const tool = (config as { tool?: string }).tool ?? "extract";
 
   switch (tool) {
     case "extract":
@@ -1504,6 +1600,8 @@ export async function execute(input: RunSkillInput) {
       return runMonitorWebsocket(config as WebSocketSkillConfig, url, input);
     case "influencer_discovery":
       return runInfluencerDiscovery(config as InfluencerDiscoverySkillConfig, input);
+    case "interact":
+      return runInteract(config as InteractSkillConfig, url, input);
     default:
       return toolResult({ error: `Unknown skill tool type: ${tool}` });
   }

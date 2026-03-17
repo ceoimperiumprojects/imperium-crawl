@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { getSkillsDir } from "../config.js";
+import type { SkillParameters } from "./parameters.js";
 
 const SKILL_NAME_RE = /^[a-zA-Z0-9_-]+$/;
 
@@ -23,7 +24,7 @@ export interface SkillPagination {
 
 // --- Discriminated union for skill configs ---
 
-export type RecipeTool = "extract" | "ai_extract" | "readability" | "scrape" | "monitor_websocket" | "influencer_discovery";
+export type RecipeTool = "extract" | "ai_extract" | "readability" | "scrape" | "monitor_websocket" | "influencer_discovery" | "interact";
 
 interface SkillConfigBase {
   name: string;
@@ -76,13 +77,63 @@ export interface InfluencerDiscoverySkillConfig extends SkillConfigBase {
   ig_max_calls?: number;
 }
 
+export interface InteractSkillAction {
+  type: string;
+  selector?: string;
+  ref?: string;
+  text?: string;
+  value?: string;
+  script?: string;
+  key?: string;
+  url?: string;
+  duration?: number;
+  next_selector?: string;
+  extract_script?: string;
+  max_pages?: number;
+  wait_after_click?: number;
+}
+
+export interface InteractSkillPagination {
+  next_selector: string;
+  extract_script: string;
+  max_pages?: number;
+  wait_after_click?: number;
+}
+
+export interface InteractSkillConfig extends SkillConfigBase {
+  tool: "interact";
+  session_id?: string;
+  actions: InteractSkillAction[];
+  pagination?: InteractSkillPagination;
+  /** Template parameter definitions — keys map to {{env:X}}, {{input:X}}, {{computed:X}} in actions */
+  parameters?: SkillParameters;
+}
+
+export interface ChainSkillConfig {
+  name: string;
+  description: string;
+  type: "chain";
+  url: string; // dummy field for SkillConfigBase compatibility
+  created_at: string;
+  builtin?: boolean;
+  steps: Array<{
+    skill: string;
+    input?: Record<string, string>;
+    output?: string;
+    condition?: string;
+  }>;
+  output?: string;
+}
+
 export type SkillConfig =
   | ExtractSkillConfig
   | AiExtractSkillConfig
   | ReadabilitySkillConfig
   | ScrapeSkillConfig
   | WebSocketSkillConfig
-  | InfluencerDiscoverySkillConfig;
+  | InfluencerDiscoverySkillConfig
+  | InteractSkillConfig
+  | ChainSkillConfig;
 
 // --- Storage functions ---
 

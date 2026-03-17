@@ -2,6 +2,7 @@ import { z } from "zod";
 import { normalizeUrl } from "../utils/url.js";
 import { isPlaywrightAvailable } from "../stealth/index.js";
 import { browserFetch } from "../stealth/browser.js";
+import { recordBrowserOutcome } from "../knowledge/index.js";
 import { MAX_URL_LENGTH } from "../constants.js";
 
 export const name = "screenshot";
@@ -39,7 +40,12 @@ export async function execute(input: ScreenshotInput) {
     };
   }
 
+  const fetchStart = Date.now();
   const result = await browserFetch(url, { screenshot: true, proxyUrl: input.proxy, chromeProfile: input.chrome_profile });
+  recordBrowserOutcome({
+    url, success: result.status < 400, responseTimeMs: Date.now() - fetchStart,
+    httpStatus: result.status, captchaSolved: result.captchaSolved, proxyUsed: !!input.proxy,
+  });
 
   if (!result.screenshot) {
     return {

@@ -3,6 +3,7 @@ import { isPlaywrightAvailable } from "../stealth/browser.js";
 import { acquirePage } from "../stealth/chrome-profile.js";
 import { resolveProxy } from "../stealth/proxy.js";
 import { normalizeUrl } from "../utils/url.js";
+import { recordBrowserOutcome } from "../knowledge/index.js";
 import { getSessionManager } from "../sessions/index.js";
 import { getEnhancedSnapshot, getSnapshotStore, annotateScreenshot } from "../snapshot/index.js";
 import { installDomainFilter } from "../security/domain-filter.js";
@@ -85,6 +86,7 @@ export async function execute(input: SnapshotInput) {
   const url = normalizeUrl(input.url);
   const proxyUrl = resolveProxy(input.proxy);
   const snapshotId = input.session_id ?? `snap_${Date.now()}`;
+  const fetchStart = Date.now();
 
   const handle = await acquirePage({
     chromeProfile: input.chrome_profile,
@@ -109,6 +111,7 @@ export async function execute(input: SnapshotInput) {
 
     // Navigate
     await page.goto(url, { waitUntil: "load", timeout: input.timeout });
+    recordBrowserOutcome({ url, success: true, responseTimeMs: Date.now() - fetchStart, proxyUsed: !!proxyUrl });
 
     // Take snapshot
     const snapshot = await getEnhancedSnapshot(page, {

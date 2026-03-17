@@ -1,6 +1,6 @@
 {
   "name": "imperium-crawl",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "Open-source CLI tool for web scraping, crawling, search, and custom skills",
   "type": "module",
   "bin": {
@@ -11,7 +11,10 @@
   "exports": {
     ".": "./dist/index.js",
     "./tools/*": "./dist/tools/*.js",
-    "./stealth/*": "./dist/stealth/*.js"
+    "./stealth/*": "./dist/stealth/*.js",
+    "./sessions": "./dist/sessions/index.js",
+    "./sessions/*": "./dist/sessions/*.js",
+    "./utils/*": "./dist/utils/*.js"
   },
   "files": [
     "dist",

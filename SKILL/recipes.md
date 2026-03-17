@@ -68,6 +68,7 @@ Skills are stored as JSON files in `~/.imperium-crawl/skills/{name}.json`.
 | `tool` | string | Which tool to use: `extract`, `scrape`, `ai_extract`, `readability`, `monitor_websocket` |
 | `url` | string | Default URL (can be overridden at runtime) |
 | `config` | object | Tool-specific configuration |
+| `parameters` | object | Parameter definitions for template variables (see below) |
 | `created_at` | string | ISO timestamp |
 | `updated_at` | string | ISO timestamp |
 
@@ -112,6 +113,47 @@ Skills are stored as JSON files in `~/.imperium-crawl/skills/{name}.json`.
   "max_messages": 100,
   "filter_url": "wss://specific-endpoint"
 }
+```
+
+**Skills with parameters:**
+```json
+{
+  "name": "my-search",
+  "description": "Search example.com",
+  "tool": "interact",
+  "url": "https://example.com/search",
+  "parameters": {
+    "query": { "type": "input", "description": "Search query" },
+    "password": { "type": "env", "env_var": "SITE_PASSWORD" }
+  },
+  "config": {
+    "actions": [
+      { "type": "type", "selector": "#q", "text": "{{input:query}}" },
+      { "type": "type", "selector": "#password", "text": "{{env:SITE_PASSWORD}}" },
+      { "type": "click", "selector": "#submit" }
+    ]
+  }
+}
+```
+
+Run with params: `imperium-crawl run-skill my-search --params '{"query": "machine learning"}'`
+
+**Chain skills:**
+```json
+{
+  "type": "chain",
+  "name": "search-and-extract",
+  "description": "Search then extract details from first result",
+  "steps": [
+    { "skill": "search-results", "output": "search" },
+    { "skill": "extract-details", "input": { "url": "$search.results[0].url" }, "output": "details" }
+  ]
+}
+```
+
+Variable syntax: `$step_name.field.nested[0]` — simple dot-path access, no eval. Use conditions for branching:
+```json
+{ "condition": "$search.total > 0", "skill": "extract-details" }
 ```
 
 ---

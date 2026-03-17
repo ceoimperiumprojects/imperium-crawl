@@ -1,4 +1,4 @@
-# Pipeline Patterns — 10 Reusable Workflows
+# Pipeline Patterns — 12 Reusable Workflows
 
 Each pipeline shows the tool chain, when to use it, and examples in CLI mode.
 
@@ -182,3 +182,62 @@ imperium-crawl snapshot --url "https://example.com/form"
 ```
 
 **Why refs > selectors:** ARIA refs are stable across page re-renders, don't break with CSS class changes, and work on elements without unique selectors.
+
+---
+
+## Pipeline 11: Explore → Save → Run (Record & Replay)
+
+**When:** Want to record real browser interactions and replay them as a parameterized skill.
+
+```
+explore(url) → REPL: navigate/click/type → save-skill(name)
+  → run_skill(name, --params) → automated replay with variable substitution
+```
+
+```bash
+# Step 1: Record interactions in headed browser
+imperium-crawl explore https://example.com/search --session-id my-session
+# In the REPL:
+# > type "#q" "{{input:query}}"
+# > click "#search-btn"
+# > snapshot
+# > save-skill my-search
+# ✅ Saved skill: my-search (3 actions, 1 parameter detected)
+
+# Step 2: Run the recorded skill with params
+imperium-crawl run-skill my-search --params '{"query": "machine learning"}'
+```
+
+**Auto-detect:** `save-skill` scans recorded actions — password fields → `{{env:...}}`, search inputs → `{{input:...}}`.
+
+---
+
+## Pipeline 12: Chain Skills (Multi-Step Extraction)
+
+**When:** Need output of one skill to feed into the next — search then extract, login then scrape, etc.
+
+```
+chain skill config → run_skill(chain-name)
+  → step 1 output → variable resolution → step 2 input → ... → final output
+```
+
+```bash
+# Save chain config to ~/.imperium-crawl/skills/my-chain.json:
+# {
+#   "type": "chain",
+#   "name": "my-chain",
+#   "steps": [
+#     { "skill": "search-results", "output": "search" },
+#     { "skill": "extract-details", "input": { "url": "$search.results[0].url" }, "output": "details" }
+#   ]
+# }
+
+# Run the chain
+imperium-crawl run-skill my-chain
+
+# Run with params passed to all steps
+imperium-crawl run-skill my-chain --params '{"query": "web scraping"}'
+```
+
+**Variable syntax:** `$step_name.field.nested[0]` — dot-path with array index support.
+**Conditions:** `{ "condition": "$step.count > 0", "skill": "next-step" }` — safe whitelist evaluator, no eval.

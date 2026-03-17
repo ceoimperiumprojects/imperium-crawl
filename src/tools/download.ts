@@ -5,6 +5,7 @@ import { MAX_URL_LENGTH } from "../constants.js";
 import { smartFetch } from "../stealth/index.js";
 import { isPlaywrightAvailable } from "../stealth/browser.js";
 import { acquirePage } from "../stealth/chrome-profile.js";
+import { recordBrowserOutcome } from "../knowledge/index.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
 import * as cheerio from "cheerio";
@@ -256,7 +257,9 @@ async function downloadTikTok(url: string, outputDir: string): Promise<DownloadR
   const handle = await acquirePage();
   try {
     const { page } = handle;
+    const fetchStart = Date.now();
     await page.goto(url, { waitUntil: "load", timeout: 30_000 });
+    recordBrowserOutcome({ url, success: true, responseTimeMs: Date.now() - fetchStart });
     await page.waitForTimeout(3000);
 
     // Extract video src from the page

@@ -1,6 +1,6 @@
 # imperium-crawl — Agent Skill Guide
 
-Comprehensive guide for AI agents using imperium-crawl's 28 CLI tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing.
+Comprehensive guide for AI agents using imperium-crawl's 29 CLI tools. Covers scraping, extraction, research, API discovery, skill building, and batch processing.
 
 **Progressive disclosure:** This file is the overview hub. Each skill and reference topic has a dedicated file with full details — read them when you need depth.
 
@@ -16,7 +16,7 @@ Comprehensive guide for AI agents using imperium-crawl's 28 CLI tools. Covers sc
 | [site-intel.md](site-intel.md) | ~206 | Full site-intel: 5-step workflow, report template, depth guidelines |
 | [research.md](research.md) | ~199 | Full research: search → scrape → synthesize, depth guidelines |
 | [api-recon.md](api-recon.md) | ~218 | Full API recon: discovery, categorization, WebSocket, report template |
-| [tool-reference.md](tool-reference.md) | ~580 | All 28 tools — params, types, defaults, gotchas |
+| [tool-reference.md](tool-reference.md) | ~580 | All 29 tools — params, types, defaults, gotchas |
 | [pipelines.md](pipelines.md) | ~310 | 10 pipeline patterns with full CLI examples |
 | [recipes.md](recipes.md) | ~320 | 14 built-in recipes + custom skill JSON format + influencer workflow |
 
@@ -24,9 +24,9 @@ Comprehensive guide for AI agents using imperium-crawl's 28 CLI tools. Covers sc
 
 ## Table of Contents
 
-1. [All 28 Tools](#all-28-tools)
+1. [All 29 Tools](#all-29-tools)
 2. [Master Decision Tree](#master-decision-tree)
-3. [Tool Combinations — 10 Patterns](#tool-combinations--10-patterns)
+3. [Tool Combinations — 11 Patterns](#tool-combinations--11-patterns)
 4. [Smart Scrape](#smart-scrape)
 5. [Build Skill](#build-skill)
 6. [Site Intel](#site-intel)
@@ -38,7 +38,7 @@ Comprehensive guide for AI agents using imperium-crawl's 28 CLI tools. Covers sc
 
 ---
 
-## All 28 Tools
+## All 29 Tools
 
 Full parameter details per tool → [tool-reference.md](tool-reference.md)
 
@@ -101,6 +101,12 @@ Full parameter details per tool → [tool-reference.md](tool-reference.md)
 | List jobs | `imperium-crawl list-jobs` | *(none)* |
 | Job status | `imperium-crawl job-status --job-id ID` | `job_id` |
 | Delete job | `imperium-crawl delete-job --job-id ID` | `job_id` |
+
+### Knowledge Engine (1)
+
+| Action | CLI Command | Key Params |
+|--------|-------------|------------|
+| Knowledge stats | `imperium-crawl knowledge` | `domain`, `sort`, `min_requests` |
 
 ### Social Media (3) — No API key needed (search/discover need `BRAVE_API_KEY`)
 
@@ -175,6 +181,12 @@ User has a web data task
 ├─ "Read RSS/Atom feed"
 │  └─ rss (--url FEED_URL --since YYYY-MM-DD)
 │
+├─ "Need to see why a domain is failing?"
+│  └─ knowledge (--domain cloudflare.com --sort success_rate)
+│
+├─ "Need to record browser interactions as a skill?"
+│  └─ explore (headed REPL → type commands → save-skill)
+│
 └─ "Full site harvest"
    └─ map → batch_scrape (parallel fetch)
    → Full guide: site-intel.md
@@ -182,7 +194,7 @@ User has a web data task
 
 ---
 
-## Tool Combinations — 10 Patterns
+## Tool Combinations — 11 Patterns
 
 Full CLI examples for each pattern → [pipelines.md](pipelines.md)
 
@@ -245,6 +257,12 @@ create_skill → run_skill → [bad?] → extract (manual) → create_skill (ove
 **When:** Need precise element targeting without fragile CSS selectors
 ```
 snapshot(url) → analyze ARIA refs → interact(url, actions: [{ref: "N"}]) → snapshot(url) to verify
+```
+
+### 11. Explore → save-skill → run_skill (Record & Replay)
+**When:** Want to record a browser session and save it as a reusable skill
+```
+explore(url) → REPL: navigate/click/type → save-skill(name) → run_skill(name, --params)
 ```
 
 ---
@@ -480,5 +498,6 @@ imperium-crawl interact --url URL --actions '[{"type":"click","selector":"button
 | `OPENAI_API_KEY` | youtube transcript (Whisper fallback) | OpenAI API for Whisper transcription |
 | `CHROME_PROFILE_PATH` | — | Chrome user data dir for authenticated sessions |
 | `RESPECT_ROBOTS` | — | Honor robots.txt (default: `true`) |
+| `IMPERIUM_DATA_DIR` | — | Override default data directory (`~/.imperium-crawl/`) |
 
 Quick setup: `imperium-crawl setup` (interactive wizard)

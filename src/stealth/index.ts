@@ -7,6 +7,44 @@ import { resolveProxy } from "./proxy.js";
 import { DEFAULT_TIMEOUT_MS } from "../constants.js";
 import { getDomain } from "../utils/url.js";
 import { getKnowledgeEngine } from "../knowledge/index.js";
+import type { StoredCookie } from "../sessions/types.js";
+
+/**
+ * Build a Cookie header string from stored session cookies,
+ * filtering by domain and path match for the given URL.
+ */
+function buildCookieHeader(cookies: StoredCookie[], url: string): string {
+  const parsed = new URL(url);
+  const hostname = parsed.hostname;
+  const pathname = parsed.pathname;
+  const now = Date.now() / 1000;
+
+  return cookies
+    .filter((c) => {
+      // Domain match: cookie domain ".example.com" matches "sub.example.com"
+      const cookieDomain = c.domain.startsWith(".") ? c.domain : `.${c.domain}`;
+      if (!`.${hostname}`.endsWith(cookieDomain)) return false;
+      // Path match
+      if (c.path && !pathname.startsWith(c.path)) return false;
+      // Expiry check
+      if (c.expires && c.expires > 0 && c.expires < now) return false;
+      return true;
+    })
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+}
+
+/**
+ * Load session cookies and build Cookie header if sessionId is provided.
+ */
+async function getSessionCookieHeader(sessionId: string | undefined, url: string): Promise<string | undefined> {
+  if (!sessionId) return undefined;
+  const { getSessionManager } = await import("../sessions/manager.js");
+  const session = await getSessionManager().load(sessionId);
+  if (!session?.cookies.length) return undefined;
+  const header = buildCookieHeader(session.cookies, url);
+  return header || undefined;
+}
 
 export type StealthLevel = 1 | 2 | 3;
 
@@ -42,6 +80,7 @@ export interface StealthOptions {
   screenshot?: boolean;
   proxy?: string; // per-request proxy URL override
   chromeProfile?: string; // Chrome user data dir for authenticated sessions
+  sessionId?: string; // session ID to inject cookies from (L1/L2 HTTP requests)
 }
 
 // ── Rendering Decision Cache ──
@@ -86,8 +125,15 @@ function cacheLevel(url: string, level: StealthLevel): void {
 
 // ── Level Fetchers ──
 
-async function level1Fetch(url: string, timeout: number, proxyUrl?: string): Promise<FetchResult> {
+async function level1Fetch(url: string, timeout: number, proxyUrl?: string, sessionId?: string): Promise<FetchResult> {
   const headers = generateHeaders();
+
+  // Inject session cookies if available
+  const cookieHeader = await getSessionCookieHeader(sessionId, url);
+  if (cookieHeader) {
+    (headers as Record<string, string>)["Cookie"] = cookieHeader;
+  }
+
   const fetchOptions: RequestInit & { dispatcher?: unknown } = {
     headers,
     redirect: "follow",
@@ -106,8 +152,12 @@ async function level1Fetch(url: string, timeout: number, proxyUrl?: string): Pro
   return { html, status: res.status, url: res.url, level: 1, headers: responseHeaders, proxyUsed: proxyUrl };
 }
 
-async function level2Fetch(url: string, timeout: number, proxyUrl?: string): Promise<FetchResult> {
-  const result = await stealthFetch({ url, timeout, proxyUrl });
+async function level2Fetch(url: string, timeout: number, proxyUrl?: string, sessionId?: string): Promise<FetchResult> {
+  // Inject session cookies as custom headers for Impit
+  const cookieHeader = await getSessionCookieHeader(sessionId, url);
+  const extraHeaders = cookieHeader ? { Cookie: cookieHeader } : undefined;
+
+  const result = await stealthFetch({ url, timeout, proxyUrl, headers: extraHeaders });
   return { ...result, level: 2, proxyUsed: proxyUrl };
 }
 
@@ -134,6 +184,7 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   const maxLevel = options?.maxLevel || 3;
   const proxyUrl = resolveProxy(options?.proxy);
   const chromeProfile = options?.chromeProfile;
+  const sessionId = options?.sessionId;
   const domain = getDomain(url);
   const engine = getKnowledgeEngine();
   const fetchStart = Date.now();
@@ -169,7 +220,7 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
 
   // Forced level — skip all heuristics
   if (options?.forceLevel) {
-    const result = await fetchByLevel(url, timeout, options.forceLevel, options.screenshot, proxyUrl);
+    const result = await fetchByLevel(url, timeout, options.forceLevel, options.screenshot, proxyUrl, sessionId);
     cacheLevel(url, options.forceLevel);
     return recordSuccess(result);
   }
@@ -178,7 +229,7 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   const cachedLevel = getCachedLevel(url);
   if (cachedLevel && cachedLevel <= maxLevel) {
     try {
-      const result = await fetchByLevel(url, timeout, cachedLevel, options?.screenshot, proxyUrl);
+      const result = await fetchByLevel(url, timeout, cachedLevel, options?.screenshot, proxyUrl, sessionId);
       if (checkResult(result)) {
         return recordSuccess(result);
       }
@@ -196,7 +247,7 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   if (prediction && prediction.confidence >= 0.7 && prediction.startLevel > 1) {
     const startLevel = Math.min(prediction.startLevel, maxLevel) as StealthLevel;
     try {
-      const result = await fetchByLevel(url, timeout, startLevel, options?.screenshot, proxyUrl);
+      const result = await fetchByLevel(url, timeout, startLevel, options?.screenshot, proxyUrl, sessionId);
       if (checkResult(result)) {
         cacheLevel(url, startLevel);
         return recordSuccess(result);
@@ -212,7 +263,7 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   // Level 1: native fetch + realistic headers
   if (maxLevel >= 1) {
     try {
-      const result = await level1Fetch(url, timeout, proxyUrl);
+      const result = await level1Fetch(url, timeout, proxyUrl, sessionId);
       if (checkResult(result)) {
         cacheLevel(url, 1);
         return recordSuccess(result);
@@ -247,7 +298,7 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
   // Level 2: impit TLS stealth
   if (maxLevel >= 2) {
     try {
-      const result = await level2Fetch(url, timeout, proxyUrl);
+      const result = await level2Fetch(url, timeout, proxyUrl, sessionId);
       if (checkResult(result)) {
         cacheLevel(url, 2);
         return recordSuccess(result);
@@ -268,12 +319,12 @@ export async function smartFetch(url: string, options?: StealthOptions): Promise
 
   // Fallback: return best effort from level 2, then level 1
   try {
-    const result = await level2Fetch(url, timeout, proxyUrl);
+    const result = await level2Fetch(url, timeout, proxyUrl, sessionId);
     lastLevel = 2;
     return recordSuccess(result);
   } catch {
     try {
-      const result = await level1Fetch(url, timeout, proxyUrl);
+      const result = await level1Fetch(url, timeout, proxyUrl, sessionId);
       lastLevel = 1;
       return recordSuccess(result);
     } catch (finalErr) {
@@ -305,12 +356,13 @@ async function fetchByLevel(
   level: StealthLevel,
   screenshot?: boolean,
   proxyUrl?: string,
+  sessionId?: string,
 ): Promise<FetchResult> {
   switch (level) {
     case 1:
-      return level1Fetch(url, timeout, proxyUrl);
+      return level1Fetch(url, timeout, proxyUrl, sessionId);
     case 2:
-      return level2Fetch(url, timeout, proxyUrl);
+      return level2Fetch(url, timeout, proxyUrl, sessionId);
     case 3:
       return level3Fetch(url, timeout, screenshot, proxyUrl);
   }

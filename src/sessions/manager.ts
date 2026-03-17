@@ -37,6 +37,7 @@ export class SessionManager {
       cookies,
       url,
       createdAt: existing?.createdAt ?? now,
+      actionCount: existing?.actionCount,
       updatedAt: now,
     };
 
@@ -101,6 +102,61 @@ export class SessionManager {
     }
   }
 
+  /**
+   * Check if a session exists and has at least one non-expired cookie.
+   */
+  async isLoggedIn(id: string): Promise<boolean> {
+    const session = await this.load(id);
+    if (!session || !session.cookies.length) return false;
+
+    const now = Date.now() / 1000; // cookies use epoch seconds
+    return session.cookies.some(
+      (c) => c.expires === undefined || c.expires === -1 || c.expires === 0 || c.expires > now,
+    );
+  }
+
+  /**
+   * Increment the action counter for a session.
+   * Call after each browser action to track session staleness.
+   */
+  async incrementActions(id: string): Promise<void> {
+    const session = await this.load(id);
+    if (!session) return;
+    const updated: StoredSession = {
+      ...session,
+      actionCount: (session.actionCount ?? 0) + 1,
+      updatedAt: new Date().toISOString(),
+    };
+    this.cache.set(id, updated);
+    // Persist async — best effort, don't block action flow
+    this.save(id, updated.cookies, updated.url).catch(() => {});
+  }
+
+  /**
+   * Returns true if the session has exceeded the max actions threshold.
+   * Use before executing actions to decide whether to refresh first.
+   */
+  async needsRefresh(id: string, maxActions: number): Promise<boolean> {
+    const session = await this.load(id);
+    if (!session) return false;
+    return (session.actionCount ?? 0) >= maxActions;
+  }
+
+  /**
+   * Reset the action counter for a session (call after page refresh).
+   */
+  async resetActionCount(id: string): Promise<void> {
+    const session = await this.load(id);
+    if (!session) return;
+    const updated: StoredSession = {
+      ...session,
+      actionCount: 0,
+      updatedAt: new Date().toISOString(),
+    };
+    this.cache.set(id, updated);
+    this.save(id, updated.cookies, updated.url).catch(() => {});
+  }
+
   async list(): Promise<string[]> {
     try {
       const files = await fs.readdir(this.dir);
@@ -122,6 +178,11 @@ export function getSessionManager(): SessionManager {
     manager = new SessionManager();
   }
   return manager;
+}
+
+/** Check if a session has valid (non-expired) cookies */
+export async function isSessionValid(sessionId: string): Promise<boolean> {
+  return getSessionManager().isLoggedIn(sessionId);
 }
 
 /** Reset singleton (for testing) */

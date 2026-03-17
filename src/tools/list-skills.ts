@@ -39,7 +39,7 @@ export async function execute(_input: ListSkillsInput) {
           {
             total: skills.length,
             skills: skills.map((s) => {
-              const tool = s.tool ?? "extract";
+              const tool = (s as { tool?: string; type?: string }).tool ?? (s as { type?: string }).type ?? "extract";
               const base = {
                 name: s.name,
                 description: s.description,
