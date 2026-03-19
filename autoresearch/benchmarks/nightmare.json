@@ -1,0 +1,66 @@
+[
+  {
+    "id": "nightmare/ticketmaster",
+    "difficulty": "nightmare",
+    "url": "https://www.ticketmaster.com/search?q=concert",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.ticketmaster.com/search?q=concert", "format": "markdown" },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "nightmare/nike-shoes",
+    "difficulty": "nightmare",
+    "url": "https://www.nike.com/w/mens-shoes-nik1zy7ok",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.nike.com/w/mens-shoes-nik1zy7ok", "format": "markdown" },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "nightmare/bet365",
+    "difficulty": "nightmare",
+    "url": "https://www.bet365.com",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.bet365.com", "format": "markdown" },
+    "expected": {
+      "min_content_length": 50,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "nightmare/stubhub",
+    "difficulty": "nightmare",
+    "url": "https://www.stubhub.com/secure/search",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.stubhub.com/secure/search", "format": "markdown" },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "nightmare/walmart-search",
+    "difficulty": "nightmare",
+    "url": "https://www.walmart.com/search?q=laptop",
+    "tool": "extract",
+    "tool_input": {
+      "url": "https://www.walmart.com/search?q=laptop",
+      "items_selector": "[data-item-id]",
+      "selectors": { "title": "span.lh-title", "price": "[data-automation-id='product-price'] .f2" }
+    },
+    "expected": {
+      "min_items": 3,
+      "expect_success": true
+    },
+    "requires_browser": true
+  }
+]

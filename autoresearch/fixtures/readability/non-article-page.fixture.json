@@ -1,0 +1,12 @@
+{
+  "id": "readability/non-article-page",
+  "category": "readability",
+  "description": "Non-article page (homepage with navigation, cards, no article structure) — readability should fail gracefully",
+  "url": "https://example.com/",
+  "html": "<!DOCTYPE html><html><head><title>Example.com - Homepage</title></head><body><header><h1>Welcome to Example.com</h1><nav><a href=\"/products\">Products</a><a href=\"/about\">About</a><a href=\"/contact\">Contact</a></nav></header><div class=\"hero\"><h2>Build Something Amazing</h2><a href=\"/signup\" class=\"cta\">Get Started</a></div><div class=\"features\"><div class=\"card\"><h3>Fast</h3><p>Lightning speed</p></div><div class=\"card\"><h3>Secure</h3><p>Enterprise grade</p></div><div class=\"card\"><h3>Scale</h3><p>Infinite growth</p></div></div><footer><p>Copyright 2024</p></footer></body></html>",
+  "tool": "readability",
+  "expected": {
+    "contains": [],
+    "min_content_length": 0
+  }
+}

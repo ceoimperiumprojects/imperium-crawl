@@ -1,0 +1,65 @@
+[
+  {
+    "id": "medium/github-trending",
+    "difficulty": "medium",
+    "url": "https://github.com/trending",
+    "tool": "scrape",
+    "tool_input": { "url": "https://github.com/trending", "format": "markdown" },
+    "expected": {
+      "min_content_length": 200,
+      "expect_success": true
+    }
+  },
+  {
+    "id": "medium/reddit-programming-json",
+    "difficulty": "medium",
+    "url": "https://www.reddit.com/r/programming.json",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.reddit.com/r/programming.json", "format": "markdown" },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    }
+  },
+  {
+    "id": "medium/old-reddit-extract",
+    "difficulty": "medium",
+    "url": "https://old.reddit.com/r/technology",
+    "tool": "extract",
+    "tool_input": {
+      "url": "https://old.reddit.com/r/technology",
+      "items_selector": ".thing.link",
+      "selectors": { "title": "a.title", "url": "a.title @href" }
+    },
+    "expected": {
+      "min_items": 5,
+      "expect_success": true
+    }
+  },
+  {
+    "id": "medium/lobsters-extract",
+    "difficulty": "medium",
+    "url": "https://lobste.rs",
+    "tool": "extract",
+    "tool_input": {
+      "url": "https://lobste.rs",
+      "items_selector": ".story",
+      "selectors": { "title": ".link a", "url": ".link a @href" }
+    },
+    "expected": {
+      "min_items": 5,
+      "expect_success": true
+    }
+  },
+  {
+    "id": "medium/hnrss-feed",
+    "difficulty": "medium",
+    "url": "https://hnrss.org/frontpage",
+    "tool": "rss",
+    "tool_input": { "url": "https://hnrss.org/frontpage" },
+    "expected": {
+      "min_items": 5,
+      "expect_success": true
+    }
+  }
+]

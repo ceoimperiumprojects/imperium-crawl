@@ -1,0 +1,15 @@
+{
+  "id": "scraping/static-article",
+  "category": "scraping",
+  "description": "Classic blog post with h1, paragraphs, images, JSON-LD structured data",
+  "url": "https://example.com/blog/ai-startups-2024",
+  "html": "<!DOCTYPE html><html lang=\"en\"><head><title>AI Startups Reshaping 2024</title><meta name=\"description\" content=\"A deep dive into AI startups\"><meta name=\"author\" content=\"Jane Doe\"><meta property=\"og:title\" content=\"AI Startups Reshaping 2024\"><meta property=\"og:type\" content=\"article\"><meta property=\"og:description\" content=\"A deep dive into AI startups\"><link rel=\"canonical\" href=\"https://example.com/blog/ai-startups-2024\"><script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@type\":\"Article\",\"headline\":\"AI Startups Reshaping 2024\",\"author\":{\"@type\":\"Person\",\"name\":\"Jane Doe\"},\"datePublished\":\"2024-03-15\"}</script></head><body><header><nav><a href=\"/\">Home</a><a href=\"/blog\">Blog</a></nav></header><main><article><h1>AI Startups Reshaping 2024</h1><p class=\"byline\">By Jane Doe | March 15, 2024</p><p>The artificial intelligence landscape has transformed dramatically in the past year. New startups are emerging with novel approaches to generative AI, autonomous agents, and enterprise solutions.</p><h2>Key Trends</h2><p>Several trends are driving this transformation:</p><ul><li>Foundation model distillation</li><li>Vertical AI applications</li><li>AI safety research</li></ul><p>These trends represent a fundamental shift in how technology companies approach AI development.</p><img src=\"/images/ai-landscape.png\" alt=\"AI Landscape 2024\"><h2>Notable Companies</h2><p>Among the most promising startups are those focused on making AI accessible to small businesses and individual developers.</p></article></main><footer><p>Copyright 2024</p></footer><div class=\"cookie-banner\">We use cookies</div><div class=\"advertisement\">Buy our product!</div></body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["AI Startups Reshaping 2024", "artificial intelligence landscape", "Foundation model distillation", "Vertical AI applications", "Notable Companies"],
+    "not_contains": ["cookie", "advertisement", "Buy our product"],
+    "min_content_length": 200,
+    "has_structured_data": true
+  }
+}

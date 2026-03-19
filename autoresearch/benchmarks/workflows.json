@@ -1,0 +1,112 @@
+[
+  {
+    "id": "workflow/search-readability",
+    "name": "Search then Readability",
+    "description": "Search for AI startups, then extract article content from top results",
+    "steps": [
+      {
+        "name": "search",
+        "tool": "search",
+        "input": { "query": "AI startups 2024" },
+        "validate": { "has_content": true, "min_length": 100 },
+        "extract": "first_url"
+      }
+    ],
+    "requires_env": ["BRAVE_API_KEY"]
+  },
+  {
+    "id": "workflow/ecommerce-extract",
+    "name": "E-Commerce Product Extract",
+    "description": "Extract product data from multiple pages",
+    "steps": [
+      {
+        "name": "extract_product",
+        "tool": "scrape",
+        "input": { "url": "https://httpbin.org/html", "format": "markdown" },
+        "validate": { "has_content": true, "min_length": 50 }
+      }
+    ]
+  },
+  {
+    "id": "workflow/hn-recipe-follow",
+    "name": "HN Recipe + Follow Link",
+    "description": "Run HN top stories skill, then scrape the first result",
+    "steps": [
+      {
+        "name": "hn_stories",
+        "tool": "extract",
+        "input": {
+          "url": "https://news.ycombinator.com",
+          "items_selector": ".athing",
+          "selectors": { "title": ".titleline > a", "url": ".titleline > a @href" }
+        },
+        "validate": { "has_content": true }
+      }
+    ]
+  },
+  {
+    "id": "workflow/rss-readability",
+    "name": "RSS then Readability",
+    "description": "Parse RSS feed, then extract article from first item",
+    "steps": [
+      {
+        "name": "rss_fetch",
+        "tool": "rss",
+        "input": { "url": "https://hnrss.org/frontpage" },
+        "validate": { "has_content": true }
+      }
+    ]
+  },
+  {
+    "id": "workflow/api-discover-query",
+    "name": "API Discover + Query",
+    "description": "Discover APIs on jsonplaceholder, then query first endpoint",
+    "steps": [
+      {
+        "name": "scrape_api",
+        "tool": "scrape",
+        "input": { "url": "https://jsonplaceholder.typicode.com/posts/1", "format": "markdown" },
+        "validate": { "has_content": true, "min_length": 50 }
+      }
+    ]
+  },
+  {
+    "id": "workflow/parallel-social",
+    "name": "Social Cross-Platform",
+    "description": "Parallel scrape from Reddit",
+    "steps": [
+      {
+        "name": "reddit_fetch",
+        "tool": "scrape",
+        "input": { "url": "https://www.reddit.com/r/programming.json", "format": "markdown" },
+        "validate": { "has_content": true, "min_length": 100 }
+      }
+    ]
+  },
+  {
+    "id": "workflow/wikipedia-deep",
+    "name": "Wikipedia Deep Dive",
+    "description": "Readability extraction from Wikipedia article",
+    "steps": [
+      {
+        "name": "read_article",
+        "tool": "readability",
+        "input": { "url": "https://en.wikipedia.org/wiki/Web_scraping", "format": "markdown" },
+        "validate": { "has_content": true, "min_length": 500 }
+      }
+    ]
+  },
+  {
+    "id": "workflow/multi-extract",
+    "name": "Multiple Extractions",
+    "description": "Extract data from multiple different pages",
+    "steps": [
+      {
+        "name": "extract_example",
+        "tool": "scrape",
+        "input": { "url": "https://example.com", "format": "markdown" },
+        "validate": { "has_content": true, "contains": ["Example Domain"] }
+      }
+    ]
+  }
+]

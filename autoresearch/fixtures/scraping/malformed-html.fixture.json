@@ -1,0 +1,13 @@
+{
+  "id": "scraping/malformed-html",
+  "category": "scraping",
+  "description": "Badly formed HTML with unclosed tags, nested errors, and encoding issues",
+  "url": "https://example.com/old-site/legacy-page",
+  "html": "<!DOCTYPE html><html><head><title>Legacy Page Content</title><meta name=\"description\" content=\"Old page with bad HTML\"></head><body><h1>Legacy System Documentation<p>This paragraph was never closed properly.<div class=\"content\"><p>Important data point: the system processes 10,000 requests per second.</p><p>Architecture overview:<ul><li>Load balancer (nginx)<li>App servers (Node.js)<li>Database (PostgreSQL)</ul><p>Performance metrics show 99.9% uptime over the last quarter.</p><table><tr><td>Metric<td>Value<tr><td>Latency<td>45ms<tr><td>Throughput<td>10K rps</table></div><p>Contact <a href=\"mailto:admin@example.com\">the admin for details.<br>Last updated: 2024-01-15</body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["Legacy System Documentation", "10,000 requests per second", "Load balancer", "PostgreSQL", "99.9% uptime", "45ms"],
+    "min_content_length": 100
+  }
+}

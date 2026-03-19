@@ -1,0 +1,24 @@
+{
+  "id": "extraction/nested-items",
+  "category": "extraction",
+  "description": "Nested card layout with complex DOM structure, attribute extraction",
+  "url": "https://example.com/jobs",
+  "html": "<!DOCTYPE html><html><head><title>Job Listings</title></head><body><div class=\"job-board\"><div class=\"job-card\" data-id=\"j1\"><h3 class=\"job-title\"><a href=\"/jobs/senior-engineer\">Senior Software Engineer</a></h3><div class=\"job-meta\"><span class=\"company\">TechCorp</span><span class=\"location\">San Francisco, CA</span><span class=\"salary\">$180,000 - $250,000</span></div><div class=\"job-tags\"><span class=\"tag\">Python</span><span class=\"tag\">Kubernetes</span><span class=\"tag\">AWS</span></div></div><div class=\"job-card\" data-id=\"j2\"><h3 class=\"job-title\"><a href=\"/jobs/ml-engineer\">ML Engineer</a></h3><div class=\"job-meta\"><span class=\"company\">AIStartup</span><span class=\"location\">Remote</span><span class=\"salary\">$150,000 - $220,000</span></div><div class=\"job-tags\"><span class=\"tag\">PyTorch</span><span class=\"tag\">CUDA</span><span class=\"tag\">MLOps</span></div></div><div class=\"job-card\" data-id=\"j3\"><h3 class=\"job-title\"><a href=\"/jobs/frontend-lead\">Frontend Team Lead</a></h3><div class=\"job-meta\"><span class=\"company\">WebFlow Inc</span><span class=\"location\">New York, NY</span><span class=\"salary\">$160,000 - $210,000</span></div><div class=\"job-tags\"><span class=\"tag\">React</span><span class=\"tag\">TypeScript</span><span class=\"tag\">Next.js</span></div></div></div></body></html>",
+  "tool": "extract",
+  "tool_input": {
+    "items_selector": ".job-card",
+    "selectors": {
+      "title": ".job-title",
+      "company": ".company",
+      "location": ".location",
+      "salary": ".salary",
+      "link": ".job-title a @href",
+      "id": " @data-id"
+    }
+  },
+  "expected": {
+    "contains": ["Senior Software Engineer", "TechCorp", "San Francisco", "ML Engineer", "AIStartup"],
+    "min_item_count": 3,
+    "has_fields": ["title", "company", "location", "salary", "link"]
+  }
+}

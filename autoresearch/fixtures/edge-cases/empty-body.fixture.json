@@ -1,0 +1,11 @@
+{
+  "id": "edge-cases/empty-body",
+  "category": "edge-cases",
+  "description": "Page with empty body — should detect as needing JS rendering",
+  "url": "https://example.com/spa",
+  "html": "<!DOCTYPE html><html><head><title>SPA App</title><script src=\"/bundle.js\"></script></head><body><div id=\"root\"></div></body></html>",
+  "tool": "needsJSRendering",
+  "expected": {
+    "expect_needs_js": true
+  }
+}

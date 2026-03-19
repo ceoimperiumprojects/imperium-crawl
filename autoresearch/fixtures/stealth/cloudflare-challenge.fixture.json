@@ -1,0 +1,20 @@
+{
+  "id": "stealth/cloudflare-challenge",
+  "category": "stealth",
+  "description": "Cloudflare challenge page — isBlocked should return true, detectAntiBot should identify cloudflare",
+  "url": "https://protected-site.example.com/",
+  "html": "<!DOCTYPE html><html><head><title>Just a moment...</title></head><body class=\"no-js\"><div class=\"main-wrapper\" role=\"main\"><div class=\"main-content\"><h1 class=\"zone-name-title h1\"><img class=\"heading-favicon\" src=\"/favicon.ico\" alt=\"Favicon\"/>protected-site.example.com</h1><h2 class=\"h2\" id=\"challenge-running\">Checking if the site connection is secure</h2><noscript><div id=\"challenge-error-title\"><div class=\"h2\"><span class=\"icon-wrapper\">Enable JavaScript and cookies to continue</span></div></div></noscript></div></div><script src=\"/cdn-cgi/challenge-platform/h/g/orchestrate/chl_page/v1\"></script></body></html>",
+  "tool": "isBlocked",
+  "tool_input": {
+    "status": 403,
+    "headers": {
+      "cf-mitigated": "challenge",
+      "cf-ray": "abc123-SJC",
+      "server": "cloudflare"
+    }
+  },
+  "expected": {
+    "expect_blocked": true,
+    "expect_antibot": "cloudflare"
+  }
+}

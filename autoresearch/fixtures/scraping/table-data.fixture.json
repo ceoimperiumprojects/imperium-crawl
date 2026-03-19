@@ -1,0 +1,14 @@
+{
+  "id": "scraping/table-data",
+  "category": "scraping",
+  "description": "Page with complex data tables that should be preserved in markdown",
+  "url": "https://example.com/data/market-stats",
+  "html": "<!DOCTYPE html><html lang=\"en\"><head><title>Market Statistics Q1 2024</title><meta name=\"description\" content=\"Quarterly market statistics\"></head><body><nav><a href=\"/\">Home</a></nav><main><h1>Market Statistics Q1 2024</h1><p>Below are the key market indicators for Q1 2024.</p><table><thead><tr><th>Company</th><th>Revenue ($M)</th><th>Growth (%)</th><th>Market Cap ($B)</th></tr></thead><tbody><tr><td>TechCorp</td><td>2,450</td><td>15.3</td><td>180</td></tr><tr><td>DataFlow</td><td>1,820</td><td>22.7</td><td>95</td></tr><tr><td>CloudBase</td><td>3,100</td><td>8.1</td><td>250</td></tr><tr><td>AIVentures</td><td>890</td><td>45.2</td><td>42</td></tr></tbody></table><h2>Regional Breakdown</h2><table><thead><tr><th>Region</th><th>Revenue ($M)</th><th>YoY Change</th></tr></thead><tbody><tr><td>North America</td><td>4,500</td><td>+12%</td></tr><tr><td>Europe</td><td>2,800</td><td>+8%</td></tr><tr><td>Asia Pacific</td><td>1,960</td><td>+28%</td></tr></tbody></table></main><div class=\"newsletter\">Subscribe to our newsletter!</div></body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["Market Statistics Q1 2024", "TechCorp", "2,450", "15.3", "DataFlow", "CloudBase", "AIVentures", "45.2", "North America", "Asia Pacific", "+28%"],
+    "not_contains": ["Subscribe to our newsletter"],
+    "min_content_length": 200
+  }
+}

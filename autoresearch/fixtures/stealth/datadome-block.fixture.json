@@ -1,0 +1,19 @@
+{
+  "id": "stealth/datadome-block",
+  "category": "stealth",
+  "description": "DataDome block page — detectAntiBot should identify datadome system",
+  "url": "https://reviews.example.com/products/123",
+  "html": "<!DOCTYPE html><html><head><title>Attention Required</title><script src=\"https://js.datadome.co/tags.js\" async></script></head><body><div id=\"dd_container\"><h1>Attention Required!</h1><p>Please complete the security check to access reviews.example.com</p><div id=\"dd_captcha\"></div><p>This process is automatic. Your browser will redirect shortly.</p></div></body></html>",
+  "tool": "detectAntiBot",
+  "tool_input": {
+    "headers": {
+      "x-datadome": "protected",
+      "x-datadome-cid": "abc123.def456"
+    },
+    "cookies": ["datadome=xyz789abcdef"]
+  },
+  "expected": {
+    "expect_blocked": true,
+    "expect_antibot": "datadome"
+  }
+}

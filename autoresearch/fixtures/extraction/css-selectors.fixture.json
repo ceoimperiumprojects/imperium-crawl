@@ -1,0 +1,21 @@
+{
+  "id": "extraction/css-selectors",
+  "category": "extraction",
+  "description": "HN-like listing page with repeating items, CSS selector extraction",
+  "url": "https://example.com/news",
+  "html": "<!DOCTYPE html><html><head><title>Tech News</title></head><body><table class=\"itemlist\"><tr class=\"athing\" id=\"1001\"><td class=\"rank\">1.</td><td class=\"title\"><a class=\"titlelink\" href=\"https://example.com/article/1\">GPT-5 Released: A New Era of AI</a><span class=\"sitebit\"> (example.com)</span></td></tr><tr class=\"subtext\"><td><span class=\"score\" id=\"score_1001\">452 points</span> by <a class=\"hnuser\" href=\"/user/alice\">alice</a> <span class=\"age\">3 hours ago</span> | <a href=\"/item?id=1001\">189 comments</a></td></tr><tr class=\"athing\" id=\"1002\"><td class=\"rank\">2.</td><td class=\"title\"><a class=\"titlelink\" href=\"https://example.com/article/2\">Rust 2.0 Announcement</a><span class=\"sitebit\"> (rust-lang.org)</span></td></tr><tr class=\"subtext\"><td><span class=\"score\" id=\"score_1002\">321 points</span> by <a class=\"hnuser\" href=\"/user/bob\">bob</a> <span class=\"age\">5 hours ago</span> | <a href=\"/item?id=1002\">97 comments</a></td></tr><tr class=\"athing\" id=\"1003\"><td class=\"rank\">3.</td><td class=\"title\"><a class=\"titlelink\" href=\"https://example.com/article/3\">Why WebAssembly Changes Everything</a><span class=\"sitebit\"> (wasm.dev)</span></td></tr><tr class=\"subtext\"><td><span class=\"score\" id=\"score_1003\">198 points</span> by <a class=\"hnuser\" href=\"/user/charlie\">charlie</a> <span class=\"age\">7 hours ago</span> | <a href=\"/item?id=1003\">64 comments</a></td></tr></table></body></html>",
+  "tool": "extract",
+  "tool_input": {
+    "items_selector": ".athing",
+    "selectors": {
+      "title": ".titlelink",
+      "url": ".titlelink @href",
+      "rank": ".rank"
+    }
+  },
+  "expected": {
+    "contains": ["GPT-5 Released", "Rust 2.0 Announcement", "WebAssembly Changes Everything"],
+    "min_item_count": 3,
+    "has_fields": ["title", "url", "rank"]
+  }
+}

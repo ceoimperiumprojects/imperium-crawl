@@ -1,0 +1,11 @@
+{
+  "id": "edge-cases/next-spa",
+  "category": "edge-cases",
+  "description": "Next.js SPA shell with __NEXT_DATA__ — should detect as needing JS rendering",
+  "url": "https://example.com/next-app",
+  "html": "<!DOCTYPE html><html><head><title>Next App</title><meta name=\"next-head-count\" content=\"4\"></head><body><div id=\"__next\"></div><script id=\"__NEXT_DATA__\" type=\"application/json\">{\"props\":{\"pageProps\":{}},\"page\":\"/\",\"query\":{},\"buildId\":\"abc123\"}</script><script src=\"/_next/static/chunks/main.js\" defer></script></body></html>",
+  "tool": "needsJSRendering",
+  "expected": {
+    "expect_needs_js": true
+  }
+}

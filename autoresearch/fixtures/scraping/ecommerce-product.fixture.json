@@ -1,0 +1,15 @@
+{
+  "id": "scraping/ecommerce-product",
+  "category": "scraping",
+  "description": "E-commerce product page with price, description, reviews, JSON-LD Product schema",
+  "url": "https://example.com/products/wireless-headphones",
+  "html": "<!DOCTYPE html><html lang=\"en\"><head><title>ProMax Wireless Headphones - $149.99</title><meta name=\"description\" content=\"Premium wireless headphones with ANC\"><meta property=\"og:title\" content=\"ProMax Wireless Headphones\"><meta property=\"og:type\" content=\"product\"><meta property=\"og:image\" content=\"https://example.com/images/headphones.jpg\"><meta name=\"twitter:card\" content=\"summary_large_image\"><meta name=\"twitter:title\" content=\"ProMax Wireless Headphones\"><script type=\"application/ld+json\">{\"@context\":\"https://schema.org\",\"@type\":\"Product\",\"name\":\"ProMax Wireless Headphones\",\"description\":\"Premium wireless headphones with active noise cancellation\",\"offers\":{\"@type\":\"Offer\",\"price\":\"149.99\",\"priceCurrency\":\"USD\",\"availability\":\"https://schema.org/InStock\"},\"aggregateRating\":{\"@type\":\"AggregateRating\",\"ratingValue\":\"4.5\",\"reviewCount\":\"342\"}}</script></head><body><div class=\"ad-container\">Sponsored content here</div><main><div class=\"product-page\"><h1>ProMax Wireless Headphones</h1><span class=\"price\">$149.99</span><div class=\"rating\">4.5 out of 5 stars (342 reviews)</div><div class=\"description\"><h2>Product Description</h2><p>Experience premium sound quality with our ProMax Wireless Headphones. Features include:</p><ul><li>Active Noise Cancellation (ANC)</li><li>40-hour battery life</li><li>Bluetooth 5.3</li><li>Hi-Res Audio certified</li></ul></div><div class=\"specs\"><h2>Specifications</h2><table><tr><th>Driver Size</th><td>40mm</td></tr><tr><th>Frequency Response</th><td>20Hz - 40kHz</td></tr><tr><th>Weight</th><td>250g</td></tr></table></div></div></main><div class=\"social-share\">Share on Facebook | Share on Twitter</div><aside class=\"sidebar\"><div class=\"related-articles\">You might also like...</div></aside></body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["ProMax Wireless Headphones", "$149.99", "Active Noise Cancellation", "40-hour battery life", "Bluetooth 5.3", "40mm"],
+    "not_contains": ["Sponsored content", "Share on Facebook", "You might also like"],
+    "min_content_length": 200,
+    "has_structured_data": true
+  }
+}

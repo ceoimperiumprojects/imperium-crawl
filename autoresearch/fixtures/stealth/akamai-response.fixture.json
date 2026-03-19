@@ -1,0 +1,19 @@
+{
+  "id": "stealth/akamai-response",
+  "category": "stealth",
+  "description": "Akamai bot manager response — detectAntiBot should identify akamai system",
+  "url": "https://retailer.example.com/products",
+  "html": "<!DOCTYPE html><html><head><title>Access Denied</title></head><body><h1>Access Denied</h1><p>You don't have permission to access this resource.</p><p>Reference ID: 18.abc123.1710000000.abcdef</p><script src=\"https://assets.akamaihd.net/akam/13/abc123\" type=\"text/javascript\"></script></body></html>",
+  "tool": "detectAntiBot",
+  "tool_input": {
+    "headers": {
+      "server": "AkamaiGHost",
+      "x-akamai-transformed": "9 - 0 pmb=mTOE,2"
+    },
+    "cookies": ["_abck=abc123~-1~YAAQ", "bm_sz=DEF456~YAAQ", "ak_bmsc=GHI789"]
+  },
+  "expected": {
+    "expect_blocked": true,
+    "expect_antibot": "akamai"
+  }
+}

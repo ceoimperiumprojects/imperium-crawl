@@ -1,0 +1,13 @@
+{
+  "id": "edge-cases/encoding-utf8",
+  "category": "edge-cases",
+  "description": "Page with UTF-8 multibyte characters (CJK, emoji, diacritics)",
+  "url": "https://example.com/international",
+  "html": "<!DOCTYPE html><html lang=\"ja\"><head><meta charset=\"UTF-8\"><title>International Content Test</title></head><body><main><h1>International Content</h1><p>English: The quick brown fox jumps over the lazy dog.</p><p>Japanese: \u6771\u4eac\u306f\u65e5\u672c\u306e\u9996\u90fd\u3067\u3059\u3002\u6771\u4eac\u30bf\u30ef\u30fc\u306f\u6709\u540d\u306a\u30e9\u30f3\u30c9\u30de\u30fc\u30af\u3067\u3059\u3002</p><p>Chinese: \u4eba\u5de5\u667a\u80fd\u6b63\u5728\u6539\u53d8\u4e16\u754c\u3002\u6df1\u5ea6\u5b66\u4e60\u662f\u5176\u6838\u5fc3\u6280\u672f\u3002</p><p>Korean: \uc778\uacf5\uc9c0\ub2a5\uc740 \ubbf8\ub798\uc758 \uae30\uc220\uc785\ub2c8\ub2e4.</p><p>German: \u00dc\u00f6\u00e4 \u00df\u00c4\u00d6\u00dc Stra\u00dfe Gr\u00f6\u00dfe F\u00fcr</p><p>French: L'\u00e9l\u00e8ve \u00e0 l'\u00e9cole fran\u00e7aise conna\u00eet la le\u00e7on.</p><p>Emoji: \ud83d\ude80\ud83c\udf1f\ud83d\udca1\ud83d\udd25 AI is transforming everything!</p></main></body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["International Content", "\u6771\u4eac", "\u4eba\u5de5\u667a\u80fd", "\uc778\uacf5\uc9c0\ub2a5", "Stra\u00dfe", "l'\u00e9cole"],
+    "min_content_length": 200
+  }
+}

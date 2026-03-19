@@ -1,0 +1,5 @@
+results.tsv
+state.json
+reports/*.html
+reports/*.png
+!reports/.gitkeep

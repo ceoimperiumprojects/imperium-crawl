@@ -1,0 +1,66 @@
+[
+  {
+    "id": "hard/amazon-product",
+    "difficulty": "hard",
+    "url": "https://www.amazon.com/dp/B0D1XD1ZV3",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.amazon.com/dp/B0D1XD1ZV3", "format": "markdown" },
+    "expected": {
+      "min_content_length": 200,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "hard/zillow-homes",
+    "difficulty": "hard",
+    "url": "https://www.zillow.com/homes/",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.zillow.com/homes/", "format": "markdown" },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "hard/linkedin-company",
+    "difficulty": "hard",
+    "url": "https://www.linkedin.com/company/google",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.linkedin.com/company/google", "format": "markdown" },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "hard/indeed-jobs",
+    "difficulty": "hard",
+    "url": "https://www.indeed.com/jobs?q=software+engineer",
+    "tool": "extract",
+    "tool_input": {
+      "url": "https://www.indeed.com/jobs?q=software+engineer",
+      "items_selector": ".job_seen_beacon",
+      "selectors": { "title": ".jobTitle", "company": ".companyName" }
+    },
+    "expected": {
+      "min_items": 3,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "hard/g2-reviews",
+    "difficulty": "hard",
+    "url": "https://www.g2.com/products/slack/reviews",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.g2.com/products/slack/reviews", "format": "markdown" },
+    "expected": {
+      "min_content_length": 200,
+      "expect_success": true
+    },
+    "requires_browser": true
+  }
+]

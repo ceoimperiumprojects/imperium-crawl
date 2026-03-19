@@ -1,0 +1,14 @@
+{
+  "id": "edge-cases/script-heavy",
+  "category": "edge-cases",
+  "description": "Page with lots of inline scripts and styles that should be stripped",
+  "url": "https://example.com/interactive-app",
+  "html": "<!DOCTYPE html><html><head><title>Interactive App</title><style>.hidden{display:none}.modal{position:fixed;z-index:9999}</style><script>var analytics={track:function(e){console.log(e)}};analytics.track('pageview');</script><script>!function(e,t){var n=document.createElement('script');n.src='https://tracker.example.com/t.js'}(window,document);</script></head><body><script>document.addEventListener('DOMContentLoaded',function(){console.log('loaded')});</script><main><h1>Product Dashboard</h1><p>Welcome to your dashboard. Here are your key metrics:</p><div class=\"metrics\"><div class=\"metric\"><h3>Revenue</h3><p>$45,230 this month</p></div><div class=\"metric\"><h3>Users</h3><p>12,847 active users</p></div><div class=\"metric\"><h3>Conversion</h3><p>3.2% conversion rate</p></div></div><script>var chart=new Chart('canvas',{type:'bar',data:{labels:['Jan','Feb','Mar']}});</script><p>Your performance has improved by 15% compared to last month.</p></main><script>window.addEventListener('scroll',function(){analytics.track('scroll')});</script><style>.banner{background:red;color:white}</style></body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["Product Dashboard", "$45,230", "12,847 active users", "3.2% conversion rate", "improved by 15%"],
+    "not_contains": ["analytics.track", "DOMContentLoaded", "tracker.example.com", "Chart"],
+    "min_content_length": 100
+  }
+}

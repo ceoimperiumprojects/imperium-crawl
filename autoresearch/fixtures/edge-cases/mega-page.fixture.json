@@ -1,0 +1,14 @@
+{
+  "id": "edge-cases/mega-page",
+  "category": "edge-cases",
+  "description": "Very large page with repetitive content — tests performance and truncation handling",
+  "url": "https://example.com/directory/all",
+  "html": "<!DOCTYPE html><html><head><title>Business Directory - All Listings</title></head><body><main><h1>Business Directory</h1><p>Complete listing of all registered businesses.</p><div class=\"listing\"><h3>Acme Corp</h3><p>Manufacturing. Located in Springfield. Rating: 4.2/5. Contact: acme@example.com</p></div><div class=\"listing\"><h3>Beta Industries</h3><p>Technology. Located in Shelbyville. Rating: 3.8/5. Contact: beta@example.com</p></div><div class=\"listing\"><h3>Gamma Solutions</h3><p>Consulting. Located in Capital City. Rating: 4.5/5. Contact: gamma@example.com</p></div><div class=\"listing\"><h3>Delta Systems</h3><p>Software. Located in Ogdenville. Rating: 4.0/5. Contact: delta@example.com</p></div><div class=\"listing\"><h3>Epsilon Labs</h3><p>Research. Located in North Haverbrook. Rating: 4.7/5. Contact: epsilon@example.com</p></div><div class=\"listing\"><h3>Zeta Corp</h3><p>Finance. Located in Brockway. Rating: 3.9/5. Contact: zeta@example.com</p></div><div class=\"listing\"><h3>Eta Industries</h3><p>Manufacturing. Located in Springfield. Rating: 4.1/5. Contact: eta@example.com</p></div><div class=\"listing\"><h3>Theta Tech</h3><p>SaaS. Located in Shelbyville. Rating: 4.3/5. Contact: theta@example.com</p></div><div class=\"listing\"><h3>Iota Solutions</h3><p>Analytics. Located in Capital City. Rating: 4.6/5. Contact: iota@example.com</p></div><div class=\"listing\"><h3>Kappa Dynamics</h3><p>Engineering. Located in Ogdenville. Rating: 4.4/5. Contact: kappa@example.com</p></div></main><div class=\"cookie-banner\">We use cookies</div></body></html>",
+  "tool": "scrape",
+  "tool_input": { "format": "markdown" },
+  "expected": {
+    "contains": ["Business Directory", "Acme Corp", "Epsilon Labs", "Kappa Dynamics"],
+    "not_contains": ["We use cookies"],
+    "min_content_length": 500
+  }
+}

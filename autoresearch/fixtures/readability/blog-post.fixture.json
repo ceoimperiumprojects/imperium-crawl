@@ -1,0 +1,13 @@
+{
+  "id": "readability/blog-post",
+  "category": "readability",
+  "description": "Personal blog post with code blocks, lists, and inline formatting",
+  "url": "https://example.com/blog/typescript-tricks",
+  "html": "<!DOCTYPE html><html lang=\"en\"><head><title>5 TypeScript Tricks You Need to Know | DevBlog</title><meta name=\"author\" content=\"Alex Dev\"></head><body><header><div class=\"logo\">DevBlog</div><nav><a href=\"/\">Home</a><a href=\"/about\">About</a></nav></header><div class=\"cookie-consent\">Accept cookies to continue</div><main><article class=\"post\"><h1>5 TypeScript Tricks You Need to Know</h1><p class=\"meta\">By Alex Dev | February 20, 2024 | 6 min read</p><p>TypeScript has become the de facto standard for large-scale JavaScript applications. Here are five tricks that will level up your TypeScript game.</p><h2>1. Const Assertions</h2><p>Use <code>as const</code> to create deeply readonly literal types:</p><pre><code>const config = { api: 'https://api.example.com', timeout: 5000 } as const;</code></pre><p>This ensures the object is completely immutable at the type level.</p><h2>2. Template Literal Types</h2><p>Create powerful string pattern types:</p><pre><code>type EventName = `on${Capitalize&lt;string&gt;}`;</code></pre><h2>3. Discriminated Unions</h2><p>The most powerful pattern for type-safe state management:</p><pre><code>type Result&lt;T&gt; = { ok: true; value: T } | { ok: false; error: Error };</code></pre><p>Each branch of the union is narrowed by the discriminant property.</p><h2>4. Branded Types</h2><p>Prevent accidental value mixing with branded primitives:</p><pre><code>type UserId = string &amp; { __brand: 'UserId' };</code></pre><h2>5. Satisfies Operator</h2><p>Validate type compatibility without widening:</p><pre><code>const palette = { red: [255, 0, 0] } satisfies Record&lt;string, [number, number, number]&gt;;</code></pre><p>This is incredibly useful for configuration objects where you want both type checking and literal type inference.</p><h3>Conclusion</h3><p>These five patterns cover the most common advanced TypeScript scenarios. Master them and you'll write safer, more expressive code.</p></article></main><div class=\"related-articles\"><h3>Related Posts</h3><ul><li>React Patterns</li><li>Node.js Best Practices</li></ul></div><footer><p>DevBlog 2024</p></footer></body></html>",
+  "tool": "readability",
+  "expected": {
+    "contains": ["5 TypeScript Tricks", "Const Assertions", "Template Literal Types", "Discriminated Unions", "Branded Types", "Satisfies Operator", "as const"],
+    "not_contains": ["Accept cookies", "Related Posts", "React Patterns"],
+    "min_content_length": 400
+  }
+}
