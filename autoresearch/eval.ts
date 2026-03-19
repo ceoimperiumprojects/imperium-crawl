@@ -13,6 +13,7 @@ import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 
 import { loadFixtures } from "./fixtures/index.js";
+import { loadBenchmarks, selectSubset } from "./benchmarks/index.js";
 import {
   computeComposite,
   scoreFixtures,
@@ -34,6 +35,7 @@ import type {
   EvalResult,
   EvalState,
 } from "./types.js";
+import { LIVE_SUBSET_SIZE, FULL_SUITE_EVERY_N } from "./types.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const ROOT = resolve(__dirname, "..");
@@ -384,6 +386,117 @@ function validateOutput(output: string, expected: Fixture["expected"], errors: s
   }
 }
 
+// ── Phase 4: Live Benchmarks ──
+// NOTE: execSync uses hardcoded commands with benchmark URLs (not user input)
+
+async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResult[]; score: number }> {
+  const benchmarks = loadBenchmarks();
+  if (benchmarks.length === 0) {
+    log("  No benchmarks found");
+    return { results: [], score: 0 };
+  }
+
+  const subset = selectSubset(benchmarks, LIVE_SUBSET_SIZE, state.run_count, FULL_SUITE_EVERY_N);
+  log(`  Running ${subset.length}/${benchmarks.length} benchmarks`);
+
+  const results: LiveResult[] = [];
+
+  for (const benchmark of subset) {
+    const start = performance.now();
+    const errors: string[] = [];
+    let passed = false;
+    let partial = false;
+
+    // Check env requirements
+    if (benchmark.requires_env) {
+      let skipped = false;
+      for (const env of benchmark.requires_env) {
+        if (!process.env[env]) {
+          results.push({
+            id: benchmark.id,
+            difficulty: benchmark.difficulty,
+            passed: false,
+            partial: false,
+            errors: [`Missing env: ${env}`],
+            skipped: true,
+            skip_reason: `requires ${env}`,
+            duration_ms: 0,
+          });
+          skipped = true;
+          break;
+        }
+      }
+      if (skipped) continue;
+    }
+
+    try {
+      const tool = benchmark.tool;
+      const url = benchmark.url;
+      const input = benchmark.tool_input || {};
+
+      // Build CLI args - tool name is hardcoded in benchmark, URL must be passed as --url
+      const args = [tool, "--url", url];
+      for (const [key, value] of Object.entries(input)) {
+        if (key === "url") continue;
+        if (typeof value === "boolean" && value) {
+          args.push(`--${key}`);
+        } else if (typeof value === "string") {
+          args.push(`--${key}`, value);
+        } else if (Array.isArray(value)) {
+          for (const v of value) args.push(`--${key}`, String(v));
+        }
+      }
+
+      // Run imperium-crawl with hardcoded tool name and benchmark URL
+      const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
+        cwd: ROOT,
+        stdio: "pipe",
+        timeout: 60_000,
+      }).toString();
+
+      // Validate output
+      const expected = benchmark.expected;
+
+      if (expected.contains) {
+        for (const needle of expected.contains) {
+          if (!output.includes(needle)) {
+            errors.push(`Missing: "${needle}"`);
+          }
+        }
+      }
+
+      if (expected.min_content_length && output.length < expected.min_content_length) {
+        errors.push(`Too short: ${output.length} < ${expected.min_content_length}`);
+      }
+
+      passed = errors.length === 0;
+      partial = !passed && errors.length < (expected.contains?.length || 0);
+
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      errors.push(`Failed: ${msg.slice(0, 80)}`);
+      passed = false;
+    }
+
+    const duration = performance.now() - start;
+    results.push({
+      id: benchmark.id,
+      difficulty: benchmark.difficulty,
+      passed,
+      partial,
+      errors,
+      skipped: false,
+      duration_ms: Math.round(duration),
+    });
+
+    const icon = passed ? "PASS" : (partial ? "PARTIAL" : "FAIL");
+    vlog(`${icon} ${benchmark.id} (${Math.round(duration)}ms)${errors.length > 0 ? " — " + errors[0] : ""}`);
+  }
+
+  const scoreResult = scoreLive(results, state);
+  return { results, score: scoreResult.score };
+}
+
 // ── Phase 6: Doc Quality ──
 
 function scoreDocQuality(): number {
@@ -451,7 +564,7 @@ async function main() {
   const { results: fixtureResults, durationMs: fixtureDuration } = await runFixtureTests();
   const fixtureScore = scoreFixtures(fixtureResults);
 
-  // Phase 4 & 5: Live + Workflow (placeholder for Phase 2/3 implementation)
+  // Phase 4: Live Benchmarks
   let liveScore = 0;
   let workflowScore = 0;
   const liveResults: LiveResult[] = [];
@@ -459,7 +572,11 @@ async function main() {
 
   if (!fixtureOnly) {
     log("PHASE: Live Benchmarks");
-    log("  SKIP — not implemented yet (Phase 2)");
+    const { results, score } = await runLiveBenchmarks(state);
+    liveResults.push(...results);
+    liveScore = score;
+    log(`  live_score: ${formatScore(liveScore)} (${results.filter(r => r.passed).length}/${results.length})`);
+
     log("PHASE: Workflows");
     log("  SKIP — not implemented yet (Phase 3)");
   }
