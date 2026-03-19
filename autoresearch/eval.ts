@@ -451,7 +451,7 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
       const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
         cwd: ROOT,
         stdio: "pipe",
-        timeout: 60_000,
+        timeout: 15_000,
       }).toString();
 
       // Validate output
