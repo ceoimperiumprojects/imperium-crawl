@@ -89,9 +89,10 @@ export function generateHeaders(overrides?: Record<string, string>, url?: string
   // ── Navigation headers ──
   headers["sec-fetch-dest"] = "document";
   headers["sec-fetch-mode"] = "navigate";
-  headers["sec-fetch-site"] = "none";
+  headers["sec-fetch-site"] = headers["referer"] ? "same-origin" : "none";
   headers["sec-fetch-user"] = "?1";
   headers["upgrade-insecure-requests"] = "1";
+  headers["priority"] = "u=0, i";
 
   return { ...headers, ...overrides };
 }
