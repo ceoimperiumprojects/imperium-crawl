@@ -8,6 +8,9 @@
 
 import type { RefMap, RefEntry } from "./types.js";
 import { MAX_STORED_SNAPSHOTS } from "../constants.js";
+import { writeFileSync, readFileSync, unlinkSync, mkdirSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 
 interface StoredSnapshot {
   refs: RefMap;
@@ -65,6 +68,12 @@ class SnapshotStore {
   get size(): number {
     return this.store.size;
   }
+
+  /** Restore timestamp when loading from disk */
+  setTimestamp(id: string, timestamp: number): void {
+    const entry = this.store.get(id);
+    if (entry) entry.timestamp = timestamp;
+  }
 }
 
 // ── Singleton ──
@@ -79,4 +88,48 @@ export function getSnapshotStore(): SnapshotStore {
 /** Reset singleton (for testing) */
 export function resetSnapshotStore(): void {
   instance = null;
+}
+
+// ── Disk Persistence ──
+
+const SNAPSHOT_DIR = join(dirname(fileURLToPath(import.meta.url)), ".snapshots");
+
+function ensureSnapshotDir(): void {
+  if (!existsSync(SNAPSHOT_DIR)) {
+    mkdirSync(SNAPSHOT_DIR, { recursive: true });
+  }
+}
+
+function snapshotPath(id: string): string {
+  return join(SNAPSHOT_DIR, `${id}.json`);
+}
+
+/** Persist a snapshot's refs to disk */
+export async function saveSnapshotToDisk(id: string, refs: RefMap, url: string): Promise<void> {
+  ensureSnapshotDir();
+  const data = JSON.stringify({ refs, url, timestamp: Date.now() });
+  writeFileSync(snapshotPath(id), data, "utf-8");
+}
+
+/** Load a snapshot's refs from disk into the in-memory store */
+export async function loadSnapshotFromDisk(id: string): Promise<void> {
+  const path = snapshotPath(id);
+  if (!existsSync(path)) return;
+  try {
+    const raw = readFileSync(path, "utf-8");
+    const { refs, url, timestamp } = JSON.parse(raw) as { refs: RefMap; url: string; timestamp: number };
+    const store = getSnapshotStore();
+    store.save(id, refs, url);
+    store.setTimestamp(id, timestamp);
+  } catch {
+    // Corrupt file — ignore
+  }
+}
+
+/** Delete a snapshot from disk */
+export async function clearSnapshotFromDisk(id: string): Promise<void> {
+  const path = snapshotPath(id);
+  if (existsSync(path)) {
+    unlinkSync(path);
+  }
 }

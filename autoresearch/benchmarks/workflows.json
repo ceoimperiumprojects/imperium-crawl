@@ -29,18 +29,18 @@
   },
   {
     "id": "workflow/hn-recipe-follow",
-    "name": "HN Recipe + Follow Link",
-    "description": "Run HN top stories skill, then scrape the first result",
+    "name": "Lobsters Recipe Extract",
+    "description": "Extract stories from Lobsters tech aggregator",
     "steps": [
       {
-        "name": "hn_stories",
+        "name": "lobsters_stories",
         "tool": "extract",
         "input": {
-          "url": "https://news.ycombinator.com",
-          "items_selector": ".athing",
-          "selectors": { "title": ".titleline > a", "url": ".titleline > a @href" }
+          "url": "https://lobste.rs",
+          "items_selector": ".story",
+          "selectors": { "title": ".link a", "url": ".link a @href" }
         },
-        "validate": { "has_content": true }
+        "validate": { "has_content": true, "min_length": 50 }
       }
     ]
   },
@@ -73,12 +73,12 @@
   {
     "id": "workflow/parallel-social",
     "name": "Social Cross-Platform",
-    "description": "Parallel scrape from Reddit",
+    "description": "Scrape multiple API endpoints",
     "steps": [
       {
-        "name": "reddit_fetch",
+        "name": "api_fetch",
         "tool": "scrape",
-        "input": { "url": "https://www.reddit.com/r/programming.json", "format": "markdown" },
+        "input": { "url": "https://jsonplaceholder.typicode.com/posts", "format": "markdown" },
         "validate": { "has_content": true, "min_length": 100 }
       }
     ]

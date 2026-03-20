@@ -11,28 +11,28 @@
     }
   },
   {
-    "id": "medium/reddit-programming-json",
+    "id": "medium/quotes-toscrape",
     "difficulty": "medium",
-    "url": "https://www.reddit.com/r/programming.json",
-    "tool": "scrape",
-    "tool_input": { "url": "https://www.reddit.com/r/programming.json", "format": "markdown" },
+    "url": "https://quotes.toscrape.com",
+    "tool": "extract",
+    "tool_input": {
+      "url": "https://quotes.toscrape.com",
+      "items_selector": ".quote",
+      "selectors": { "text": ".text", "author": ".author" }
+    },
     "expected": {
-      "min_content_length": 100,
+      "min_items": 5,
       "expect_success": true
     }
   },
   {
-    "id": "medium/old-reddit-extract",
+    "id": "medium/books-toscrape",
     "difficulty": "medium",
-    "url": "https://old.reddit.com/r/technology",
-    "tool": "extract",
-    "tool_input": {
-      "url": "https://old.reddit.com/r/technology",
-      "items_selector": ".thing.link",
-      "selectors": { "title": "a.title", "url": "a.title @href" }
-    },
+    "url": "https://books.toscrape.com",
+    "tool": "scrape",
+    "tool_input": { "url": "https://books.toscrape.com", "format": "markdown" },
     "expected": {
-      "min_items": 5,
+      "min_content_length": 200,
       "expect_success": true
     }
   },

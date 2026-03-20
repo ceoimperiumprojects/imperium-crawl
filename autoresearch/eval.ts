@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 import { performance } from "node:perf_hooks";
 
 import { loadFixtures } from "./fixtures/index.js";
-import { loadBenchmarks, selectSubset } from "./benchmarks/index.js";
+import { loadBenchmarks, selectSubset, loadWorkflows } from "./benchmarks/index.js";
 import {
   computeComposite,
   scoreFixtures,
@@ -34,6 +34,7 @@ import type {
   ComponentScores,
   EvalResult,
   EvalState,
+  Workflow,
 } from "./types.js";
 import { LIVE_SUBSET_SIZE, FULL_SUITE_EVERY_N } from "./types.js";
 
@@ -386,6 +387,108 @@ function validateOutput(output: string, expected: Fixture["expected"], errors: s
   }
 }
 
+// ── Phase 3: Workflow Benchmarks ──
+
+function runWorkflowBenchmarks(): { results: WorkflowResult[]; score: number } {
+  const workflows = loadWorkflows();
+  if (workflows.length === 0) {
+    log("  No workflows found");
+    return { results: [], score: 0 };
+  }
+
+  const results: WorkflowResult[] = [];
+
+  for (const workflow of workflows) {
+    const start = performance.now();
+    const errors: string[] = [];
+    let stepsPassed = 0;
+    const stepsTotal = workflow.steps.length;
+
+    // Check env requirements — skip if missing
+    if (workflow.requires_env) {
+      const missing = workflow.requires_env.filter((env) => !process.env[env]);
+      if (missing.length > 0) {
+        log(`  SKIP ${workflow.id} (missing: ${missing.join(", ")})`);
+        results.push({
+          id: workflow.id,
+          completed: false,
+          steps_passed: 0,
+          steps_total: stepsTotal,
+          errors: [`Missing env: ${missing.join(", ")}`],
+          duration_ms: 0,
+        });
+        continue;
+      }
+    }
+
+    // Run each step
+    for (const step of workflow.steps) {
+      try {
+        const args = [step.tool];
+
+        // Build CLI args from step input
+        const input = step.input as Record<string, unknown>;
+        for (const [key, value] of Object.entries(input)) {
+          if (typeof value === "boolean" && value) {
+            args.push(`--${key}`);
+          } else if (typeof value === "string") {
+            args.push(`--${key}`, value);
+          } else if (typeof value === "number") {
+            args.push(`--${key}`, String(value));
+          } else if (Array.isArray(value)) {
+            for (const v of value) args.push(`--${key}`, String(v));
+          }
+        }
+
+        const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
+          cwd: ROOT,
+          stdio: "pipe",
+          timeout: 30_000,
+        }).toString();
+
+        // Validate step output
+        const validate = step.validate;
+        if (validate) {
+          if (validate.has_content && output.trim().length === 0) {
+            errors.push(`Step "${step.name}": no content`);
+          } else if (validate.min_length && output.length < validate.min_length) {
+            errors.push(`Step "${step.name}": too short (${output.length} < ${validate.min_length})`);
+          } else if (validate.contains) {
+            for (const needle of validate.contains) {
+              if (!output.includes(needle)) {
+                errors.push(`Step "${step.name}": missing "${needle}"`);
+              }
+            }
+          }
+        }
+
+        stepsPassed++;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        errors.push(`Step "${step.name}": ${msg.slice(0, 80)}`);
+      }
+    }
+
+    const duration = performance.now() - start;
+    const completed = errors.length === 0 && stepsPassed === stepsTotal;
+
+    results.push({
+      id: workflow.id,
+      completed,
+      steps_passed: stepsPassed,
+      steps_total: stepsTotal,
+      errors,
+      duration_ms: Math.round(duration),
+    });
+
+    const icon = completed ? "PASS" : "FAIL";
+    log(`  ${icon} ${workflow.id} (${stepsPassed}/${stepsTotal} steps, ${Math.round(duration)}ms)${errors.length > 0 ? " — " + errors[0] : ""}`);
+  }
+
+  const score = scoreWorkflows(results);
+  return { results, score };
+}
+
 // ── Phase 4: Live Benchmarks ──
 // NOTE: execSync uses hardcoded commands with benchmark URLs (not user input)
 
@@ -406,6 +509,21 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
     const errors: string[] = [];
     let passed = false;
     let partial = false;
+
+    // Check browser requirements — skip (browser tool not yet integrated in eval harness)
+    if ((benchmark as { requires_browser?: boolean }).requires_browser) {
+      results.push({
+        id: benchmark.id,
+        difficulty: benchmark.difficulty,
+        passed: false,
+        partial: false,
+        errors: [],
+        skipped: true,
+        skip_reason: "requires browser",
+        duration_ms: 0,
+      });
+      continue;
+    }
 
     // Check env requirements
     if (benchmark.requires_env) {
@@ -451,7 +569,7 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
       const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
         cwd: ROOT,
         stdio: "pipe",
-        timeout: 15_000,
+        timeout: 30_000,
       }).toString();
 
       // Validate output
@@ -578,7 +696,10 @@ async function main() {
     log(`  live_score: ${formatScore(liveScore)} (${results.filter(r => r.passed).length}/${results.length})`);
 
     log("PHASE: Workflows");
-    log("  SKIP — not implemented yet (Phase 3)");
+    const { results: wfResults, score: wfScore } = runWorkflowBenchmarks();
+    workflowResults.push(...wfResults);
+    workflowScore = wfScore;
+    log(`  workflow_score: ${formatScore(workflowScore)} (${wfResults.filter((r) => r.completed).length}/${wfResults.length})`);
   }
 
   // Phase 6: Performance

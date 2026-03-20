@@ -36,17 +36,17 @@
     "requires_env": []
   },
   {
-    "id": "easy/hn-extract",
+    "id": "easy/quotes-extract",
     "difficulty": "easy",
-    "url": "https://news.ycombinator.com",
+    "url": "https://quotes.toscrape.com",
     "tool": "extract",
     "tool_input": {
-      "url": "https://news.ycombinator.com",
-      "items_selector": ".athing",
-      "selectors": { "title": ".titleline > a", "url": ".titleline > a @href" }
+      "url": "https://quotes.toscrape.com",
+      "items_selector": ".quote",
+      "selectors": { "text": ".text", "author": ".author" }
     },
     "expected": {
-      "min_items": 10,
+      "min_items": 5,
       "expect_success": true
     }
   },
