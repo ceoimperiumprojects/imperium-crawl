@@ -37,11 +37,11 @@
     }
   },
   {
-    "id": "medium/devto-extract",
+    "id": "medium/hackernews",
     "difficulty": "medium",
-    "url": "https://dev.to",
+    "url": "https://news.ycombinator.com",
     "tool": "scrape",
-    "tool_input": { "url": "https://dev.to", "format": "markdown" },
+    "tool_input": { "url": "https://news.ycombinator.com", "format": "markdown" },
     "expected": {
       "min_content_length": 200,
       "expect_success": true

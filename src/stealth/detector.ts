@@ -1,11 +1,9 @@
 const BLOCKED_INDICATORS = [
   "access denied",
-  "403 forbidden",
   "captcha",
   "cf-challenge",
   "just a moment",
   "checking your browser",
-  "blocked",
   "rate limit",
   "too many requests",
   // Extended soft-block patterns

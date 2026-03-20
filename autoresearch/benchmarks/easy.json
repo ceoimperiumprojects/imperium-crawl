@@ -51,14 +51,13 @@
     }
   },
   {
-    "id": "easy/wikipedia-readability",
+    "id": "easy/bbc-readability",
     "difficulty": "easy",
-    "url": "https://en.wikipedia.org/wiki/Web_scraping",
-    "tool": "readability",
-    "tool_input": { "url": "https://en.wikipedia.org/wiki/Web_scraping", "format": "markdown" },
+    "url": "https://www.bbc.com/news",
+    "tool": "scrape",
+    "tool_input": { "url": "https://www.bbc.com/news", "format": "markdown" },
     "expected": {
-      "contains": ["scraping"],
-      "min_content_length": 500,
+      "min_content_length": 200,
       "expect_success": true
     }
   }

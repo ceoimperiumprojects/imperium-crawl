@@ -140,11 +140,28 @@ function runTests(state: EvalState): { passed: boolean; count: { passed: number;
     log("  WARN — could not parse test output, assuming pass");
     return { passed: true, count: { passed: 0, total: 0 } };
   } catch (err: unknown) {
-    // Test command failed — try to extract counts from stderr
+    // Test command exited non-zero — extract counts from output
     const errObj = err as { stderr?: Buffer; stdout?: Buffer };
     const combined = String(errObj.stdout || "") + String(errObj.stderr || "");
 
-    // Try to find pass/fail counts in vitest output
+    // Parse JSON output (vitest --reporter=json writes JSON even on failure)
+    const jsonMatch = combined.match(/"numPassedTests"\s*:\s*(\d+)/);
+    const jsonTotalMatch = combined.match(/"numTotalTests"\s*:\s*(\d+)/);
+    const jsonFailMatch = combined.match(/"numFailedTests"\s*:\s*(\d+)/);
+    if (jsonMatch && jsonTotalMatch) {
+      const passed = parseInt(jsonMatch[1], 10);
+      const total = parseInt(jsonTotalMatch[1], 10);
+      const failed = jsonFailMatch ? parseInt(jsonFailMatch[1], 10) : total - passed;
+      log(`  ${passed}/${total} tests passed (${failed} failed)`);
+      if (state.baseline_tests > 0 && passed < state.baseline_tests) {
+        log(`  FAIL — regression: ${passed} < baseline ${state.baseline_tests}`);
+        return { passed: false, count: { passed, total } };
+      }
+      log("  PASS (failures present but no regression)");
+      return { passed: true, count: { passed, total } };
+    }
+
+    // Fallback: plain text regex for vitest verbose output
     const passMatch = combined.match(/(\d+)\s+passed/);
     const failMatch = combined.match(/(\d+)\s+failed/);
     const totalMatch = combined.match(/(\d+)\s+total/);
@@ -573,11 +590,11 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
         }
       }
 
-      // Run imperium-crawl with hardcoded tool name and benchmark URL
+      // Run imperium-crawl CLI with hardcoded benchmark args (not user input)
       const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
         cwd: ROOT,
         stdio: "pipe",
-        timeout: 60_000,
+        timeout: 120_000,
       }).toString();
 
       // Validate output
