@@ -1,9 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Autoresearch Loop — MiniMax M2.7 powered autonomous scraper improvement engine.
- *
- * Reads program.md, analyzes current eval score, makes one targeted improvement,
- * runs eval, commits + pushes on improvement, discards on regression.
+ * Uses tool-use for file editing + code execution.
  *
  * Usage:
  *   npx tsx autoresearch/run-loop.ts              # default: 999999 iterations
@@ -30,7 +28,6 @@ const MAX_ITERATIONS = process.argv[2] === "unlimited"
 
 const MINIMAX_API_KEY = (() => {
   if (process.env.MINIMAX_API_KEY) return process.env.MINIMAX_API_KEY;
-  // Extract from LiteLLM config as fallback
   try {
     const config = readFileSync("/home/pavle/.litellm/config.yaml", "utf-8");
     const match = config.match(/api_key:\s+(\S+)/);
@@ -43,22 +40,238 @@ const API_BASE = "https://api.minimax.io/anthropic/v1";
 
 // ── Logging ────────────────────────────────────────────────────────────────
 
+let logFilePath = "";
+
 function log(msg: string) {
   const ts = new Date().toISOString().slice(11, 19);
   const line = `[${ts}] ${msg}`;
   console.log(line);
-  mkdirSync(LOG_DIR, { recursive: true });
-  const logFile = join(LOG_DIR, `loop-${new Date().toISOString().slice(0, 10)}.log`);
-  writeFileSync(logFile, line + "\n", { flag: "a" });
+  if (logFilePath) {
+    writeFileSync(logFilePath, line + "\n", { flag: "a" });
+  }
 }
 
-// ── MiniMax API ────────────────────────────────────────────────────────────
+// ── Tool Implementations ───────────────────────────────────────────────────
 
-async function chat(messages: { role: string; content: string }[]): Promise<string> {
+type ToolInput = Record<string, unknown>;
+
+async function toolRead(input: ToolInput): Promise<string> {
+  const file_path = input.file_path as string;
+  const absPath = file_path.startsWith("/") ? file_path : resolve(ROOT, file_path);
+  if (!existsSync(absPath)) return "File not found: " + absPath;
+  const content = readFileSync(absPath, "utf-8");
+  const limit = (input.limit as number) || 200;
+  const offset = (input.offset as number) || 1;
+  const lines = content.split("\n");
+  if (offset > lines.length) return "Offset beyond file length";
+  return lines.slice(offset - 1, offset - 1 + limit).join("\n");
+}
+
+async function toolGrep(input: ToolInput): Promise<string> {
+  const pattern = input.pattern as string;
+  const path = (input.path as string) || ROOT;
+  const glob = input.glob as string;
+  const output_mode = (input.output_mode as string) || "content";
+  try {
+    const args = ["--no-ignore", pattern, path];
+    if (glob) args.push("--glob", glob);
+    const result = execSync("rg " + args.join(" "), { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
+    const lines = result.trim().split("\n");
+    if (output_mode === "content") return lines.slice(0, 50).join("\n");
+    return result;
+  } catch { return "No matches found"; }
+}
+
+async function toolGlob(input: ToolInput): Promise<string> {
+  const pattern = input.pattern as string;
+  try {
+    const result = execSync("rg --files " + pattern + " .", { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
+    return result.trim();
+  } catch { return ""; }
+}
+
+async function toolEdit(input: ToolInput): Promise<string> {
+  const file_path = (input.file_path as string) || (input.path as string);
+  const old_string = input.old_string as string;
+  const new_string = input.new_string as string;
+  if (!file_path || !old_string || new_string === undefined) {
+    return "Missing required: file_path, old_string, new_string";
+  }
+  const absPath = resolve(ROOT, file_path);
+  if (!existsSync(absPath)) return "File not found: " + absPath;
+  const content = readFileSync(absPath, "utf-8");
+  if (!content.includes(old_string)) {
+    return "ERROR: old_string not found in file. Check the file content first with Read tool.";
+  }
+  const newContent = content.replace(old_string, new_string as string);
+  writeFileSync(absPath, newContent, "utf-8");
+  return "Edit applied successfully to " + absPath;
+}
+
+async function toolWrite(input: ToolInput): Promise<string> {
+  const file_path = input.file_path as string;
+  const content = input.content as string;
+  if (!file_path || content === undefined) return "Missing required: file_path, content";
+  const absPath = resolve(ROOT, file_path);
+  writeFileSync(absPath, content, "utf-8");
+  return "Written successfully to " + absPath;
+}
+
+async function toolBash(input: ToolInput): Promise<string> {
+  const command = input.command as string;
+  const timeout = (input.timeout as number) || 60000;
+  // Only allow specific safe commands
+  const allowed = [
+    "npx tsx", "npm run", "npm test", "npm build",
+    "git add", "git commit", "git push", "git checkout", "git status", "git diff", "git log",
+    "rg ", "ls ", "cat ", "head ", "tail ", "wc ",
+  ];
+  if (!allowed.some(prefix => command.trim().startsWith(prefix))) {
+    return "Command not allowed: " + command.trim().slice(0, 50);
+  }
+  try {
+    const result = execSync(command, { cwd: ROOT, stdio: "pipe", timeout });
+    return result.toString().slice(0, 5000);
+  } catch (err: unknown) {
+    return "Error: " + (err instanceof Error ? err.message.slice(0, 200) : String(err));
+  }
+}
+
+async function toolRunEval(input: ToolInput): Promise<string> {
+  const verbose = input.verbose !== false;
+  try {
+    const cmd = "npx tsx " + EVAL_PATH + " " + (verbose ? "--verbose" : "");
+    const output = execSync(cmd, { cwd: ROOT, stdio: "pipe", timeout: 300000 }).toString();
+    const scoreMatch = output.match(/__SCORE__:(\d+\.\d+)/);
+    const score = scoreMatch ? parseFloat(scoreMatch[1]) : 0;
+    return "SCORE: " + score.toFixed(6) + "\n" + output.slice(-2000);
+  } catch (err: unknown) {
+    return "EVAL FAILED: " + (err instanceof Error ? err.message.slice(0, 300) : String(err));
+  }
+}
+
+async function executeTool(name: string, input: ToolInput): Promise<string> {
+  switch (name) {
+    case "Read": return toolRead(input);
+    case "Grep": return toolGrep(input);
+    case "Glob": return toolGlob(input);
+    case "Edit": return toolEdit(input);
+    case "Write": return toolWrite(input);
+    case "Bash": return toolBash(input);
+    case "run_eval": return toolRunEval(input);
+    default: return "Unknown tool: " + name;
+  }
+}
+
+// ── MiniMax API with Tool Use ──────────────────────────────────────────────
+
+const TOOL_DEFINITIONS = [
+  {
+    name: "Read",
+    description: "Read file contents. Use offset/limit for partial reads.",
+    input_schema: {
+      type: "object",
+      properties: {
+        file_path: { type: "string", description: "Absolute or relative path" },
+        offset: { type: "number", description: "Line number to start from (1-indexed)" },
+        limit: { type: "number", description: "Max lines to read (default 200)" },
+      },
+      required: ["file_path"],
+    },
+  },
+  {
+    name: "Grep",
+    description: "Search file contents with ripgrep.",
+    input_schema: {
+      type: "object",
+      properties: {
+        pattern: { type: "string" },
+        path: { type: "string" },
+        glob: { type: "string" },
+        output_mode: { type: "string", enum: ["content", "files_with_matches"] },
+      },
+      required: ["pattern"],
+    },
+  },
+  {
+    name: "Glob",
+    description: "Find files matching a glob pattern.",
+    input_schema: {
+      type: "object",
+      properties: {
+        pattern: { type: "string" },
+      },
+      required: ["pattern"],
+    },
+  },
+  {
+    name: "Edit",
+    description: "Replace old_string with new_string in a file. old_string must match exactly (including whitespace).",
+    input_schema: {
+      type: "object",
+      properties: {
+        file_path: { type: "string" },
+        old_string: { type: "string" },
+        new_string: { type: "string" },
+      },
+      required: ["file_path", "old_string", "new_string"],
+    },
+  },
+  {
+    name: "Write",
+    description: "Write complete file content (overwrites existing).",
+    input_schema: {
+      type: "object",
+      properties: {
+        file_path: { type: "string" },
+        content: { type: "string" },
+      },
+      required: ["file_path", "content"],
+    },
+  },
+  {
+    name: "Bash",
+    description: "Run a shell command. Only safe commands allowed.",
+    input_schema: {
+      type: "object",
+      properties: {
+        command: { type: "string" },
+        timeout: { type: "number" },
+      },
+      required: ["command"],
+    },
+  },
+  {
+    name: "run_eval",
+    description: "Run the autoresearch eval harness and return score.",
+    input_schema: {
+      type: "object",
+      properties: {
+        verbose: { type: "boolean" },
+      },
+    },
+  },
+];
+
+interface ToolCall {
+  name: string;
+  input: ToolInput;
+}
+
+interface Message {
+  role: "user" | "assistant";
+  content: string | ToolCall[];
+}
+
+async function chatWithTools(
+  messages: Message[],
+  maxTokens = 8192,
+): Promise<{ text: string; toolCalls: ToolCall[] }> {
   const url = `${API_BASE}/messages`;
   const body = {
     model: "MiniMax-M2.7",
-    max_tokens: 4096,
+    max_tokens: maxTokens,
+    tools: TOOL_DEFINITIONS,
     messages,
   };
 
@@ -74,47 +287,29 @@ async function chat(messages: { role: string; content: string }[]): Promise<stri
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`MiniMax API error ${res.status}: ${text.slice(0, 200)}`);
+    throw new Error(`API error ${res.status}: ${text.slice(0, 200)}`);
   }
 
-  const data = await res.json() as { content: { type: string; text?: string }[] };
-  // Skip thinking blocks, extract only text content
-  const text = data.content
-    ?.filter(c => c.type === "text")
-    .map(c => c.text ?? "")
-    .join("\n")
-    .trim() ?? "";
-  return text;
-}
+  const data = await res.json() as {
+    content: { type: string; name?: string; input?: ToolInput; text?: string }[];
+    stop_reason: string;
+  };
 
-// ── Shell helpers (all inputs are hardcoded, safe) ─────────────────────────
+  const toolCalls: ToolCall[] = [];
+  let text = "";
 
-function runEval(): { score: number; fixture: number; live: number; workflow: number; output: string } {
-  try {
-    const output = execSync("npx tsx " + EVAL_PATH + " --verbose", {
-      cwd: ROOT,
-      stdio: "pipe",
-      timeout: 300_000,
-    }).toString();
-
-    const scoreMatch = output.match(/__SCORE__:(\d+\.\d+)/);
-    const fixtureMatch = output.match(/fixture:\s+(\d+\.\d+)/);
-    const liveMatch = output.match(/live:\s+(\d+\.\d+)/);
-    const workflowMatch = output.match(/workflow:\s+(\d+\.\d+)/);
-
-    return {
-      score: scoreMatch ? parseFloat(scoreMatch[1]) : 0,
-      fixture: fixtureMatch ? parseFloat(fixtureMatch[1]) : 0,
-      live: liveMatch ? parseFloat(liveMatch[1]) : 0,
-      workflow: workflowMatch ? parseFloat(workflowMatch[1]) : 0,
-      output,
-    };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    log("EVAL FAILED: " + msg.slice(0, 200));
-    return { score: 0, fixture: 0, live: 0, workflow: 0, output: msg };
+  for (const block of data.content) {
+    if (block.type === "text") {
+      text += (block.text ?? "") + "\n";
+    } else if (block.type === "tool_use" && block.name && block.input) {
+      toolCalls.push({ name: block.name, input: block.input });
+    }
   }
+
+  return { text: text.trim(), toolCalls };
 }
+
+// ── Shell helpers ──────────────────────────────────────────────────────────
 
 function getCurrentScore(): number {
   if (!existsSync(RESULTS_TSV)) return 0;
@@ -130,11 +325,10 @@ function gitAddCommitPush(description: string, score: number) {
     const msg = "autoresearch: " + description + " (score: " + score.toFixed(6) + ")";
     execSync("git add -A", { cwd: ROOT, stdio: "pipe" });
     execSync("git commit -m \"" + msg + "\"", { cwd: ROOT, stdio: "pipe" });
-    execSync("git push", { cwd: ROOT, stdio: "pipe", timeout: 30_000 });
+    execSync("git push", { cwd: ROOT, stdio: "pipe", timeout: 60000 });
     log("COMMIT + PUSH: " + msg);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    log("Git failed: " + msg.slice(0, 150));
+    log("Git failed: " + (err instanceof Error ? err.message.slice(0, 150) : String(err)));
   }
 }
 
@@ -145,60 +339,80 @@ function discardChanges() {
   } catch { /* ignore */ }
 }
 
-function getGitDiffCount(): number {
+function hasChanges(): boolean {
   try {
-    const out = execSync("git diff --stat", { cwd: ROOT, stdio: "pipe" }).toString();
-    // Count non-empty lines in diff output
-    const lines = out.trim().split("\n").filter(l => l.length > 0);
-    return lines.length;
+    const out = execSync("git status --short", { cwd: ROOT, stdio: "pipe" }).toString().trim();
+    return out.length > 0;
+  } catch { return false; }
+}
+
+function runEvalScore(): number {
+  try {
+    const output = execSync("npx tsx " + EVAL_PATH + " --verbose", {
+      cwd: ROOT,
+      stdio: "pipe",
+      timeout: 300000,
+    }).toString();
+    const m = output.match(/__SCORE__:(\d+\.\d+)/);
+    return m ? parseFloat(m[1]) : 0;
   } catch { return 0; }
 }
 
 // ── Prompt builder ─────────────────────────────────────────────────────────
 
-function buildPrompt(programMd: string, currentScore: number, evalOutput: string): string {
+function buildSystemPrompt(): string {
   return `You are an elite autonomous research agent improving imperium-crawl — the world's most advanced open-source web scraping CLI toolkit.
 
-Read this program carefully:
-${programMd}
+Read program.md at ./autoresearch/program.md for the full research mandate.
 
-CURRENT EVALUATION OUTPUT (last 4000 chars):
-${evalOutput.slice(-4000)}
-
-CURRENT SCORE: ${currentScore.toFixed(6)}
-
-Your task: Make ONE small, high-impact code change that will improve the score.
+CRITICAL WORKFLOW — follow this exactly:
+1. First, READ the current eval output using Bash: npx tsx ./autoresearch/eval.ts --verbose
+2. Analyze which component has the lowest score
+3. Read relevant source files to understand the code
+4. Make ONE targeted change using Edit or Write tools
+5. Run eval again: use the run_eval tool
+6. If score improved: git add -A && git commit -m "autoresearch: <description> (score: X.XXXXXX)" && git push
+7. If score unchanged/decreased: git checkout -- .
 
 Rules:
-- NEVER modify anything in autoresearch/ directory (SACRED — it's the eval harness)
-- You CAN modify: src/**, SKILL/**, tests/**
-- ONE change per iteration — focused, surgical, not sprawling
-- Read source files before modifying them
-- After making the change, run \`npx tsx ${EVAL_PATH} --verbose\` to measure
-- If score improved: use git to commit and push:
-  git add -A && git commit -m "autoresearch: <description> (score: X.XXXXXX)" && git push
-- If score decreased or same: run \`git checkout -- .\` to discard
+- NEVER modify anything in ./autoresearch/ directory (SACRED — it's the eval harness)
+- You CAN modify: ./src/**, ./SKILL/**, ./tests/**
+- ONE logical change per iteration — surgical, not sprawling
+- NEVER break the build (npm run build must pass)
+- NEVER delete existing tests
+- Always verify with run_eval before committing
 
-CRITICAL: You MUST actually edit source files and run the eval harness. Do not just describe what you would do — actually do it.
+Current working directory: ${ROOT}
 
-Priority based on current score:
-${currentScore < 0.7 ? "- LIVE SCORE is the bottleneck: improve stealth, anti-bot, user-agent rotation, header spoofing, fingerprint randomization" : ""}
-${currentScore < 0.8 ? "- WORKFLOW score can improve: fix failing workflows, make tool chains more robust" : ""}
-${currentScore < 0.85 ? "- Focus on workflow + live — those have the most weight remaining" : ""}
-${currentScore >= 0.9 ? "- Near-perfect! Push to 1.0: add new tools (pdf extraction, graphql query, watch/monitor), expand stealth, improve fixture parsing" : ""}
+Available tools: Read, Grep, Glob, Edit, Write, Bash, run_eval`;
+}
 
-Go. Analyze the eval output, find the weakest component, make ONE targeted fix, run eval, commit or discard.`;
+function buildUserPrompt(currentScore: number): string {
+  return `CURRENT SCORE: ${currentScore.toFixed(6)}
+
+Start by reading the eval output, then make one improvement. Focus on:
+${currentScore < 0.85 ? "- LIVE SCORE is the biggest opportunity: improve stealth, user-agent rotation, anti-bot headers, rate limiting" : ""}
+${currentScore < 0.90 ? "- WORKFLOW score: fix failing workflows (check which ones FAIL in eval output)" : ""}
+${currentScore < 0.95 ? "- Push to 1.0: new tools (pdf, graphql, watch), better fixture parsing, stealth improvements" : ""}
+${currentScore >= 0.95 ? "- Maximize: improve perf speed, expand stealth fingerprinting, add new benchmark categories" : ""}
+
+Execute the full workflow: read → analyze → edit → run_eval → commit/push or discard.`;
 }
 
 // ── Main loop ──────────────────────────────────────────────────────────────
 
 async function main() {
+  // Setup logging
+  mkdirSync(LOG_DIR, { recursive: true });
+  logFilePath = join(LOG_DIR, `loop-${new Date().toISOString().slice(0, 10)}.log`);
+
   log("═══════════════════════════════════════════");
-  log("AUTORESEARCH LOOP — MiniMax M2.7");
+  log("AUTORESEARCH LOOP — MiniMax M2.7 + TOOL-USE");
   log("Max iterations: " + (MAX_ITERATIONS === Infinity ? "unlimited" : MAX_ITERATIONS));
   log("═══════════════════════════════════════════");
 
-  const programMd = readFileSync(PROGRAM_MD, "utf-8");
+  const systemPrompt = buildSystemPrompt();
+  const messages: Message[] = [];
   let currentScore = getCurrentScore();
   log("Starting score: " + currentScore.toFixed(6));
 
@@ -209,50 +423,67 @@ async function main() {
     log("");
     log("─── Iteration " + iteration + " ───────────────────────");
 
-    // Run current eval to analyze state
-    log("Running eval...");
-    const { score, output } = runEval();
-    currentScore = score;
-    log("Current score: " + score.toFixed(6));
+    // Add user turn
+    const userContent = buildUserPrompt(currentScore);
+    messages.push({ role: "user", content: userContent });
 
-    // Build improvement prompt
-    const prompt = buildPrompt(programMd, score, output);
+    // Multi-turn tool loop
+    let turnCount = 0;
+    const MAX_TURNS = 20; // max tool calls per iteration
 
-    // Call MiniMax
-    log("Calling MiniMax M2.7...");
-    try {
-      const response = await chat([
-        { role: "user", content: prompt },
-      ]);
-      log("MiniMax response: " + response.length + " chars");
+    while (turnCount < MAX_TURNS) {
+      turnCount++;
+      log("MiniMax turn " + turnCount + "...");
 
-      // Check if git has changes
-      const diffCount = getGitDiffCount();
-      if (diffCount > 0) {
-        log("Files were modified. Running eval to verify...");
-        const { score: newScore } = runEval();
-        if (newScore > score) {
-          gitAddCommitPush("iteration " + iteration + " improvement", newScore);
-        } else {
-          log("Score unchanged/decreased (" + newScore.toFixed(6) + " vs " + score.toFixed(6) + "). Discarding.");
-          discardChanges();
+      const { text, toolCalls } = await chatWithTools(messages, 8192);
+
+      if (text) {
+        log("Model text: " + text.slice(0, 200));
+      }
+
+      if (toolCalls.length === 0) {
+        // No more tool calls — model is done
+        log("Model finished (no more tool calls)");
+        break;
+      }
+
+      // Execute tool calls
+      for (const tc of toolCalls) {
+        log("Tool: " + tc.name + " " + JSON.stringify(tc.input).slice(0, 100));
+        try {
+          const result = await executeTool(tc.name, tc.input);
+          const truncated = result.slice(0, 3000);
+          log("Result: " + truncated.replace(/\n/g, " | ").slice(0, 200));
+          messages.push({
+            role: "assistant",
+            content: JSON.stringify([{ type: "tool_result", name: tc.name, content: truncated }]),
+          });
+        } catch (err: unknown) {
+          const msg = "ERROR: " + (err instanceof Error ? err.message.slice(0, 200) : String(err));
+          log(msg);
+          messages.push({ role: "assistant", content: msg });
         }
-      } else {
-        log("No files modified by model.");
       }
-
-      // Extract reported score
-      const scoreMatch = response.match(/__SCORE__:(\d+\.\d+)/);
-      if (scoreMatch) {
-        log("Model reported score: " + parseFloat(scoreMatch[1]).toFixed(6));
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      log("ERROR: " + msg.slice(0, 300));
     }
 
-    // Cooldown between iterations
-    await new Promise((r) => setTimeout(r, 5000));
+    // After all tool calls, check git status
+    if (hasChanges()) {
+      log("Files modified — running final eval to confirm...");
+      const newScore = runEvalScore();
+      log("New score: " + newScore.toFixed(6) + " (was " + currentScore.toFixed(6) + ")");
+      if (newScore > currentScore) {
+        gitAddCommitPush("iteration " + iteration + " improvement", newScore);
+        currentScore = newScore;
+      } else {
+        log("No improvement — discarding.");
+        discardChanges();
+      }
+    } else {
+      log("No files modified this iteration.");
+    }
+
+    // Cooldown
+    await new Promise((r) => setTimeout(r, 3000));
   }
 
   log("");
