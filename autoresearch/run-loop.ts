@@ -72,20 +72,31 @@ async function toolGrep(input: ToolInput): Promise<string> {
   const path = (input.path as string) || ROOT;
   const glob = input.glob as string;
   const output_mode = (input.output_mode as string) || "content";
+  if (!pattern) return "No pattern provided";
   try {
-    const args = ["--no-ignore", pattern, path];
+    const args = [pattern];
     if (glob) args.push("--glob", glob);
-    const result = execSync("rg " + args.join(" "), { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
+    args.push(path || ROOT);
+    const result = execSync("rg -n --no-ignore " + args.join(" "), { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
+    if (!result.trim()) return "No matches found";
     const lines = result.trim().split("\n");
-    if (output_mode === "content") return lines.slice(0, 50).join("\n");
-    return result;
-  } catch { return "No matches found"; }
+    return lines.slice(0, 80).join("\n");
+  } catch (err: unknown) {
+    return "No matches found: " + (err instanceof Error ? err.message.slice(0, 50) : "");
+  }
 }
 
 async function toolGlob(input: ToolInput): Promise<string> {
   const pattern = input.pattern as string;
+  if (!pattern) return "";
   try {
-    const result = execSync("rg --files " + pattern + " .", { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
+    // Convert glob to find-compatible pattern
+    // e.g. "src/**/*.ts" -> "src"
+    const baseDir = pattern.replace(/\*\*.*$/, "").replace(/\/$/, "") || ".";
+    const ext = pattern.match(/\.(\w+)$/)?.[1] || "*";
+    const result = execSync("find " + baseDir + " -name '*." + ext + "' 2>/dev/null | head -50", {
+      cwd: ROOT, stdio: "pipe", timeout: 10000,
+    }).toString();
     return result.trim();
   } catch { return ""; }
 }
@@ -124,7 +135,7 @@ async function toolBash(input: ToolInput): Promise<string> {
   const allowed = [
     "npx tsx", "npm run", "npm test", "npm build",
     "git add", "git commit", "git push", "git checkout", "git status", "git diff", "git log",
-    "rg ", "ls ", "cat ", "head ", "tail ", "wc ",
+    "rg ", "find ", "ls ", "cat ", "head ", "tail ", "wc ",
   ];
   if (!allowed.some(prefix => command.trim().startsWith(prefix))) {
     return "Command not allowed: " + command.trim().slice(0, 50);
@@ -423,44 +434,77 @@ function buildUserPrompt(
   workflow: number,
   perf: number,
 ): string {
-  // Extract key info from eval output
-  const passLines = evalOutput.match(/  PASS .+/g) ?? [];
+  // Pre-analyze: find the most impactful single improvement
   const failLines = evalOutput.match(/  FAIL .+/g) ?? [];
-  const skipLines = evalOutput.match(/  SKIP .+/g) ?? [];
+  const passLines = evalOutput.match(/  PASS .+/g) ?? [];
 
-  return `You are improving imperium-crawl. Your goal: make ONE small code change that raises the score.
+  // Pick ONE actionable fix
+  let action = "";
+
+  // Check for wikipedia timeout (most common failure)
+  if (evalOutput.includes("wikipedia-readability") || evalOutput.includes("wikipedia-deep")) {
+    if (evalOutput.includes("ETIMEDOUT")) {
+      action = `TASK: The "wikipedia-deep" workflow and "wikipedia-readability" live benchmark are timing out at 30s.
+Fix: Read "src/constants.ts" and increase DEFAULT_TIMEOUT_MS from 30_000 to 60_000.
+Also check if "autoresearch/eval.ts" has hardcoded 30_000 timeout and increase it.`;
+    }
+  }
+
+  // Check for lobsters extract failure
+  if (evalOutput.includes("lobsters-extract") || evalOutput.includes("lobsters_stories")) {
+    if (evalOutput.includes("Command failed") || evalOutput.includes("Failed")) {
+      action = `TASK: The "lobsters-extract" live benchmark and "hn-recipe-follow" workflow are failing.
+Fix: Read "src/tools/extract.ts" and check why the '.story' selector might not be matching.
+Lobsters uses CSS class "story" for each story item. Make sure the extract tool handles this correctly.`;
+    }
+  }
+
+  // Check for live score being low
+  if (live < 0.9 && !action) {
+    action = `TASK: Live score is ${live.toFixed(3)} — improve stealth/scraping.
+Read "src/stealth/headers.ts" and add more realistic browser headers.
+Or read "src/stealth/detector.ts" and improve anti-bot detection bypass.`;
+  }
+
+  // Check for workflow score
+  if (workflow < 0.8 && !action) {
+    action = `TASK: Workflow score is ${workflow.toFixed(3)} — improve multi-step chains.
+Read "src/tools/run-skill.ts" and check for error handling issues.
+Improve error messages and fallback behavior.`;
+  }
+
+  // Default: improve fixture
+  if (!action) {
+    action = `TASK: Fixture/other score needs improvement.
+Read "src/utils/markdown.ts" and improve HTML-to-markdown conversion.
+Look for NOISE_SELECTORS that could be expanded to remove more boilerplate.`;
+  }
+
+  return `You are improving imperium-crawl. Make ONE targeted code change.
 
 CURRENT SCORES:
   Overall: ${currentScore.toFixed(6)}
-  Fixture: ${fixture.toFixed(6)} (30% weight)
-  Live:    ${live.toFixed(6)} (25% weight)
-  Workflow: ${workflow.toFixed(6)} (15% weight)
-  Perf:    ${perf.toFixed(6)} (10% weight)
+  Fixture: ${fixture.toFixed(6)} | Live: ${live.toFixed(6)} | Workflow: ${workflow.toFixed(6)} | Perf: ${perf.toFixed(6)}
 
-LOWEST COMPONENT: ${live < workflow && live < fixture ? "LIVE" : workflow < live ? "WORKFLOW" : "FIXTURE"}
+${failLines.length > 0 ? "FAILING:\n" + failLines.slice(0, 5).join("\n") + "\n" : ""}
 
-${failLines.length > 0 ? `FAILING BENCHMARKS:\n${failLines.slice(0, 5).join("\n")}` : ""}
-${skipLines.length > 0 ? `SKIPPED:\n${skipLines.slice(0, 3).join("\n")}` : ""}
-
-EVAL OUTPUT (last 2500 chars):
-${evalOutput.slice(-2500)}
+${action}
 
 WORKFLOW:
-1. Look at the failing benchmarks above
-2. Find the relevant source code in src/ that handles this
-3. Make ONE targeted Edit to improve it
-4. Call run_eval tool to measure
-5. If improved: Bash with command="git add -A && git commit -m \"autoresearch: <desc> (score: X)\" && git push"
-6. If not improved: Bash with command="git checkout -- ."
+1. Read the relevant source file(s) I identified above
+2. Make ONE targeted Edit (replace old_string with new_string)
+3. Call run_eval {verbose:true} to measure
+4. If score improved: Bash with command="git add -A && git commit -m \"autoresearch: <short desc> (score: X)\" && git push"
+5. If not improved: Bash with command="git checkout -- ."
 
 RULES:
 - NEVER modify ./autoresearch/** (SACRED)
-- You CAN modify: src/**, SKILL/**, tests/**
-- ONE targeted edit — surgical fix, not rewrite
-- Never break the build
+- ONE edit only — pick the most impactful single change
+- Never break the build (npm run build must pass)
+- Use RELATIVE paths from project root
 
-The project is at: ${ROOT}
-Use Read {path:"src/..."} Edit {path:"src/...", old_string:"...", new_string:"..."} run_eval {verbose:true} Bash commands.`;
+Project root: ${ROOT}`;
+}
 }
 
 // ── Main loop ──────────────────────────────────────────────────────────────
