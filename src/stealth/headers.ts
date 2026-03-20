@@ -95,6 +95,8 @@ export function generateHeaders(overrides?: Record<string, string>, url?: string
   headers["priority"] = "u=0, i";
 
   // ── Additional realistic browser headers ──
+  // sec-gpc: Global Privacy Control — sent by Chrome/Firefox for GDPR compliance
+  headers["sec-gpc"] = "1";
   // te: trailers — real Chrome sends this on HTTP/2+ requests
   headers["te"] = "trailers";
   // pragma for HTTP/1.1 backwards compatibility with older proxies/caches
