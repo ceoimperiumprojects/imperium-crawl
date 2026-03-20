@@ -96,11 +96,9 @@ function hasAntiBotHeaders(headers: Record<string, string>): boolean {
  * Check if the page has challenge scripts (Cloudflare, DataDome, etc.)
  */
 function hasChallengeScript(html: string): boolean {
-  const lower = html.toLowerCase();
   return (
     html.includes("/cdn-cgi/challenge-platform/") ||
     html.includes("js.datadome.co") ||
-    lower.includes("datadome") ||
     html.includes("client.perimeterx.net") ||
     html.includes("awswaf") ||
     html.includes("_kpsdk")
