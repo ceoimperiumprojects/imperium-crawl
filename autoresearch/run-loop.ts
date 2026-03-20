@@ -456,6 +456,17 @@ async function main() {
         break;
       }
 
+      // Push assistant message with tool_use blocks BEFORE sending tool results
+      messages.push({
+        role: "assistant",
+        content: toolCalls.map((tc) => ({
+          type: "tool_use",
+          id: tc.id,
+          name: tc.name,
+          input: tc.input,
+        })),
+      });
+
       // Execute tool calls
       for (const tc of toolCalls) {
         log("Tool: " + tc.name + " " + JSON.stringify(tc.input).slice(0, 100));
