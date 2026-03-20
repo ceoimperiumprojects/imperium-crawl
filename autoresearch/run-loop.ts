@@ -71,18 +71,16 @@ async function toolGrep(input: ToolInput): Promise<string> {
   const pattern = input.pattern as string;
   const path = (input.path as string) || ROOT;
   const glob = input.glob as string;
-  const output_mode = (input.output_mode as string) || "content";
   if (!pattern) return "No pattern provided";
   try {
-    const args = [pattern];
+    const args = ["-n", "--no-ignore", pattern];
     if (glob) args.push("--glob", glob);
-    args.push(path || ROOT);
-    const result = execSync("rg -n --no-ignore " + args.join(" "), { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
+    args.push(path);
+    const result = execSync("rg", args, { cwd: ROOT, stdio: "pipe", timeout: 10000 }).toString();
     if (!result.trim()) return "No matches found";
-    const lines = result.trim().split("\n");
-    return lines.slice(0, 80).join("\n");
+    return result.trim().split("\n").slice(0, 80).join("\n");
   } catch (err: unknown) {
-    return "No matches found: " + (err instanceof Error ? err.message.slice(0, 50) : "");
+    return "No matches found";
   }
 }
 
@@ -91,10 +89,10 @@ async function toolGlob(input: ToolInput): Promise<string> {
   if (!pattern) return "";
   try {
     // Convert glob to find-compatible pattern
-    // e.g. "src/**/*.ts" -> "src"
+    // e.g. "src/**/*.ts" -> "src" with extension filter
     const baseDir = pattern.replace(/\*\*.*$/, "").replace(/\/$/, "") || ".";
     const ext = pattern.match(/\.(\w+)$/)?.[1] || "*";
-    const result = execSync("find " + baseDir + " -name '*." + ext + "' 2>/dev/null | head -50", {
+    const result = execSync("find " + baseDir + " -name '*." + ext + "' 2>/dev/null | grep -v node_modules | head -50", {
       cwd: ROOT, stdio: "pipe", timeout: 10000,
     }).toString();
     return result.trim();
@@ -135,7 +133,7 @@ async function toolBash(input: ToolInput): Promise<string> {
   const allowed = [
     "npx tsx", "npm run", "npm test", "npm build",
     "git add", "git commit", "git push", "git checkout", "git status", "git diff", "git log",
-    "rg ", "find ", "ls ", "cat ", "head ", "tail ", "wc ",
+    "rg ", "find ", "ls ", "cat ", "head ", "tail ", "wc ", "grep ",
   ];
   if (!allowed.some(prefix => command.trim().startsWith(prefix))) {
     return "Command not allowed: " + command.trim().slice(0, 50);
@@ -527,6 +525,9 @@ async function main() {
     iteration++;
     log("");
     log("─── Iteration " + iteration + " ───────────────────────");
+
+    // ── Step 0: Discard any uncommitted changes for clean slate ──
+    discardChanges();
 
     // ── Step 1: Run eval BEFORE MiniMax sees anything ──
     log("Running eval to get current state...");
