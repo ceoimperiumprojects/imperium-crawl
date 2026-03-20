@@ -24,3 +24,11 @@ coverage/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local dev artifacts
+*.tgz
+*.png
+*.pptx
+media/
+autoresearch/run-loop.sh
+autoresearch/reports/
