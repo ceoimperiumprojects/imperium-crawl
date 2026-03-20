@@ -1,20 +1,33 @@
 import { describe, it, expect } from "vitest";
-import { isBlocked, needsJSRendering } from "../src/stealth/detector.js";
+import { isBlocked, needsJSRendering, isCaptchaPage } from "../src/stealth/detector.js";
 import { detectAntiBot, parseCookieNames } from "../src/stealth/antibot-detector.js";
 
 // ── isBlocked ──
 
 describe("isBlocked", () => {
-  it("detects 403 status", () => {
-    expect(isBlocked("<html>Forbidden</html>", 403)).toBe(true);
+  it("detects 403 with anti-bot headers as blocked", () => {
+    expect(isBlocked("<html>Forbidden</html>", 403, { "cf-ray": "abc123" })).toBe(true);
   });
 
-  it("detects 429 status", () => {
-    expect(isBlocked("<html>Too Many</html>", 429)).toBe(true);
+  it("detects 429 with anti-bot headers as blocked", () => {
+    expect(isBlocked("<html>Too Many</html>", 429, { "cf-mitigated": "challenge" })).toBe(true);
   });
 
-  it("detects 503 status", () => {
-    expect(isBlocked("<html>Service Unavailable</html>", 503)).toBe(true);
+  it("detects 503 with challenge script as blocked", () => {
+    const html = '<html><body><script src="/cdn-cgi/challenge-platform/v1"></script></body></html>';
+    expect(isBlocked(html, 503, { "cf-ray": "abc" })).toBe(true);
+  });
+
+  it("does NOT flag 403 without anti-bot signals (regular server)", () => {
+    expect(isBlocked("<html><body><p>You don't have permission to access this resource. The directory listing is not allowed. Please check the URL.</p></body></html>", 403, { "server": "nginx" })).toBe(false);
+  });
+
+  it("does NOT flag 503 without anti-bot signals (maintenance)", () => {
+    expect(isBlocked("<html><body><p>We are currently performing maintenance. Please check back soon. Our engineers are working to resolve the issue.</p></body></html>", 503)).toBe(false);
+  });
+
+  it("detects 403 with small body and blocked indicators", () => {
+    expect(isBlocked("<html><body>Access Denied</body></html>", 403)).toBe(true);
   });
 
   it("detects Cloudflare challenge page", () => {
@@ -22,16 +35,22 @@ describe("isBlocked", () => {
     expect(isBlocked(html, 200)).toBe(true);
   });
 
-  it("detects 'access denied' in body", () => {
-    expect(isBlocked("<html><body>Access Denied - you don't have permission</body></html>", 200)).toBe(true);
+  it("detects 'access denied' in small body (no headers needed)", () => {
+    expect(isBlocked("<html><body>Access Denied</body></html>", 200)).toBe(true);
   });
 
-  it("detects 'verify you are human'", () => {
+  it("detects 'verify you are human' in small body", () => {
     expect(isBlocked("<html><body>Please verify you are human to continue</body></html>", 200)).toBe(true);
   });
 
-  it("detects captcha keyword", () => {
+  it("detects captcha keyword in small body", () => {
     expect(isBlocked("<html><body>Please solve the CAPTCHA</body></html>", 200)).toBe(true);
+  });
+
+  it("does NOT flag large article mentioning 'blocked' and 'captcha'", () => {
+    const longContent = "A".repeat(6000);
+    const html = `<html><body><nav><a href='/1'>1</a><a href='/2'>2</a><a href='/3'>3</a><a href='/4'>4</a><a href='/5'>5</a><a href='/6'>6</a><a href='/7'>7</a><a href='/8'>8</a><a href='/9'>9</a><a href='/10'>10</a><a href='/11'>11</a></nav><p>This article discusses how users get blocked by captcha systems. ${longContent}</p></body></html>`;
+    expect(isBlocked(html, 200)).toBe(false);
   });
 
   it("detects 'Attention Required' title", () => {
@@ -50,6 +69,26 @@ describe("isBlocked", () => {
 
   it("passes normal page without indicators", () => {
     expect(isBlocked("<html><body>Hello World, this is a nice article about cooking.</body></html>", 200)).toBe(false);
+  });
+});
+
+// ── isCaptchaPage ──
+
+describe("isCaptchaPage", () => {
+  it("detects reCAPTCHA", () => {
+    expect(isCaptchaPage('<html><div class="g-recaptcha"></div></html>')).toBe(true);
+  });
+
+  it("detects Turnstile", () => {
+    expect(isCaptchaPage('<html><div class="cf-turnstile"></div></html>')).toBe(true);
+  });
+
+  it("detects hCaptcha", () => {
+    expect(isCaptchaPage('<html><div class="h-captcha"></div></html>')).toBe(true);
+  });
+
+  it("does not flag normal page", () => {
+    expect(isCaptchaPage('<html><body>Regular content</body></html>')).toBe(false);
   });
 });
 
