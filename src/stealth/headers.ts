@@ -2,9 +2,10 @@ import { HeaderGenerator } from "header-generator";
 
 const generator = new HeaderGenerator({
   browsers: [
-    { name: "chrome", minVersion: 126 },
-    { name: "firefox", minVersion: 125 },
-    { name: "edge", minVersion: 126 },
+    { name: "chrome", minVersion: 120 },
+    { name: "firefox", minVersion: 121 },
+    { name: "edge", minVersion: 120 },
+    { name: "safari", minVersion: 17 },
   ],
   devices: ["desktop"],
   operatingSystems: ["windows", "macos", "linux"],
