@@ -8,6 +8,11 @@ export type AntiBotSystem =
   | "kasada"
   | "aws-waf"
   | "f5-shape"
+  | "incapsula"
+  | "sucuri"
+  | "geetest"
+  | "distil"
+  | "unknown"
   | "none";
 
 export interface AntiBotDetection {
@@ -67,6 +72,27 @@ const RULES: DetectionRule[] = [
   // ── F5 / Shape Security ──
   { system: "f5-shape", weight: 0.5, signal: "TS cookie prefix", check: (c) => c.cookies.some((k) => /^ts[a-f0-9]{6,}/.test(k)) },
   { system: "f5-shape", weight: 0.3, signal: "shape script", check: (c) => c.html.includes("shape.js") || c.html.includes("shapesecurity.com") },
+
+  // ── Incapsula / Imperva ──
+  { system: "incapsula", weight: 0.6, signal: "_incap_ses_ cookie", check: (c) => c.cookies.some((k) => k.startsWith("_incap_ses_")) },
+  { system: "incapsula", weight: 0.6, signal: "visid_incap cookie", check: (c) => c.cookies.some((k) => k.startsWith("visid_incap")) },
+  { system: "incapsula", weight: 0.3, signal: "incap_ses cookie", check: (c) => c.cookies.some((k) => k.includes("incap")) },
+  { system: "incapsula", weight: 0.4, signal: "incapsula script", check: (c) => c.html.includes("incapsula") || c.html.includes("imperva") },
+  { system: "incapsula", weight: 0.3, signal: "x-iinfo header", check: (c) => "x-iinfo" in c.headers },
+
+  // ── Sucuri ──
+  { system: "sucuri", weight: 0.7, signal: "sucuri cookie", check: (c) => c.cookies.some((k) => k.includes("sucuri")) },
+  { system: "sucuri", weight: 0.4, signal: "x-sucuri-id header", check: (c) => "x-sucuri-id" in c.headers },
+  { system: "sucuri", weight: 0.3, signal: "sucuri script/content", check: (c) => c.html.includes("sucuri") && c.html.includes("cloudproxy") },
+
+  // ── GeeTest ──
+  { system: "geetest", weight: 0.7, signal: "geetest script", check: (c) => c.html.includes("geetest") || c.html.includes("gt.js") },
+  { system: "geetest", weight: 0.5, signal: "geetest captcha div", check: (c) => c.html.includes("geetest_") || c.html.includes("gt_captcha") },
+
+  // ── Distil Networks ──
+  { system: "distil", weight: 0.6, signal: "D= cookie", check: (c) => c.cookies.some((k) => k === "d" || k.startsWith("d=")) },
+  { system: "distil", weight: 0.5, signal: "distil script", check: (c) => c.html.includes("distil") || c.html.includes("distilnetworks") },
+  { system: "distil", weight: 0.3, signal: "x-distil-cs header", check: (c) => "x-distil-cs" in c.headers },
 ];
 
 // What stealth level each system typically needs
@@ -78,6 +104,11 @@ const RECOMMENDED_LEVELS: Record<AntiBotSystem, StealthLevel> = {
   kasada: 3,        // Proof of work
   "aws-waf": 2,     // Often basic enough for TLS stealth
   "f5-shape": 3,    // JS obfuscation
+  incapsula: 3,     // JS challenge + fingerprinting
+  sucuri: 2,        // Usually simpler WAF rules
+  geetest: 3,       // Interactive challenge
+  distil: 3,        // Heavy JS fingerprinting
+  unknown: 3,       // Unknown → assume worst case
   none: 1,
 };
 
@@ -123,6 +154,47 @@ export function detectAntiBot(
       bestSystem = system;
       bestScore = total;
       bestSignals = signals;
+    }
+  }
+
+  // ── "Unknown anti-bot" fallback detection ──
+  // If no known system matched but page shows challenge characteristics
+  if (bestSystem === "none") {
+    const unknownSignals: string[] = [];
+
+    // Challenge-like page: small body, mostly scripts, noscript fallback
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    if (bodyMatch) {
+      const bodyContent = bodyMatch[1];
+      const textOnly = bodyContent
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/<[^>]*>/g, "")
+        .trim();
+
+      const scriptCount = (bodyContent.match(/<script/gi) || []).length;
+      const hasNoscript = bodyContent.includes("<noscript>");
+
+      // Small text content but lots of scripts → challenge page
+      if (textOnly.length < 200 && scriptCount >= 2) {
+        unknownSignals.push("small body with multiple scripts");
+      }
+
+      // noscript with content but body is mostly scripts → JS challenge
+      if (hasNoscript && textOnly.length < 500 && scriptCount >= 3) {
+        unknownSignals.push("noscript fallback with script-heavy body");
+      }
+    }
+
+    // JS redirect pattern
+    if (html.includes("window.location") && html.includes("document.cookie")) {
+      unknownSignals.push("JS redirect with cookie manipulation");
+    }
+
+    if (unknownSignals.length >= 1) {
+      bestSystem = "unknown";
+      bestScore = 0.3;
+      bestSignals = unknownSignals;
     }
   }
 

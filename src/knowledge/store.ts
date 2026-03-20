@@ -15,11 +15,14 @@ import {
 const DEBOUNCE_MS = 30_000;
 const MAX_DOMAINS = 2000;
 const PRUNE_AGE_DAYS = 30;
+const PARENT_DOMAIN_CONFIDENCE_MULTIPLIER = 0.5;
 
 // ── AdaptiveLearningEngine ──
 
 export class AdaptiveLearningEngine {
   private store = new Map<string, DomainKnowledge>();
+  /** Index: anti-bot system → Set of domains using it */
+  private antiBotIndex = new Map<string, Set<string>>();
   private dirty = false;
   private writeTimer: ReturnType<typeof setTimeout> | null = null;
   private filePath: string;
@@ -46,8 +49,10 @@ export class AdaptiveLearningEngine {
       const data = await fs.readFile(this.filePath, "utf-8");
       const parsed = JSON.parse(data) as Record<string, DomainKnowledge>;
       this.store.clear();
+      this.antiBotIndex.clear();
       for (const [domain, knowledge] of Object.entries(parsed)) {
         this.store.set(domain, knowledge);
+        this.indexAntiBot(domain, knowledge);
       }
       // Prune on load if over limit
       if (this.store.size > MAX_DOMAINS) {
@@ -60,9 +65,31 @@ export class AdaptiveLearningEngine {
         console.error("[knowledge] Failed to load knowledge file:", err instanceof Error ? err.message : String(err));
       }
       this.store.clear();
+      this.antiBotIndex.clear();
     }
     this.loaded = true;
     this.loading = null;
+  }
+
+  /**
+   * Index a domain by its anti-bot system for cross-domain lookup.
+   */
+  private indexAntiBot(domain: string, knowledge: DomainKnowledge): void {
+    if (knowledge.antibot_system) {
+      const existing = this.antiBotIndex.get(knowledge.antibot_system) || new Set();
+      existing.add(domain);
+      this.antiBotIndex.set(knowledge.antibot_system, existing);
+    }
+  }
+
+  /**
+   * Extract parent domain from a subdomain.
+   * e.g., "shop.example.com" → "example.com"
+   */
+  private getParentDomain(domain: string): string | null {
+    const parts = domain.split(".");
+    if (parts.length <= 2) return null; // Already a root domain
+    return parts.slice(1).join(".");
   }
 
   // ── Persistence ──
@@ -117,12 +144,43 @@ export class AdaptiveLearningEngine {
     return this.store.get(domain) ?? null;
   }
 
+  /**
+   * Predict optimal fetch configuration for a URL.
+   * Falls back to parent domain knowledge with reduced confidence.
+   */
   async predict(url: string): Promise<PredictedConfig | null> {
     await this.ensureLoaded();
     const domain = getDomain(url);
-    const knowledge = this.store.get(domain);
-    if (!knowledge) return null;
-    return predict(knowledge);
+
+    // Exact domain match
+    const exactKnowledge = this.store.get(domain);
+    if (exactKnowledge) {
+      return predict(exactKnowledge);
+    }
+
+    // ── Cross-domain: parent domain fallback ──
+    const parentDomain = this.getParentDomain(domain);
+    if (parentDomain) {
+      const parentKnowledge = this.store.get(parentDomain);
+      if (parentKnowledge) {
+        const prediction = predict(parentKnowledge);
+        // Reduce confidence for parent-domain predictions
+        prediction.confidence = Math.round(prediction.confidence * PARENT_DOMAIN_CONFIDENCE_MULTIPLIER * 100) / 100;
+        prediction.reason = `parent:${parentDomain}, ${prediction.reason}`;
+        return prediction;
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Find domains known to use a specific anti-bot system.
+   */
+  async getDomainsWithAntiBot(system: string): Promise<string[]> {
+    await this.ensureLoaded();
+    const domains = this.antiBotIndex.get(system);
+    return domains ? Array.from(domains) : [];
   }
 
   // ── Record ──
@@ -132,6 +190,10 @@ export class AdaptiveLearningEngine {
     const existing = this.store.get(outcome.domain) ?? null;
     const updated = aggregateOutcome(existing, outcome);
     this.store.set(outcome.domain, updated);
+
+    // Update anti-bot index
+    this.indexAntiBot(outcome.domain, updated);
+
     this.dirty = true;
     this.scheduleSave();
   }
@@ -159,6 +221,12 @@ export class AdaptiveLearningEngine {
       for (let i = 0; i < toRemove; i++) {
         this.store.delete(sorted[i][0]);
       }
+    }
+
+    // Rebuild anti-bot index after pruning
+    this.antiBotIndex.clear();
+    for (const [domain, knowledge] of this.store) {
+      this.indexAntiBot(domain, knowledge);
     }
 
     if (this.store.size > 0) {

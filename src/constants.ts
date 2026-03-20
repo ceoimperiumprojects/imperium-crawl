@@ -21,6 +21,10 @@ export const KNOWLEDGE_FILE = "knowledge.json";
 
 // ── Stealth defaults ──
 
+// Random window size variation for fingerprint diversity
+const W_OFFSET = Math.floor(Math.random() * 101) - 50; // -50 to +50
+const H_OFFSET = Math.floor(Math.random() * 101) - 50;
+
 export const STEALTH_ARGS: string[] = [
   "--disable-blink-features=AutomationControlled",
   "--disable-features=AutomationControlled",
@@ -37,6 +41,11 @@ export const STEALTH_ARGS: string[] = [
   "--metrics-recording-only",
   "--no-service-autorun",
   "--password-store=basic",
+  // Phase 9 additions
+  "--disable-dev-shm-usage",     // Docker compatibility (shared memory)
+  "--disable-extensions",         // No extension detection fingerprint
+  "--lang=en-US,en",             // Consistent language fingerprint
+  `--window-size=${1920 + W_OFFSET},${1080 + H_OFFSET}`, // Random window size variation
 ];
 
 export const DEFAULT_VIEWPORT = { width: 1920, height: 1080 };
