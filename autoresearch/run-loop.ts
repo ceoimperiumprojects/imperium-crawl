@@ -287,15 +287,38 @@ async function chatWithTools(
     messages,
   };
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${MINIMAX_API_KEY}`,
-      "Content-Type": "application/json",
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify(body),
-  });
+  // Retry with exponential backoff for transient network errors (EPIPE, ECONNRESET)
+  const MAX_RETRIES = 3;
+  let lastError: Error | null = null;
+  let res: Response | null = null;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${MINIMAX_API_KEY}`,
+          "Content-Type": "application/json",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify(body),
+      });
+      lastError = null;
+      break;
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt < MAX_RETRIES) {
+        const delay = Math.min(30000, 1000 * Math.pow(2, attempt)) + Math.random() * 2000;
+        log(`  API fetch error (attempt ${attempt + 1}/${MAX_RETRIES + 1}): ${lastError.message.slice(0, 80)}`);
+        log(`  Retrying in ${Math.round(delay / 1000)}s...`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+
+  if (lastError || !res) {
+    throw lastError ?? new Error("All API retries failed");
+  }
 
   if (!res.ok) {
     const text = await res.text();
@@ -520,12 +543,15 @@ async function main() {
   log("Starting score: " + currentScore.toFixed(6));
 
   let iteration = 0;
+  let consecutiveErrors = 0;
+  const MAX_CONSECUTIVE_ERRORS = 5;
 
   while (iteration < MAX_ITERATIONS) {
     iteration++;
     log("");
     log("─── Iteration " + iteration + " ───────────────────────");
 
+    try {
     // ── Step 0: Discard any uncommitted changes for clean slate ──
     discardChanges();
 
@@ -618,6 +644,25 @@ async function main() {
       }
     } else {
       log("No files modified this iteration.");
+    }
+
+    consecutiveErrors = 0; // Reset on successful iteration
+
+    } catch (iterErr) {
+      consecutiveErrors++;
+      const msg = iterErr instanceof Error ? iterErr.message : String(iterErr);
+      log("ITERATION ERROR (" + consecutiveErrors + "/" + MAX_CONSECUTIVE_ERRORS + "): " + msg.slice(0, 200));
+      try { discardChanges(); } catch { /* ignore */ }
+
+      if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+        log("FATAL: " + MAX_CONSECUTIVE_ERRORS + " consecutive errors — stopping loop.");
+        break;
+      }
+
+      // Back off before retrying
+      const backoff = Math.min(60000, 5000 * Math.pow(2, consecutiveErrors));
+      log("Backing off " + Math.round(backoff / 1000) + "s before next iteration...");
+      await new Promise(r => setTimeout(r, backoff));
     }
 
     // Cooldown
