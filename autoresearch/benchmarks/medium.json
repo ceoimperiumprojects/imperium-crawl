@@ -4,7 +4,10 @@
     "difficulty": "medium",
     "url": "https://github.com/trending",
     "tool": "scrape",
-    "tool_input": { "url": "https://github.com/trending", "format": "markdown" },
+    "tool_input": {
+      "url": "https://github.com/trending",
+      "format": "markdown"
+    },
     "expected": {
       "min_content_length": 200,
       "expect_success": true
@@ -18,7 +21,10 @@
     "tool_input": {
       "url": "https://quotes.toscrape.com",
       "items_selector": ".quote",
-      "selectors": { "text": ".text", "author": ".author" }
+      "selectors": {
+        "text": ".text",
+        "author": ".author"
+      }
     },
     "expected": {
       "min_items": 5,
@@ -30,7 +36,10 @@
     "difficulty": "medium",
     "url": "https://books.toscrape.com",
     "tool": "scrape",
-    "tool_input": { "url": "https://books.toscrape.com", "format": "markdown" },
+    "tool_input": {
+      "url": "https://books.toscrape.com",
+      "format": "markdown"
+    },
     "expected": {
       "min_content_length": 200,
       "expect_success": true
@@ -41,7 +50,10 @@
     "difficulty": "medium",
     "url": "https://news.ycombinator.com",
     "tool": "scrape",
-    "tool_input": { "url": "https://news.ycombinator.com", "format": "markdown" },
+    "tool_input": {
+      "url": "https://news.ycombinator.com",
+      "format": "markdown"
+    },
     "expected": {
       "min_content_length": 200,
       "expect_success": true
@@ -52,10 +64,102 @@
     "difficulty": "medium",
     "url": "https://hnrss.org/frontpage",
     "tool": "rss",
-    "tool_input": { "url": "https://hnrss.org/frontpage" },
+    "tool_input": {
+      "url": "https://hnrss.org/frontpage"
+    },
     "expected": {
       "min_items": 5,
       "expect_success": true
     }
+  },
+  {
+    "id": "medium/realauction-miamidade",
+    "difficulty": "medium",
+    "url": "https://miamidade.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+    "tool": "scrape",
+    "tool_input": {
+      "url": "https://miamidade.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+      "format": "markdown"
+    },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "medium/realauction-broward",
+    "difficulty": "medium",
+    "url": "https://www.broward.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+    "tool": "scrape",
+    "tool_input": {
+      "url": "https://www.broward.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+      "format": "markdown"
+    },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "medium/realauction-palmbeach",
+    "difficulty": "medium",
+    "url": "https://palmbeach.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+    "tool": "scrape",
+    "tool_input": {
+      "url": "https://palmbeach.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+      "format": "markdown"
+    },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "medium/realauction-hillsborough",
+    "difficulty": "medium",
+    "url": "https://www.hillsborough.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+    "tool": "scrape",
+    "tool_input": {
+      "url": "https://www.hillsborough.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+      "format": "markdown"
+    },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "medium/realauction-orange",
+    "difficulty": "medium",
+    "url": "https://myorangeclerk.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+    "tool": "scrape",
+    "tool_input": {
+      "url": "https://myorangeclerk.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+      "format": "markdown"
+    },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
+  },
+  {
+    "id": "medium/realauction-lee",
+    "difficulty": "medium",
+    "url": "https://lee.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+    "tool": "scrape",
+    "tool_input": {
+      "url": "https://lee.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+      "format": "markdown"
+    },
+    "expected": {
+      "min_content_length": 100,
+      "expect_success": true
+    },
+    "requires_browser": true
   }
 ]

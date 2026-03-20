@@ -7,12 +7,19 @@
       {
         "name": "search",
         "tool": "search",
-        "input": { "query": "AI startups 2024" },
-        "validate": { "has_content": true, "min_length": 100 },
+        "input": {
+          "query": "AI startups 2024"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 100
+        },
         "extract": "first_url"
       }
     ],
-    "requires_env": ["BRAVE_API_KEY"]
+    "requires_env": [
+      "BRAVE_API_KEY"
+    ]
   },
   {
     "id": "workflow/ecommerce-extract",
@@ -22,8 +29,14 @@
       {
         "name": "extract_product",
         "tool": "scrape",
-        "input": { "url": "https://httpbin.org/html", "format": "markdown" },
-        "validate": { "has_content": true, "min_length": 50 }
+        "input": {
+          "url": "https://httpbin.org/html",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 50
+        }
       }
     ]
   },
@@ -35,8 +48,12 @@
       {
         "name": "hn_rss",
         "tool": "rss",
-        "input": { "url": "https://hnrss.org/frontpage" },
-        "validate": { "has_content": true }
+        "input": {
+          "url": "https://hnrss.org/frontpage"
+        },
+        "validate": {
+          "has_content": true
+        }
       }
     ]
   },
@@ -48,8 +65,14 @@
       {
         "name": "fetch_json",
         "tool": "scrape",
-        "input": { "url": "https://jsonplaceholder.typicode.com/users/1", "format": "markdown" },
-        "validate": { "has_content": true, "min_length": 50 }
+        "input": {
+          "url": "https://jsonplaceholder.typicode.com/users/1",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 50
+        }
       }
     ]
   },
@@ -61,8 +84,14 @@
       {
         "name": "scrape_api",
         "tool": "scrape",
-        "input": { "url": "https://jsonplaceholder.typicode.com/posts/1", "format": "markdown" },
-        "validate": { "has_content": true, "min_length": 50 }
+        "input": {
+          "url": "https://jsonplaceholder.typicode.com/posts/1",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 50
+        }
       }
     ]
   },
@@ -74,8 +103,14 @@
       {
         "name": "api_fetch",
         "tool": "scrape",
-        "input": { "url": "https://jsonplaceholder.typicode.com/posts", "format": "markdown" },
-        "validate": { "has_content": true, "min_length": 100 }
+        "input": {
+          "url": "https://jsonplaceholder.typicode.com/posts",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 100
+        }
       }
     ]
   },
@@ -87,8 +122,14 @@
       {
         "name": "scrape_books",
         "tool": "scrape",
-        "input": { "url": "https://books.toscrape.com", "format": "markdown" },
-        "validate": { "has_content": true, "min_length": 100 }
+        "input": {
+          "url": "https://books.toscrape.com",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 100
+        }
       }
     ]
   },
@@ -100,9 +141,96 @@
       {
         "name": "extract_example",
         "tool": "scrape",
-        "input": { "url": "https://example.com", "format": "markdown" },
-        "validate": { "has_content": true, "contains": ["Example Domain"] }
+        "input": {
+          "url": "https://example.com",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "contains": [
+            "Example Domain"
+          ]
+        }
       }
     ]
+  },
+  {
+    "id": "workflow/realauction-miamidade",
+    "name": "RealAuction Miami-Dade",
+    "description": "Scrape RealAuction Miami-Dade foreclosures",
+    "steps": [
+      {
+        "name": "scrape_auction",
+        "tool": "scrape",
+        "input": {
+          "url": "https://miamidade.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 100
+        }
+      }
+    ],
+    "requires_browser": true
+  },
+  {
+    "id": "workflow/realauction-broward",
+    "name": "RealAuction Broward",
+    "description": "Scrape RealAuction Broward foreclosures",
+    "steps": [
+      {
+        "name": "scrape_auction",
+        "tool": "scrape",
+        "input": {
+          "url": "https://www.broward.realforeclose.com/index.cfm?zaction=AUCTION&Zmethod=PREVIEW&AUCTIONDATE=03/25/2026",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 100
+        }
+      }
+    ],
+    "requires_browser": true
+  },
+  {
+    "id": "workflow/pa-miamidade-api",
+    "name": "Miami-Dade PA API",
+    "description": "Fetch Miami-Dade PA property data via API",
+    "steps": [
+      {
+        "name": "fetch_pa",
+        "tool": "scrape",
+        "input": {
+          "url": "https://apps.miamidadepa.gov/PApublicServiceProxy/PaServicesProxy.ashx?Operation=GetPropertySearchByFolio&clientAppName=PropertySearch&folioNumber=3021090120010",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 50
+        }
+      }
+    ]
+  },
+  {
+    "id": "workflow/sunbiz-search",
+    "name": "SunBiz Search",
+    "description": "Search SunBiz corporation database",
+    "steps": [
+      {
+        "name": "scrape_sunbiz",
+        "tool": "scrape",
+        "input": {
+          "url": "https://search.sunbiz.org/Inquiry/CorporationSearch/ByName",
+          "format": "markdown"
+        },
+        "validate": {
+          "has_content": true,
+          "min_length": 100
+        }
+      }
+    ],
+    "requires_browser": true
   }
 ]
