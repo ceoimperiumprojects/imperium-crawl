@@ -258,6 +258,7 @@ const TOOL_DEFINITIONS = [
 interface ToolCall {
   name: string;
   input: ToolInput;
+  id?: string;
 }
 
 interface Message {
@@ -304,7 +305,11 @@ async function chatWithTools(
     if (block.type === "text") {
       text += (block.text ?? "") + "\n";
     } else if (block.type === "tool_use" && block.name && block.input) {
-      toolCalls.push({ name: block.name, input: block.input });
+      toolCalls.push({
+        name: block.name,
+        input: block.input,
+        id: (block as { id?: string }).id,
+      });
     }
   }
 
@@ -459,11 +464,12 @@ async function main() {
           const truncated = result.slice(0, 3000);
           log("Result: " + truncated.replace(/\n/g, " | ").slice(0, 200));
           // Push tool result as user message with proper Anthropic content blocks
+          // tool_use_id MUST match the id from the tool_use block
           messages.push({
             role: "user",
             content: [{
               type: "tool_result",
-              tool_use_id: "call_" + tc.name + "_" + Date.now(),
+              tool_use_id: tc.id ?? "call_" + tc.name + "_" + Date.now(),
               content: truncated,
             }],
           });
@@ -475,7 +481,7 @@ async function main() {
             role: "user",
             content: [{
               type: "tool_result",
-              tool_use_id: "call_" + tc.name + "_" + Date.now(),
+              tool_use_id: tc.id ?? "call_" + tc.name + "_" + Date.now(),
               content: msg,
             }],
           });
