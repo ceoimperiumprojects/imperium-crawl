@@ -94,6 +94,22 @@ export function generateHeaders(overrides?: Record<string, string>, url?: string
   headers["upgrade-insecure-requests"] = "1";
   headers["priority"] = "u=0, i";
 
+  // ── Additional realistic browser headers ──
+  // te: trailers — real Chrome sends this on HTTP/2+ requests
+  headers["te"] = "trailers";
+  // pragma for HTTP/1.1 backwards compatibility with older proxies/caches
+  if (!headers["pragma"]) {
+    headers["pragma"] = "no-cache";
+  }
+  // cache-control — real browsers send this on navigations
+  if (!headers["cache-control"]) {
+    headers["cache-control"] = "max-age=0";
+  }
+  // x-requested-with is sent by some sites to identify non-AJAX vs AJAX
+  delete headers["x-requested-with"];
+  // Remove any non-standard headers that could fingerprint the scraper
+  delete headers["x-devtools-emulate-network-conditions-client-id"];
+
   return { ...headers, ...overrides };
 }
 
