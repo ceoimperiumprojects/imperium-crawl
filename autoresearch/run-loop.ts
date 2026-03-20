@@ -56,7 +56,7 @@ function log(msg: string) {
 type ToolInput = Record<string, unknown>;
 
 async function toolRead(input: ToolInput): Promise<string> {
-  const file_path = input.file_path as string;
+  const file_path = (input.file_path as string) || (input.path as string);
   const absPath = file_path.startsWith("/") ? file_path : resolve(ROOT, file_path);
   if (!existsSync(absPath)) return "File not found: " + absPath;
   const content = readFileSync(absPath, "utf-8");
@@ -91,7 +91,7 @@ async function toolGlob(input: ToolInput): Promise<string> {
 }
 
 async function toolEdit(input: ToolInput): Promise<string> {
-  const file_path = (input.file_path as string) || (input.path as string);
+  const file_path = (input.path as string) || (input.file_path as string);
   const old_string = input.old_string as string;
   const new_string = input.new_string as string;
   if (!file_path || !old_string || new_string === undefined) {
@@ -109,7 +109,7 @@ async function toolEdit(input: ToolInput): Promise<string> {
 }
 
 async function toolWrite(input: ToolInput): Promise<string> {
-  const file_path = input.file_path as string;
+  const file_path = (input.path as string) || (input.file_path as string);
   const content = input.content as string;
   if (!file_path || content === undefined) return "Missing required: file_path, content";
   const absPath = resolve(ROOT, file_path);
@@ -172,11 +172,11 @@ const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object",
       properties: {
-        file_path: { type: "string", description: "Absolute or relative path" },
+        path: { type: "string", description: "File path (absolute or relative to project root)" },
         offset: { type: "number", description: "Line number to start from (1-indexed)" },
         limit: { type: "number", description: "Max lines to read (default 200)" },
       },
-      required: ["file_path"],
+      required: ["path"],
     },
   },
   {
@@ -210,11 +210,12 @@ const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object",
       properties: {
-        file_path: { type: "string" },
+        path: { type: "string", description: "File path" },
+        file_path: { type: "string", description: "File path" },
         old_string: { type: "string" },
         new_string: { type: "string" },
       },
-      required: ["file_path", "old_string", "new_string"],
+      required: ["old_string", "new_string"],
     },
   },
   {
@@ -223,10 +224,11 @@ const TOOL_DEFINITIONS = [
     input_schema: {
       type: "object",
       properties: {
-        file_path: { type: "string" },
+        path: { type: "string", description: "File path" },
+        file_path: { type: "string", description: "File path" },
         content: { type: "string" },
       },
-      required: ["file_path", "content"],
+      required: ["content"],
     },
   },
   {
@@ -260,7 +262,7 @@ interface ToolCall {
 
 interface Message {
   role: "user" | "assistant";
-  content: string | ToolCall[];
+  content: string | { type: string; [key: string]: unknown }[];
 }
 
 async function chatWithTools(
@@ -363,26 +365,28 @@ function runEvalScore(): number {
 function buildSystemPrompt(): string {
   return `You are an elite autonomous research agent improving imperium-crawl — the world's most advanced open-source web scraping CLI toolkit.
 
-Read program.md at ./autoresearch/program.md for the full research mandate.
+EXACT WORKFLOW (follow step by step):
+1. READ: Read ./autoresearch/program.md
+2. RUN EVAL: Call run_eval tool with {verbose: true}
+3. ANALYZE: Read the eval output from the tool result. Find the weakest component.
+4. READ CODE: Use Read tool to read relevant source files (use RELATIVE paths like "src/utils/markdown.ts")
+5. MAKE ONE CHANGE: Use Edit tool to modify one small thing
+6. RUN EVAL AGAIN: Call run_eval tool
+7. IF IMPROVED: Call Bash with command="git add -A && git commit -m \"autoresearch: <desc> (score: X)\" && git push"
+8. IF NOT IMPROVED: Call Bash with command="git checkout -- ."
 
-CRITICAL WORKFLOW — follow this exactly:
-1. First, READ the current eval output using Bash: npx tsx ./autoresearch/eval.ts --verbose
-2. Analyze which component has the lowest score
-3. Read relevant source files to understand the code
-4. Make ONE targeted change using Edit or Write tools
-5. Run eval again: use the run_eval tool
-6. If score improved: git add -A && git commit -m "autoresearch: <description> (score: X.XXXXXX)" && git push
-7. If score unchanged/decreased: git checkout -- .
-
-Rules:
-- NEVER modify anything in ./autoresearch/ directory (SACRED — it's the eval harness)
-- You CAN modify: ./src/**, ./SKILL/**, ./tests/**
-- ONE logical change per iteration — surgical, not sprawling
-- NEVER break the build (npm run build must pass)
+CRITICAL RULES:
+- NEVER modify anything in ./autoresearch/ directory (SACRED)
+- You CAN modify: src/**, SKILL/**, tests/** (relative paths from project root)
+- ONE targeted change per iteration — pick ONE thing and fix it well
+- NEVER break the build
 - NEVER delete existing tests
-- Always verify with run_eval before committing
+- ALWAYS run eval before and after changes
 
-Current working directory: ${ROOT}
+The project root is: ${ROOT}
+For Read/Edit/Write tools, use RELATIVE paths from the project root.
+Example: Read {path: "src/utils/markdown.ts"}
+Example: Edit {path: "src/utils/markdown.ts", old_string: "...", new_string: "..."}
 
 Available tools: Read, Grep, Glob, Edit, Write, Bash, run_eval`;
 }
@@ -454,14 +458,27 @@ async function main() {
           const result = await executeTool(tc.name, tc.input);
           const truncated = result.slice(0, 3000);
           log("Result: " + truncated.replace(/\n/g, " | ").slice(0, 200));
+          // Push tool result as user message with proper Anthropic content blocks
           messages.push({
-            role: "assistant",
-            content: JSON.stringify([{ type: "tool_result", name: tc.name, content: truncated }]),
+            role: "user",
+            content: [{
+              type: "tool_result",
+              tool_use_id: "call_" + tc.name + "_" + Date.now(),
+              content: truncated,
+            }],
           });
         } catch (err: unknown) {
           const msg = "ERROR: " + (err instanceof Error ? err.message.slice(0, 200) : String(err));
           log(msg);
-          messages.push({ role: "assistant", content: msg });
+          // Push tool error as user message (proper format for tool results)
+          messages.push({
+            role: "user",
+            content: [{
+              type: "tool_result",
+              tool_use_id: "call_" + tc.name + "_" + Date.now(),
+              content: msg,
+            }],
+          });
         }
       }
     }
