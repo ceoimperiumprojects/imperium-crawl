@@ -365,6 +365,25 @@ function runEvalScore(): number {
   } catch { return 0; }
 }
 
+function runEvalFull(): { score: number; output: string; fixture: number; live: number; workflow: number; perf: number } {
+  try {
+    const output = execSync("npx tsx " + EVAL_PATH + " --verbose", {
+      cwd: ROOT,
+      stdio: "pipe",
+      timeout: 300000,
+    }).toString();
+    const score = parseFloat((output.match(/__SCORE__:(\d+\.\d+)/) ?? ["", "0"])[1]);
+    const fixture = parseFloat((output.match(/fixture:\s+(\d+\.\d+)/) ?? ["", "0"])[1]);
+    const live = parseFloat((output.match(/live:\s+(\d+\.\d+)/) ?? ["", "0"])[1]);
+    const workflow = parseFloat((output.match(/workflow:\s+(\d+\.\d+)/) ?? ["", "0"])[1]);
+    const perf = parseFloat((output.match(/perf:\s+(\d+\.\d+)/) ?? ["", "0"])[1]);
+    return { score, output, fixture, live, workflow, perf };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { score: 0, output: "EVAL FAILED: " + msg.slice(0, 200), fixture: 0, live: 0, workflow: 0, perf: 0 };
+  }
+}
+
 // ── Prompt builder ─────────────────────────────────────────────────────────
 
 function buildSystemPrompt(): string {
@@ -396,16 +415,52 @@ Example: Edit {path: "src/utils/markdown.ts", old_string: "...", new_string: "..
 Available tools: Read, Grep, Glob, Edit, Write, Bash, run_eval`;
 }
 
-function buildUserPrompt(currentScore: number): string {
-  return `CURRENT SCORE: ${currentScore.toFixed(6)}
+function buildUserPrompt(
+  currentScore: number,
+  evalOutput: string,
+  fixture: number,
+  live: number,
+  workflow: number,
+  perf: number,
+): string {
+  // Extract key info from eval output
+  const passLines = evalOutput.match(/  PASS .+/g) ?? [];
+  const failLines = evalOutput.match(/  FAIL .+/g) ?? [];
+  const skipLines = evalOutput.match(/  SKIP .+/g) ?? [];
 
-Start by reading the eval output, then make one improvement. Focus on:
-${currentScore < 0.85 ? "- LIVE SCORE is the biggest opportunity: improve stealth, user-agent rotation, anti-bot headers, rate limiting" : ""}
-${currentScore < 0.90 ? "- WORKFLOW score: fix failing workflows (check which ones FAIL in eval output)" : ""}
-${currentScore < 0.95 ? "- Push to 1.0: new tools (pdf, graphql, watch), better fixture parsing, stealth improvements" : ""}
-${currentScore >= 0.95 ? "- Maximize: improve perf speed, expand stealth fingerprinting, add new benchmark categories" : ""}
+  return `You are improving imperium-crawl. Your goal: make ONE small code change that raises the score.
 
-Execute the full workflow: read → analyze → edit → run_eval → commit/push or discard.`;
+CURRENT SCORES:
+  Overall: ${currentScore.toFixed(6)}
+  Fixture: ${fixture.toFixed(6)} (30% weight)
+  Live:    ${live.toFixed(6)} (25% weight)
+  Workflow: ${workflow.toFixed(6)} (15% weight)
+  Perf:    ${perf.toFixed(6)} (10% weight)
+
+LOWEST COMPONENT: ${live < workflow && live < fixture ? "LIVE" : workflow < live ? "WORKFLOW" : "FIXTURE"}
+
+${failLines.length > 0 ? `FAILING BENCHMARKS:\n${failLines.slice(0, 5).join("\n")}` : ""}
+${skipLines.length > 0 ? `SKIPPED:\n${skipLines.slice(0, 3).join("\n")}` : ""}
+
+EVAL OUTPUT (last 2500 chars):
+${evalOutput.slice(-2500)}
+
+WORKFLOW:
+1. Look at the failing benchmarks above
+2. Find the relevant source code in src/ that handles this
+3. Make ONE targeted Edit to improve it
+4. Call run_eval tool to measure
+5. If improved: Bash with command="git add -A && git commit -m \"autoresearch: <desc> (score: X)\" && git push"
+6. If not improved: Bash with command="git checkout -- ."
+
+RULES:
+- NEVER modify ./autoresearch/** (SACRED)
+- You CAN modify: src/**, SKILL/**, tests/**
+- ONE targeted edit — surgical fix, not rewrite
+- Never break the build
+
+The project is at: ${ROOT}
+Use Read {path:"src/..."} Edit {path:"src/...", old_string:"...", new_string:"..."} run_eval {verbose:true} Bash commands.`;
 }
 
 // ── Main loop ──────────────────────────────────────────────────────────────
@@ -420,8 +475,6 @@ async function main() {
   log("Max iterations: " + (MAX_ITERATIONS === Infinity ? "unlimited" : MAX_ITERATIONS));
   log("═══════════════════════════════════════════");
 
-  const systemPrompt = buildSystemPrompt();
-  const messages: Message[] = [];
   let currentScore = getCurrentScore();
   log("Starting score: " + currentScore.toFixed(6));
 
@@ -432,13 +485,20 @@ async function main() {
     log("");
     log("─── Iteration " + iteration + " ───────────────────────");
 
-    // Add user turn
-    const userContent = buildUserPrompt(currentScore);
+    // ── Step 1: Run eval BEFORE MiniMax sees anything ──
+    log("Running eval to get current state...");
+    const { score: baselineScore, output: evalOutput, fixture, live, workflow, perf } = runEvalFull();
+    currentScore = baselineScore;
+    log("Current score: " + currentScore.toFixed(6) + " | live=" + live.toFixed(3) + " workflow=" + workflow.toFixed(3));
+
+    // ── Step 2: Clear messages, build prompt with eval results ──
+    const messages: Message[] = [];
+    const userContent = buildUserPrompt(baselineScore, evalOutput, fixture, live, workflow, perf);
     messages.push({ role: "user", content: userContent });
 
     // Multi-turn tool loop
     let turnCount = 0;
-    const MAX_TURNS = 20; // max tool calls per iteration
+    const MAX_TURNS = 30; // max tool calls per iteration
 
     while (turnCount < MAX_TURNS) {
       turnCount++;
