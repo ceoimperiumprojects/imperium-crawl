@@ -36,7 +36,7 @@ function buildSecChUa(majorVersion: string): string {
   return `"Chromium";v="${majorVersion}", "Google Chrome";v="${majorVersion}", "Not-A.Brand";v="99"`;
 }
 
-export function generateHeaders(overrides?: Record<string, string>): Record<string, string> {
+export function generateHeaders(overrides?: Record<string, string>, url?: string): Record<string, string> {
   const headers = generator.getHeaders();
 
   // ── Add Client Hints if Chrome/Edge UA detected ──
@@ -48,6 +48,30 @@ export function generateHeaders(overrides?: Record<string, string>): Record<stri
     headers["sec-ch-ua"] = buildSecChUa(chromeVersion);
     headers["sec-ch-ua-mobile"] = "?0";
     headers["sec-ch-ua-platform"] = detectPlatform(ua);
+  }
+
+  // ── URL-aware header enrichment ──
+  if (url) {
+    try {
+      const parsed = new URL(url);
+      const hostname = parsed.hostname;
+
+      // Add origin-based Referer for API endpoints and .gov sites
+      if (hostname.endsWith(".gov") || hostname.endsWith(".gov.com") ||
+          parsed.pathname.includes(".ashx") || parsed.pathname.includes("/api/") ||
+          parsed.pathname.includes("/proxy") || parsed.pathname.includes("Proxy")) {
+        headers["referer"] = `${parsed.origin}/`;
+        headers["origin"] = parsed.origin;
+      }
+
+      // .gov sites: add DNT and cache-control for less aggressive fingerprint
+      if (hostname.endsWith(".gov")) {
+        headers["dnt"] = "1";
+        headers["cache-control"] = "no-cache";
+      }
+    } catch {
+      // Invalid URL, skip enrichment
+    }
   }
 
   // ── Standard Accept headers ──

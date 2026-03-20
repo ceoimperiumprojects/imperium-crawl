@@ -223,7 +223,7 @@ async function level1Fetch(
   sessionId?: string,
   accumulatedCookieHeader?: string,
 ): Promise<FetchResult> {
-  const headers = generateHeaders();
+  const headers = generateHeaders(undefined, url);
 
   // Inject session cookies if available
   const sessionCookieHeader = await getSessionCookieHeader(sessionId, url);

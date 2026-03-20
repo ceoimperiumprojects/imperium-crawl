@@ -55,9 +55,24 @@ export async function execute(input: ScrapeInput) {
     stealth_level: result.level,
   };
 
+  // Detect JSON responses by Content-Type header
+  const contentType = result.headers?.["content-type"] || "";
+  const isJsonResponse = contentType.includes("application/json") || contentType.includes("+json");
+
   // Primary content
   if (primaryFormat === "markdown" || include.has("markdown")) {
-    output.markdown = htmlToMarkdown(result.html);
+    if (isJsonResponse) {
+      // JSON API response: pretty-print in a code block instead of HTML→Markdown
+      try {
+        const parsed = JSON.parse(result.html);
+        output.markdown = "```json\n" + JSON.stringify(parsed, null, 2) + "\n```";
+      } catch {
+        // Not valid JSON despite Content-Type — fall back to raw
+        output.markdown = "```\n" + result.html + "\n```";
+      }
+    } else {
+      output.markdown = htmlToMarkdown(result.html);
+    }
   }
   if (primaryFormat === "html" || include.has("html")) {
     output.html = result.html;
