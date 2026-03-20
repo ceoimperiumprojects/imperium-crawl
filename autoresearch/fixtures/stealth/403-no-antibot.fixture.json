@@ -1,0 +1,18 @@
+{
+  "id": "stealth/403-no-antibot",
+  "category": "stealth",
+  "description": "403 from a regular web server (no anti-bot) — should NOT be detected as blocked",
+  "url": "https://example.com/private/restricted",
+  "html": "<!DOCTYPE html><html><head><title>403 Forbidden - Nginx</title></head><body><center><h1>403 Forbidden</h1></center><hr><center>nginx/1.24.0</center><p>You don't have permission to access this resource. The directory listing is not allowed or the file does not exist. Please check the URL and try again. If you believe this is an error, contact the server administrator at webmaster@example.com.</p><p>Additional information: This server is configured to deny access to this directory for security reasons. The resource you requested requires proper authentication.</p></body></html>",
+  "tool": "isBlocked",
+  "tool_input": {
+    "status": 403,
+    "headers": {
+      "server": "nginx/1.24.0",
+      "content-type": "text/html"
+    }
+  },
+  "expected": {
+    "expect_blocked": false
+  }
+}

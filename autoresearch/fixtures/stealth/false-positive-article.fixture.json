@@ -1,0 +1,15 @@
+{
+  "id": "stealth/false-positive-article",
+  "category": "stealth",
+  "description": "Article mentioning 'blocked' and 'captcha' in content — isBlocked should return FALSE (not a block page)",
+  "url": "https://blog.example.com/anti-bot-systems",
+  "html": "<!DOCTYPE html><html><head><title>Understanding Anti-Bot Systems - Tech Blog</title></head><body><nav><a href='/'>Home</a><a href='/blog'>Blog</a><a href='/about'>About</a><a href='/contact'>Contact</a><a href='/archive'>Archive</a><a href='/tags'>Tags</a><a href='/authors'>Authors</a><a href='/search'>Search</a><a href='/rss'>RSS</a><a href='/sitemap'>Sitemap</a><a href='/privacy'>Privacy</a></nav><article><h1>Understanding Anti-Bot Systems</h1><p>In this article, we explore how websites use anti-bot systems like Cloudflare and DataDome to protect their content. When a user is blocked by these systems, they typically see a challenge page with a captcha that must be solved before accessing the content.</p><p>The most common approach involves showing a CAPTCHA challenge — a test designed to distinguish humans from automated bots. Modern captcha systems like Turnstile and reCAPTCHA v3 run invisibly in the background.</p><p>When too many requests come from a single IP, the user may receive a 403 Forbidden or 429 Too Many Requests status. The phrase 'access denied' or 'blocked' appears on the error page, along with instructions to verify you are human.</p><p>Bot detection has evolved significantly. Systems now check browser fingerprints, TLS signatures, and behavioral patterns. A simple rate limit or blocked response is just the tip of the iceberg.</p><p>Understanding these systems is crucial for web developers who need to implement their own protection. The balance between security and user experience remains a key challenge in modern web development.</p></article><footer><p>&copy; 2024 Tech Blog. All rights reserved.</p></footer></body></html>",
+  "tool": "isBlocked",
+  "tool_input": {
+    "status": 200,
+    "headers": {}
+  },
+  "expected": {
+    "expect_blocked": false
+  }
+}
