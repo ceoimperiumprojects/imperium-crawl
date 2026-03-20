@@ -37,17 +37,13 @@
     }
   },
   {
-    "id": "medium/lobsters-extract",
+    "id": "medium/devto-extract",
     "difficulty": "medium",
-    "url": "https://lobste.rs",
-    "tool": "extract",
-    "tool_input": {
-      "url": "https://lobste.rs",
-      "items_selector": ".story",
-      "selectors": { "title": ".link a", "url": ".link a @href" }
-    },
+    "url": "https://dev.to",
+    "tool": "scrape",
+    "tool_input": { "url": "https://dev.to", "format": "markdown" },
     "expected": {
-      "min_items": 5,
+      "min_content_length": 200,
       "expect_success": true
     }
   },

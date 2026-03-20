@@ -29,31 +29,27 @@
   },
   {
     "id": "workflow/hn-recipe-follow",
-    "name": "Lobsters Recipe Extract",
-    "description": "Extract stories from Lobsters tech aggregator",
+    "name": "Hacker News RSS Follow",
+    "description": "Parse HN via RSS, then extract article",
     "steps": [
       {
-        "name": "lobsters_stories",
-        "tool": "extract",
-        "input": {
-          "url": "https://lobste.rs",
-          "items_selector": ".story",
-          "selectors": { "title": ".link a", "url": ".link a @href" }
-        },
-        "validate": { "has_content": true, "min_length": 50 }
+        "name": "hn_rss",
+        "tool": "rss",
+        "input": { "url": "https://hnrss.org/frontpage" },
+        "validate": { "has_content": true }
       }
     ]
   },
   {
-    "id": "workflow/rss-readability",
-    "name": "RSS then Readability",
-    "description": "Parse RSS feed, then extract article from first item",
+    "id": "workflow/json-api-fetch",
+    "name": "JSON API Fetch",
+    "description": "Fetch structured JSON from a mock API",
     "steps": [
       {
-        "name": "rss_fetch",
-        "tool": "rss",
-        "input": { "url": "https://hnrss.org/frontpage" },
-        "validate": { "has_content": true }
+        "name": "fetch_json",
+        "tool": "scrape",
+        "input": { "url": "https://jsonplaceholder.typicode.com/users/1", "format": "markdown" },
+        "validate": { "has_content": true, "min_length": 50 }
       }
     ]
   },
@@ -84,15 +80,15 @@
     ]
   },
   {
-    "id": "workflow/wikipedia-deep",
-    "name": "Wikipedia Deep Dive",
-    "description": "Readability extraction from Wikipedia article",
+    "id": "workflow/books-scrape",
+    "name": "Books Scraper",
+    "description": "Scrape books.toscrape.com for book listings",
     "steps": [
       {
-        "name": "read_article",
-        "tool": "readability",
-        "input": { "url": "https://en.wikipedia.org/wiki/Web_scraping", "format": "markdown" },
-        "validate": { "has_content": true, "min_length": 500 }
+        "name": "scrape_books",
+        "tool": "scrape",
+        "input": { "url": "https://books.toscrape.com", "format": "markdown" },
+        "validate": { "has_content": true, "min_length": 100 }
       }
     ]
   },

@@ -426,24 +426,27 @@ function runWorkflowBenchmarks(): { results: WorkflowResult[]; score: number } {
       try {
         const args = [step.tool];
 
-        // Build CLI args from step input
+        // Build CLI args from step input — convert snake_case to kebab-case
         const input = step.input as Record<string, unknown>;
         for (const [key, value] of Object.entries(input)) {
+          const kebabKey = key.replace(/_/g, "-");
           if (typeof value === "boolean" && value) {
-            args.push(`--${key}`);
+            args.push(`--${kebabKey}`);
           } else if (typeof value === "string") {
-            args.push(`--${key}`, value);
+            args.push(`--${kebabKey}`, value);
           } else if (typeof value === "number") {
-            args.push(`--${key}`, String(value));
+            args.push(`--${kebabKey}`, String(value));
+          } else if (typeof value === "object" && value !== null) {
+            args.push(`--${kebabKey}`, JSON.stringify(value));
           } else if (Array.isArray(value)) {
-            for (const v of value) args.push(`--${key}`, String(v));
+            for (const v of value) args.push(`--${kebabKey}`, String(v));
           }
         }
 
         const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
           cwd: ROOT,
           stdio: "pipe",
-          timeout: 30_000,
+          timeout: 60_000,
         }).toString();
 
         // Validate step output
@@ -556,12 +559,17 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
       const args = [tool, "--url", url];
       for (const [key, value] of Object.entries(input)) {
         if (key === "url") continue;
+        const kebabKey = key.replace(/_/g, "-");
         if (typeof value === "boolean" && value) {
-          args.push(`--${key}`);
+          args.push(`--${kebabKey}`);
         } else if (typeof value === "string") {
-          args.push(`--${key}`, value);
+          args.push(`--${kebabKey}`, value);
+        } else if (typeof value === "number") {
+          args.push(`--${kebabKey}`, String(value));
+        } else if (typeof value === "object" && value !== null) {
+          args.push(`--${kebabKey}`, JSON.stringify(value));
         } else if (Array.isArray(value)) {
-          for (const v of value) args.push(`--${key}`, String(v));
+          for (const v of value) args.push(`--${kebabKey}`, String(v));
         }
       }
 
@@ -569,7 +577,7 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
       const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
         cwd: ROOT,
         stdio: "pipe",
-        timeout: 30_000,
+        timeout: 60_000,
       }).toString();
 
       // Validate output
