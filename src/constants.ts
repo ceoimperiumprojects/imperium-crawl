@@ -26,6 +26,7 @@ const W_OFFSET = Math.floor(Math.random() * 101) - 50; // -50 to +50
 const H_OFFSET = Math.floor(Math.random() * 101) - 50;
 
 export const STEALTH_ARGS: string[] = [
+  // ── Core automation hiding ──
   "--disable-blink-features=AutomationControlled",
   "--disable-features=AutomationControlled",
   "--disable-infobars",
@@ -41,11 +42,32 @@ export const STEALTH_ARGS: string[] = [
   "--metrics-recording-only",
   "--no-service-autorun",
   "--password-store=basic",
-  // Phase 9 additions
-  "--disable-dev-shm-usage",     // Docker compatibility (shared memory)
-  "--disable-extensions",         // No extension detection fingerprint
-  "--lang=en-US,en",             // Consistent language fingerprint
+  // ── Phase 9 additions ──
+  "--disable-dev-shm-usage",      // Docker compatibility (shared memory)
+  "--disable-extensions",          // No extension detection fingerprint
+  "--lang=en-US,en",              // Consistent language fingerprint
   `--window-size=${1920 + W_OFFSET},${1080 + H_OFFSET}`, // Random window size variation
+  // ── Anti-fingerprinting: WebGL ──
+  "--disable-webgl",
+  "--disable-webgl2",
+  // ── Anti-fingerprinting: Canvas noise suppression ──
+  "--disable-canvas-aa",
+  // ── Anti-fingerprinting: Client Hints (reduce entropy surface) ──
+  "--disable-client-side-phishing-detection",
+  "--disable-histogram-customizer",
+  "--disable-peer-connection",
+  "--disable-permissions-api",
+  // ── Additional anti-bot ──
+  "--disable-background-timer-throttling",
+  "--disable-renderer-backgrounding",
+  "--disable-backgrounding-occluded-windows",
+  "--disable-ipc-flooding-protection",
+  "--disable-gpu-sandbox",
+  "--enable-features=NetworkService,NetworkServiceInProcess",
+  // ── Webdriver flag ──
+  "--webdriver-active=false",
+  // ── Hide Chromium presence via prefs ──
+  "--browser.search.isOnDefaultSearchProvider=false",
 ];
 
 export const DEFAULT_VIEWPORT = { width: 1920, height: 1080 };
