@@ -45,20 +45,11 @@ const SPA_INDICATORS = [
 const ANTI_BOT_HEADERS = [
   "cf-ray",
   "cf-mitigated",
-  "cf-cache-status",
   "x-datadome",
   "x-datadome-cid",
   "x-kpsdk-ct",
   "x-sucuri-id",
   "x-distil-cs",
-  "x-request-id",
-  "x-srt-block-id",
-  "x-axd",
-  "x-envoy-upstream-service-time",
-  "server-timing",
-  "x-sucuri-id",
-  "x-cdn",
-  "x-edge-location",
 ];
 
 /**
