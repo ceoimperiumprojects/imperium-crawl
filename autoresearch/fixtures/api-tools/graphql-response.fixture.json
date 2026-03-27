@@ -1,0 +1,15 @@
+{
+  "id": "api-tools/graphql-response",
+  "category": "api-tools",
+  "description": "Simulated GraphQL response wrapped in HTML page",
+  "url": "https://api.example.com/graphql",
+  "html": "<!DOCTYPE html><html><head><title>GraphQL Explorer</title></head><body><pre>{\"data\":{\"repository\":{\"name\":\"imperium-crawl\",\"description\":\"Web scraping toolkit\",\"stargazers\":{\"totalCount\":1234},\"issues\":{\"totalCount\":42},\"pullRequests\":{\"totalCount\":15}}}}</pre></body></html>",
+  "tool": "scrape",
+  "tool_input": {
+    "format": "markdown"
+  },
+  "expected": {
+    "contains": ["imperium-crawl", "Web scraping toolkit", "1234"],
+    "min_content_length": 50
+  }
+}

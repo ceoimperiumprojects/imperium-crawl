@@ -6,7 +6,7 @@
  * Usage: npx tsx autoresearch/eval.ts [--baseline] [--fixture-only] [--verbose]
  */
 
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -49,6 +49,25 @@ const args = process.argv.slice(2);
 const isBaseline = args.includes("--baseline");
 const fixtureOnly = args.includes("--fixture-only");
 const verbose = args.includes("--verbose");
+
+// ── Playwright detection (cached) ──
+
+let _playwrightAvailable: boolean | null = null;
+
+function checkPlaywrightAvailable(): boolean {
+  if (_playwrightAvailable !== null) return _playwrightAvailable;
+  try {
+    execFileSync("node", ["-e", "require.resolve('rebrowser-playwright')"], {
+      cwd: ROOT,
+      stdio: "pipe",
+      timeout: 5_000,
+    });
+    _playwrightAvailable = true;
+  } catch {
+    _playwrightAvailable = false;
+  }
+  return _playwrightAvailable;
+}
 
 function log(msg: string) {
   console.log(msg);
@@ -380,6 +399,42 @@ async function runFixtureTests(): Promise<{ results: FixtureResult[]; durationMs
 }
 
 /**
+ * Build CLI args array for a tool invocation.
+ * Handles tools with/without URL, action-based tools (youtube, reddit),
+ * array inputs (urls, actions), and boolean flags.
+ */
+function buildCliArgs(tool: string, url: string, input: Record<string, unknown>): string[] {
+  // CLI uses kebab-case commands (e.g. list-skills, query-api, batch-scrape)
+  const cliTool = tool.replace(/_/g, "-");
+  const args = [cliTool];
+
+  // Add URL if present (some tools like list_skills/knowledge don't need one)
+  if (url) {
+    args.push("--url", url);
+  }
+
+  for (const [key, value] of Object.entries(input)) {
+    if (key === "url") continue; // already handled above
+    const kebabKey = key.replace(/_/g, "-");
+    if (typeof value === "boolean" && value) {
+      args.push(`--${kebabKey}`);
+    } else if (typeof value === "string") {
+      args.push(`--${kebabKey}`, value);
+    } else if (typeof value === "number") {
+      args.push(`--${kebabKey}`, String(value));
+    } else if (Array.isArray(value)) {
+      // Arrays of objects (like interact actions) → JSON string
+      // Arrays of strings (like urls) → JSON string
+      args.push(`--${kebabKey}`, JSON.stringify(value));
+    } else if (typeof value === "object" && value !== null) {
+      args.push(`--${kebabKey}`, JSON.stringify(value));
+    }
+  }
+
+  return args;
+}
+
+/**
  * Validate output string against expected fixture criteria.
  */
 function validateOutput(output: string, expected: Fixture["expected"], errors: string[]) {
@@ -438,32 +493,40 @@ function runWorkflowBenchmarks(): { results: WorkflowResult[]; score: number } {
       }
     }
 
+    // Check browser requirements — skip if Playwright not available
+    if (workflow.requires_browser && !checkPlaywrightAvailable()) {
+      log(`  SKIP ${workflow.id} (requires browser, Playwright not available)`);
+      results.push({
+        id: workflow.id,
+        completed: false,
+        steps_passed: 0,
+        steps_total: stepsTotal,
+        errors: ["Playwright not available"],
+        duration_ms: 0,
+      });
+      continue;
+    }
+
     // Run each step
     for (const step of workflow.steps) {
       try {
-        const args = [step.tool];
-
-        // Build CLI args from step input — convert snake_case to kebab-case
         const input = step.input as Record<string, unknown>;
-        for (const [key, value] of Object.entries(input)) {
-          const kebabKey = key.replace(/_/g, "-");
-          if (typeof value === "boolean" && value) {
-            args.push(`--${kebabKey}`);
-          } else if (typeof value === "string") {
-            args.push(`--${kebabKey}`, value);
-          } else if (typeof value === "number") {
-            args.push(`--${kebabKey}`, String(value));
-          } else if (typeof value === "object" && value !== null) {
-            args.push(`--${kebabKey}`, JSON.stringify(value));
-          } else if (Array.isArray(value)) {
-            for (const v of value) args.push(`--${kebabKey}`, String(v));
-          }
+        const stepUrl = (input.url as string) || "";
+        const cliArgs = buildCliArgs(step.tool, stepUrl, input);
+
+        // Inject --stealth-level 3 for browser workflows
+        if (workflow.requires_browser) {
+          cliArgs.push("--stealth-level", "3");
         }
 
-        const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
+        // Browser workflows get 120s timeout, default 60s
+        const stepTimeout = workflow.requires_browser ? 120_000 : 60_000;
+
+        // Uses execFileSync to avoid shell quoting issues with & in URLs
+        const output = execFileSync("npx", ["imperium-crawl", ...cliArgs], {
           cwd: ROOT,
           stdio: "pipe",
-          timeout: 60_000,
+          timeout: stepTimeout,
         }).toString();
 
         // Validate step output
@@ -530,19 +593,21 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
     let passed = false;
     let partial = false;
 
-    // Check browser requirements — skip (browser tool not yet integrated in eval harness)
+    // Check browser requirements — skip if Playwright not available
     if ((benchmark as { requires_browser?: boolean }).requires_browser) {
-      results.push({
-        id: benchmark.id,
-        difficulty: benchmark.difficulty,
-        passed: false,
-        partial: false,
-        errors: [],
-        skipped: true,
-        skip_reason: "requires browser",
-        duration_ms: 0,
-      });
-      continue;
+      if (!checkPlaywrightAvailable()) {
+        results.push({
+          id: benchmark.id,
+          difficulty: benchmark.difficulty,
+          passed: false,
+          partial: false,
+          errors: [],
+          skipped: true,
+          skip_reason: "requires browser (Playwright not available)",
+          duration_ms: 0,
+        });
+        continue;
+      }
     }
 
     // Check env requirements
@@ -573,47 +638,81 @@ async function runLiveBenchmarks(state: EvalState): Promise<{ results: LiveResul
       const input = benchmark.tool_input || {};
 
       // Build CLI args - tool name is hardcoded in benchmark, URL must be passed as --url
-      const args = [tool, "--url", url];
-      for (const [key, value] of Object.entries(input)) {
-        if (key === "url") continue;
-        const kebabKey = key.replace(/_/g, "-");
-        if (typeof value === "boolean" && value) {
-          args.push(`--${kebabKey}`);
-        } else if (typeof value === "string") {
-          args.push(`--${kebabKey}`, value);
-        } else if (typeof value === "number") {
-          args.push(`--${kebabKey}`, String(value));
-        } else if (typeof value === "object" && value !== null) {
-          args.push(`--${kebabKey}`, JSON.stringify(value));
-        } else if (Array.isArray(value)) {
-          for (const v of value) args.push(`--${kebabKey}`, String(v));
-        }
+      const cliArgs = buildCliArgs(tool, url, input);
+
+      // Inject --stealth-level 3 for browser benchmarks
+      if ((benchmark as { requires_browser?: boolean }).requires_browser) {
+        cliArgs.push("--stealth-level", "3");
       }
 
-      // Run imperium-crawl CLI with hardcoded benchmark args (not user input)
-      const output = execSync(`npx imperium-crawl ${args.join(" ")}`, {
+      // Determine timeout: browser benchmarks get 120s, crawl/batch get 180s, default 60s
+      const timeout = (benchmark as { requires_browser?: boolean }).requires_browser ? 120_000
+        : (tool === "crawl" || tool === "batch_scrape") ? 180_000
+        : 60_000;
+
+      // Run imperium-crawl CLI — uses execFileSync to avoid shell quoting issues with & in URLs
+      const output = execFileSync("npx", ["imperium-crawl", ...cliArgs], {
         cwd: ROOT,
         stdio: "pipe",
-        timeout: 120_000,
+        timeout,
       }).toString();
 
       // Validate output
-      const expected = benchmark.expected;
+      const expected = benchmark.expected as Record<string, unknown>;
 
       if (expected.contains) {
-        for (const needle of expected.contains) {
+        for (const needle of expected.contains as string[]) {
           if (!output.includes(needle)) {
             errors.push(`Missing: "${needle}"`);
           }
         }
       }
 
-      if (expected.min_content_length && output.length < expected.min_content_length) {
+      if (expected.min_content_length && output.length < (expected.min_content_length as number)) {
         errors.push(`Too short: ${output.length} < ${expected.min_content_length}`);
       }
 
+      // min_items — check JSON array length or count occurrences
+      if (expected.min_items) {
+        try {
+          const parsed = JSON.parse(output);
+          if (Array.isArray(parsed) && parsed.length < (expected.min_items as number)) {
+            errors.push(`Too few items: ${parsed.length} < ${expected.min_items}`);
+          }
+        } catch {
+          // Not JSON — count structured items by newline-separated entries
+          const lines = output.split("\n").filter(l => l.trim().length > 0);
+          if (lines.length < (expected.min_items as number)) {
+            errors.push(`Too few items: ${lines.length} lines < ${expected.min_items}`);
+          }
+        }
+      }
+
+      // expect_json_field — verify specific field exists in JSON output
+      if (expected.expect_json_field) {
+        try {
+          const parsed = JSON.parse(output);
+          const field = expected.expect_json_field as string;
+          const hasField = Array.isArray(parsed)
+            ? parsed.length > 0 && field in parsed[0]
+            : field in parsed;
+          if (!hasField) {
+            errors.push(`Missing JSON field: "${field}"`);
+          }
+        } catch {
+          errors.push(`Output is not valid JSON (expected field "${expected.expect_json_field}")`);
+        }
+      }
+
+      // expect_screenshot — verify base64 image data in output
+      if (expected.expect_screenshot) {
+        if (!output.includes("data:image/") && !output.includes("iVBOR") && !output.includes("/9j/")) {
+          errors.push("No screenshot/base64 image data found in output");
+        }
+      }
+
       passed = errors.length === 0;
-      partial = !passed && errors.length < (expected.contains?.length || 0);
+      partial = !passed && errors.length < ((expected.contains as string[] | undefined)?.length || 1);
 
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -686,6 +785,10 @@ async function main() {
   log("═══════════════════════════════════════════");
   log(" imperium-crawl autoresearch eval");
   log("═══════════════════════════════════════════");
+
+  // Log browser availability
+  const browserAvailable = checkPlaywrightAvailable();
+  log(`  Browser support: ${browserAvailable ? "available" : "not available"}`);
 
   const state = loadState();
   state.run_count++;

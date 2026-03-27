@@ -10,7 +10,7 @@ import type { Fixture } from "../types.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-const FIXTURE_DIRS = ["scraping", "extraction", "readability", "edge-cases", "stealth"];
+const FIXTURE_DIRS = ["scraping", "extraction", "readability", "edge-cases", "stealth", "crawl", "api-tools", "social"];
 
 /**
  * Load all fixtures from fixture subdirectories.

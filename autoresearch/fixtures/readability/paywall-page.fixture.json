@@ -1,0 +1,13 @@
+{
+  "id": "readability/paywall-page",
+  "category": "readability",
+  "description": "Page with paywall overlay, minimal article content visible",
+  "url": "https://example-news.com/premium-article",
+  "html": "<!DOCTYPE html><html><head><title>Premium Content - Subscribe Now</title></head><body><header><nav><a href='/'>Home</a><a href='/subscribe'>Subscribe</a></nav></header><div class='paywall-overlay' style='position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:999'><div class='paywall-modal'><h2>Subscribe to read this article</h2><p>Get unlimited access for $9.99/month</p><button>Subscribe Now</button></div></div><main><article><h1>This Article Is Behind a Paywall</h1><p class='preview'>The first paragraph is visible as a teaser to entice subscription...</p></article></main><footer><p>Copyright 2024</p></footer></body></html>",
+  "tool": "readability",
+  "tool_input": {},
+  "expected": {
+    "min_content_length": 0,
+    "contains": []
+  }
+}

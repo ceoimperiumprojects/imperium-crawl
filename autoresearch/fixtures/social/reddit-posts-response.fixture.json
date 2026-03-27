@@ -1,0 +1,15 @@
+{
+  "id": "social/reddit-posts-response",
+  "category": "social",
+  "description": "Simulated Reddit post listing page for social tool testing",
+  "url": "https://www.reddit.com/r/rust/hot",
+  "html": "<!DOCTYPE html><html><head><title>r/rust - Hot Posts</title></head><body><div id='siteTable'><div class='thing'><div class='entry'><p class='title'><a href='/r/rust/comments/abc123'>Announcing Rust 2024 Edition</a></p><p class='tagline'>submitted by <a class='author'>rust_team</a> to <a class='subreddit'>r/rust</a></p><div class='score'>2847 points</div><a class='comments'>342 comments</a></div></div><div class='thing'><div class='entry'><p class='title'><a href='/r/rust/comments/def456'>How I built a web scraper in Rust that handles 10K requests per second</a></p><p class='tagline'>submitted by <a class='author'>scrape_dev</a> to <a class='subreddit'>r/rust</a></p><div class='score'>1523 points</div><a class='comments'>189 comments</a></div></div><div class='thing'><div class='entry'><p class='title'><a href='/r/rust/comments/ghi789'>Comparison: Rust vs Go for CLI tools</a></p><p class='tagline'>submitted by <a class='author'>cli_fan</a> to <a class='subreddit'>r/rust</a></p><div class='score'>987 points</div><a class='comments'>256 comments</a></div></div></div></body></html>",
+  "tool": "scrape",
+  "tool_input": {
+    "format": "markdown"
+  },
+  "expected": {
+    "contains": ["Rust 2024 Edition", "web scraper", "Rust vs Go"],
+    "min_content_length": 100
+  }
+}

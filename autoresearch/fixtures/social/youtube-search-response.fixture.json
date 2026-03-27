@@ -1,0 +1,15 @@
+{
+  "id": "social/youtube-search-response",
+  "category": "social",
+  "description": "Simulated YouTube search results page for social tool testing",
+  "url": "https://www.youtube.com/results?search_query=rust+programming",
+  "html": "<!DOCTYPE html><html><head><title>rust programming - YouTube</title></head><body><div id='contents'><div class='video-item'><h3><a href='/watch?v=abc123'>Rust Programming Tutorial for Beginners</a></h3><span class='channel'>The Rust Channel</span><span class='views'>1.2M views</span><span class='date'>6 months ago</span></div><div class='video-item'><h3><a href='/watch?v=def456'>Why Rust is the Future of Systems Programming</a></h3><span class='channel'>Tech Talks</span><span class='views'>890K views</span><span class='date'>3 months ago</span></div><div class='video-item'><h3><a href='/watch?v=ghi789'>Build a Web Scraper in Rust</a></h3><span class='channel'>Code With Me</span><span class='views'>450K views</span><span class='date'>1 month ago</span></div></div></body></html>",
+  "tool": "scrape",
+  "tool_input": {
+    "format": "markdown"
+  },
+  "expected": {
+    "contains": ["Rust Programming Tutorial", "Systems Programming", "Web Scraper"],
+    "min_content_length": 100
+  }
+}
