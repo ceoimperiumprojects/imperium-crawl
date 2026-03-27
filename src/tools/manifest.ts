@@ -161,6 +161,11 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
       "Download media files (images, videos) from URLs. Supports direct files, page media extraction (og:image, all images), YouTube, TikTok, and bulk downloads.",
   },
   {
+    cmd: "batch-download",
+    description:
+      "Download multiple files (PDFs, images, documents) in parallel with session cookie support. Uses L1 HTTP fetch — 10x faster than browser downloads.",
+  },
+  {
     cmd: "rss",
     description:
       "Fetch and parse RSS/Atom feeds. Returns structured items with title, link, date, author, content, and categories.",

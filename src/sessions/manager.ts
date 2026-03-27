@@ -4,14 +4,19 @@ import { getSessionsDir } from "../config.js";
 import type { StoredSession, StoredCookie } from "./types.js";
 import { encryptData, decryptData, isEncryptedPayload, ensureEncryptionKey } from "./encryption.js";
 
+/** Default action count before a session is considered stale and needs refresh */
+const DEFAULT_REFRESH_THRESHOLD = 15;
+
 export class SessionManager {
   private cache = new Map<string, StoredSession>();
   private dir: string;
   private encryptionKey: string | undefined;
   private keyLoaded = false;
+  private refreshThreshold: number;
 
-  constructor(dir?: string) {
+  constructor(dir?: string, refreshThreshold?: number) {
     this.dir = dir ?? getSessionsDir();
+    this.refreshThreshold = refreshThreshold ?? DEFAULT_REFRESH_THRESHOLD;
   }
 
   private async getEncryptionKey(): Promise<string | undefined> {
@@ -43,21 +48,31 @@ export class SessionManager {
 
     this.cache.set(id, session);
 
-    await fs.mkdir(this.dir, { recursive: true });
-    const filePath = this.sessionPath(id);
-    const tmpPath = `${filePath}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`;
-
     const key = await this.getEncryptionKey();
     const content = key
       ? JSON.stringify(encryptData(JSON.stringify(session), key), null, 2)
       : JSON.stringify(session, null, 2);
 
-    await fs.writeFile(tmpPath, content, "utf-8");
-    try {
-      await fs.rename(tmpPath, filePath);
-    } catch (err) {
-      await fs.unlink(tmpPath).catch(() => {});
-      throw err;
+    // Retry loop — handles ENOENT from dir not existing or tmp file disappearing
+    const MAX_SAVE_RETRIES = 2;
+    for (let attempt = 0; attempt <= MAX_SAVE_RETRIES; attempt++) {
+      await fs.mkdir(this.dir, { recursive: true });
+      const filePath = this.sessionPath(id);
+      const tmpPath = `${filePath}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}.tmp`;
+
+      try {
+        await fs.writeFile(tmpPath, content, "utf-8");
+        await fs.rename(tmpPath, filePath);
+        return; // success
+      } catch (err) {
+        await fs.unlink(tmpPath).catch(() => {});
+        const code = (err as NodeJS.ErrnoException).code;
+        if (code === "ENOENT" && attempt < MAX_SAVE_RETRIES) {
+          // Directory may have been removed between mkdir and write — retry
+          continue;
+        }
+        throw err;
+      }
     }
   }
 
@@ -145,6 +160,22 @@ export class SessionManager {
     const session = await this.load(id);
     if (!session) return false;
     return (session.actionCount ?? 0) >= maxActions;
+  }
+
+  /**
+   * Returns true if the session has exceeded the configured refresh threshold.
+   * Convenience wrapper — uses the instance's refreshThreshold (default: 15).
+   */
+  async shouldRefresh(id: string): Promise<boolean> {
+    return this.needsRefresh(id, this.refreshThreshold);
+  }
+
+  /**
+   * Get the current action count for a session.
+   */
+  async getActionCount(id: string): Promise<number> {
+    const session = await this.load(id);
+    return session?.actionCount ?? 0;
   }
 
   /**

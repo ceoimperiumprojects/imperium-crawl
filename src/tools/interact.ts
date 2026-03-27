@@ -146,6 +146,10 @@ export const schema = z.object({
     .boolean()
     .default(false)
     .describe("Include captured network request log in output"),
+  retry_on_stale: z
+    .boolean()
+    .default(false)
+    .describe("When an action fails with a recoverable error (timeout, element not found, detached), auto-navigate back to the starting URL and retry the action (max 2 retries). Useful for long-running batch sessions where pages go stale."),
   device: z
     .string()
     .max(100)
@@ -167,6 +171,27 @@ export const schema = z.object({
 });
 
 export type InteractInput = z.infer<typeof schema>;
+
+/** Patterns that indicate an action failed due to a stale/broken page state, not a logic error */
+const RECOVERABLE_ERROR_PATTERNS = [
+  "timeout",
+  "Timeout",
+  "element not found",
+  "element is detached",
+  "Element is not attached",
+  "waiting for selector",
+  "Target closed",
+  "Navigation failed",
+  "frame was detached",
+  "Execution context was destroyed",
+];
+
+const MAX_STALE_RETRIES = 2;
+
+function isRecoverableError(error: string | undefined): boolean {
+  if (!error) return false;
+  return RECOVERABLE_ERROR_PATTERNS.some((p) => error.includes(p));
+}
 
 export async function execute(input: InteractInput) {
   if (!(await isPlaywrightAvailable())) {
@@ -265,7 +290,29 @@ export async function execute(input: InteractInput) {
 
       // Human-like delay between actions
       await page.waitForTimeout(humanDelay());
-      const result = await executeAction(page, action, midScreenshots, input.timeout, input.session_id);
+      let result = await executeAction(page, action, midScreenshots, input.timeout, input.session_id);
+
+      // Retry on stale page errors: navigate back to start URL and retry
+      if (!result.success && input.retry_on_stale && isRecoverableError(result.error)) {
+        for (let retry = 1; retry <= MAX_STALE_RETRIES; retry++) {
+          try {
+            await page.goto(url, { waitUntil: "load", timeout: input.timeout });
+            if (input.session_id) {
+              await getSessionManager().resetActionCount(input.session_id);
+            }
+            await page.waitForTimeout(humanDelay());
+            result = await executeAction(page, action, midScreenshots, input.timeout, input.session_id);
+            if (result.success) {
+              result.result = `recovered after ${retry} retry${retry > 1 ? "s" : ""}: ${result.result ?? "ok"}`;
+              break;
+            }
+          } catch {
+            // Recovery navigation itself failed — stop retrying
+            break;
+          }
+        }
+      }
+
       actionResults.push(result);
       actionCount++;
 

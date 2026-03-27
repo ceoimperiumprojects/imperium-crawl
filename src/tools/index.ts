@@ -27,6 +27,7 @@ import * as youtube from "./youtube.js";
 import * as reddit from "./reddit.js";
 import * as instagram from "./instagram.js";
 import * as download from "./download.js";
+import * as batchDownload from "./batch-download.js";
 import * as rss from "./rss.js";
 import * as knowledge from "./knowledge.js";
 
@@ -75,6 +76,7 @@ export const allTools: ToolDefinition[] = [
   instagram as ToolDefinition,
   // Media & feeds
   download as ToolDefinition,
+  batchDownload as ToolDefinition,
   rss as ToolDefinition,
   // Intelligence
   knowledge as ToolDefinition,

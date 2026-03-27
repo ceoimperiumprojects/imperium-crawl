@@ -1517,6 +1517,7 @@ async function runInteract(
     return_screenshot: false,
     return_snapshot: false,
     return_network_log: false,
+    retry_on_stale: false,
     timeout: 30000,
   });
 

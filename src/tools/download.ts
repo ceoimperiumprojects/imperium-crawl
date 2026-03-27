@@ -8,6 +8,7 @@ import { acquirePage } from "../stealth/chrome-profile.js";
 import { recordBrowserOutcome } from "../knowledge/index.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
+import { generateHeaders } from "../stealth/headers.js";
 import * as cheerio from "cheerio";
 
 export const name = "download";
@@ -24,6 +25,7 @@ export const schema = z.object({
   og_only: z.boolean().default(false).describe("Download only og:image / twitter:image from the page"),
   video: z.boolean().default(false).describe("Download video elements from the page"),
   all: z.boolean().default(false).describe("Download all media (images + video) from the page"),
+  session_id: z.string().max(200).optional().describe("Session ID to inject cookies from for authenticated downloads (enables L1/L2 binary download without browser)"),
 });
 
 export type DownloadInput = z.infer<typeof schema>;
@@ -71,8 +73,47 @@ async function ensureDir(dir: string): Promise<void> {
   await fs.mkdir(dir, { recursive: true });
 }
 
-async function downloadDirect(url: string, outputDir: string, filenameHint?: string): Promise<DownloadResult> {
+/**
+ * Build Cookie header from session cookies for a given URL.
+ */
+async function getSessionCookieHeader(sessionId: string | undefined, url: string): Promise<string | undefined> {
+  if (!sessionId) return undefined;
+  const { getSessionManager } = await import("../sessions/manager.js");
+  const session = await getSessionManager().load(sessionId);
+  if (!session?.cookies.length) return undefined;
+
+  const parsed = new URL(url);
+  const hostname = parsed.hostname;
+  const pathname = parsed.pathname;
+  const now = Date.now() / 1000;
+
+  const header = session.cookies
+    .filter((c) => {
+      const cookieDomain = c.domain.startsWith(".") ? c.domain : `.${c.domain}`;
+      if (!`.${hostname}`.endsWith(cookieDomain)) return false;
+      if (c.path && !pathname.startsWith(c.path)) return false;
+      if (c.expires && c.expires > 0 && c.expires < now) return false;
+      return true;
+    })
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+
+  return header || undefined;
+}
+
+async function downloadDirect(url: string, outputDir: string, filenameHint?: string, sessionId?: string): Promise<DownloadResult> {
+  const headers: Record<string, string> = {
+    ...generateHeaders(undefined, url) as Record<string, string>,
+  };
+
+  // Inject session cookies for authenticated downloads (L1-level, no browser needed)
+  const cookieHeader = await getSessionCookieHeader(sessionId, url);
+  if (cookieHeader) {
+    headers["Cookie"] = cookieHeader;
+  }
+
   const response = await fetch(url, {
+    headers,
     signal: AbortSignal.timeout(60_000),
     redirect: "follow",
   });
@@ -351,13 +392,13 @@ export async function execute(input: DownloadInput) {
             break;
           }
           case "direct-media": {
-            const r = await downloadDirect(url, input.output);
+            const r = await downloadDirect(url, input.output, undefined, input.session_id);
             results.push(r);
             break;
           }
           case "webpage": {
             // Fetch page and extract media
-            const pageResult = await smartFetch(url, { maxLevel: 2 });
+            const pageResult = await smartFetch(url, { maxLevel: 2, sessionId: input.session_id });
             const media = extractMediaUrls(pageResult.html, pageResult.url);
 
             let toDownload: string[] = [];
@@ -387,7 +428,7 @@ export async function execute(input: DownloadInput) {
                 count++;
                 const hostname = new URL(url).hostname.replace(/^www\./, "");
                 const hint = `${sanitizeFilename(hostname)}-${count}${extname(new URL(mediaUrl).pathname) || ".jpg"}`;
-                const r = await downloadDirect(mediaUrl, input.output, hint);
+                const r = await downloadDirect(mediaUrl, input.output, hint, input.session_id);
                 results.push(r);
               } catch (err) {
                 debugLog("download", `Failed to download ${mediaUrl}`, err);
