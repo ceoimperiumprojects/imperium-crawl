@@ -30,14 +30,14 @@ export interface FixtureExpected {
 
 export interface Fixture {
   id: string;
-  category: "scraping" | "extraction" | "readability" | "edge-cases" | "stealth" | "crawl" | "api-tools" | "social";
+  category: "scraping" | "extraction" | "readability" | "edge-cases" | "stealth";
   description: string;
   /** Original URL for context (not fetched) */
   url: string;
   /** Raw HTML content to feed to tool functions */
   html: string;
   /** Which tool/utility to test */
-  tool: "scrape" | "extract" | "readability" | "isBlocked" | "needsJSRendering" | "detectAntiBot" | "structuredData" | "crawl" | "query_api" | "youtube" | "reddit";
+  tool: "scrape" | "extract" | "readability" | "isBlocked" | "needsJSRendering" | "detectAntiBot" | "structuredData";
   /** Tool-specific input params (selectors, format, etc.) */
   tool_input?: Record<string, unknown>;
   /** Expected outputs for scoring */
@@ -67,10 +67,6 @@ export interface LiveBenchmark {
     expect_success?: boolean;
     /** Expected item count range */
     min_items?: number;
-    /** Verify specific field exists in JSON output */
-    expect_json_field?: string;
-    /** Verify output contains base64 screenshot data */
-    expect_screenshot?: boolean;
   };
   /** Skip if env var not set */
   requires_env?: string[];
