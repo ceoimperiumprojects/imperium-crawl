@@ -28,6 +28,7 @@ Thumbs.db
 # Local dev artifacts
 *.tgz
 *.png
+!assets/*.png
 *.pptx
 media/
 autoresearch/run-loop.sh

@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="assets/hero-banner.png" alt="imperium-crawl — 3-level auto-escalating stealth engine" width="800" />
+
 # imperium-crawl
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
