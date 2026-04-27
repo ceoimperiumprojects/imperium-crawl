@@ -1,7 +1,7 @@
 {
   "name": "imperium-crawl",
-  "version": "2.4.0",
-  "description": "Open-source CLI tool for web scraping, crawling, search, and custom skills",
+  "version": "2.5.0",
+  "description": "33-tool open-source CLI for web scraping, PDF extraction, content monitoring, RSS aggregation, and custom skills. Zero API keys for core tools.",
   "type": "module",
   "bin": {
     "imperium-crawl": "dist/index.js",
@@ -36,7 +36,12 @@
     "web-search",
     "brave-search",
     "firecrawl",
-    "cli"
+    "cli",
+    "pdf-extract",
+    "web-monitoring",
+    "url-watch",
+    "content-diff",
+    "intelligence-digest"
   ],
   "author": "ImperiumTech",
   "license": "MIT",
@@ -57,6 +62,7 @@
     "normalize-url": "^8.1.1",
     "ora": "^8.2.0",
     "p-queue": "^8.1.1",
+    "pdfjs-dist": "^4.0.379",
     "playwright": "1.52",
     "robots-parser": "^3.0.1",
     "rss-parser": "^3.13.0",

@@ -170,4 +170,21 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     description:
       "Fetch and parse RSS/Atom feeds. Returns structured items with title, link, date, author, content, and categories.",
   },
+  // Documents
+  {
+    cmd: "pdf-extract",
+    description:
+      "Extract text, pages, tables, and metadata from a local or remote PDF. Native text-layer strategy (pdfjs-dist). OCR + Vision fallbacks deferred to v2.6.0.",
+  },
+  // Change tracking
+  {
+    cmd: "watch",
+    description:
+      "One-shot change detector: scrape a URL, hash its content, compare against the last snapshot, and fire a webhook on change. Run via cron for periodic checks.",
+  },
+  {
+    cmd: "monitor",
+    description:
+      "Portfolio-level change tracker across many URLs grouped by topic. Emits a markdown digest of meaningful changes per run.",
+  },
 ];

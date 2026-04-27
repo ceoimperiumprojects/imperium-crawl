@@ -6,14 +6,26 @@
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
-29 tools. Zero API keys required. One `npx` command.
+33 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-546%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-572%20passing-brightgreen.svg)]()
 [![npm downloads](https://img.shields.io/npm/dm/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 
 </div>
+
+---
+
+## What's new in 2.5.0
+
+Three new tools for document extraction and content monitoring — all zero-API-key, all native:
+
+- **`pdf-extract`** — Pull text, pages, tables, and metadata from any PDF (local or remote) via `pdfjs-dist`. Ideal for regulatory docs, sustainability reports, invoices. Smoke-tested on a 98-page CBAM Guidance PDF (199K chars, confidence 0.99).
+- **`watch`** — Hash-based one-shot change detector for a single URL. Cron-friendly. Fires a webhook on change.
+- **`monitor`** — Multi-URL intelligence digest. Reads a JSON config grouping URLs by topic, emits a markdown digest filtered by minimum change percentage.
+
+See [CHANGELOG.md](./CHANGELOG.md) for the full release notes.
 
 ---
 
@@ -33,7 +45,13 @@ npx -y imperium-crawl scrape --url https://example.com
 npm install -g imperium-crawl
 ```
 
-> That's it. 23 of 29 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+**Install from a local tarball** (e.g. pre-release testing):
+
+```bash
+npm install -g ./imperium-crawl-2.5.0.tgz
+```
+
+> That's it. 27 of 33 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -109,7 +127,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-23 of 29 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+27 of 33 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -117,7 +135,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **29 Tools, 2 Modes**
+🧰 **33 Tools, 2 Modes**
 CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **14 Built-in Recipes**
@@ -133,7 +151,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
 |---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
 | Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
-| Total tools | **29** | 5 | 2 | 4 | N/A |
+| Total tools | **33** | 5 | 2 | 4 | N/A |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
 | Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -226,7 +244,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 29 Tools
+## All 33 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -306,6 +324,46 @@ Second visit to cloudflare.com:
 | Tool | What It Does |
 |------|-------------|
 | **knowledge** | Dump adaptive knowledge engine stats — per-domain success rates, optimal stealth levels, anti-bot detection history, rate limits. Use to debug scraping issues and understand problematic domains. |
+
+### 📄 Documents (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **pdf_extract** | Extract text, pages, tables, and metadata from a local or remote PDF. Native text-layer strategy via `pdfjs-dist`. OCR + Claude Vision fallbacks deferred to v2.6.0. Use for sustainability reports, invoices, regulatory PDFs. |
+
+```bash
+imperium-crawl pdf-extract --input ./report.pdf --output ./extracted.json
+imperium-crawl pdf-extract --input https://example.com/report.pdf --max-pages 20
+```
+
+### 👀 Change Tracking (no API key needed)
+
+| Tool | What It Does |
+|------|-------------|
+| **watch** | One-shot change detector: scrape a URL, hash its content (readability / markdown / full), compare against the last snapshot, fire a webhook on change. Pair with cron for periodic monitoring. |
+| **monitor** | Portfolio-level change tracker across many URLs grouped by topic. Reads a JSON config, runs `watch` on each URL, emits a markdown digest filtered by minimum change percentage. |
+
+```bash
+# Watch a single URL — run periodically via cron
+imperium-crawl watch --url https://carbonchain.com/pricing \
+  --output-dir ./data/watch \
+  --webhook https://hooks.example.com/on-change
+
+# Monitor many URLs grouped by topic, emit a daily digest
+imperium-crawl monitor --config ./monitor.json --output-dir ./data/monitor
+```
+
+`monitor.json`:
+```json
+{
+  "topics": [
+    {
+      "name": "Competitor pricing",
+      "urls": ["https://carbonchain.com/pricing", "https://spherasolutions.com/cbam"]
+    }
+  ]
+}
+```
 
 ---
 
@@ -494,7 +552,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 29 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 33 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Two Ways to Connect
 
@@ -562,7 +620,7 @@ Every tool tested against production websites with real anti-bot defenses:
 | 📥 **download** | YouTube video, web page images | Auto-detect URL type, download media files — images, video, og:image |
 | 📡 **rss** | Hacker News RSS | Parsed feed items with title, link, date, author, categories |
 
-> **29/29 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **33 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
 
 ---
 

@@ -30,6 +30,9 @@ import * as download from "./download.js";
 import * as batchDownload from "./batch-download.js";
 import * as rss from "./rss.js";
 import * as knowledge from "./knowledge.js";
+import * as pdfExtract from "./pdf-extract.js";
+import * as watch from "./watch.js";
+import * as monitor from "./monitor.js";
 
 export interface ToolDefinition {
   name: string;
@@ -80,4 +83,9 @@ export const allTools: ToolDefinition[] = [
   rss as ToolDefinition,
   // Intelligence
   knowledge as ToolDefinition,
+  // Documents
+  pdfExtract as ToolDefinition,
+  // Change tracking
+  watch as ToolDefinition,
+  monitor as ToolDefinition,
 ];
