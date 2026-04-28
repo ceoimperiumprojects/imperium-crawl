@@ -187,4 +187,35 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     description:
       "Portfolio-level change tracker across many URLs grouped by topic. Emits a markdown digest of meaningful changes per run.",
   },
+  // Imperium Flows
+  {
+    cmd: "record-flow",
+    description:
+      "Record a headed browser workflow and save it as a generic Imperium Flow family/variant.",
+  },
+  {
+    cmd: "run-flow",
+    description:
+      "Run a saved Imperium Flow by family/variant with runtime input JSON, CAPTCHA handling, and evidence collection.",
+  },
+  {
+    cmd: "serve-flow",
+    description:
+      "Expose saved Imperium Flows as a local HTTP API.",
+  },
+  {
+    cmd: "list-flows",
+    description:
+      "List saved Imperium Flows across project-local and global storage.",
+  },
+  {
+    cmd: "inspect-flow",
+    description:
+      "Inspect one Imperium Flow definition by family/variant.",
+  },
+  {
+    cmd: "validate-flow",
+    description:
+      "Validate an Imperium Flow schema and report its inputs, steps, and storage path.",
+  },
 ];

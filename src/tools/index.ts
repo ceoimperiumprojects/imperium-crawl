@@ -33,6 +33,12 @@ import * as knowledge from "./knowledge.js";
 import * as pdfExtract from "./pdf-extract.js";
 import * as watch from "./watch.js";
 import * as monitor from "./monitor.js";
+import * as recordFlow from "./record-flow.js";
+import * as runFlow from "./run-flow.js";
+import * as serveFlow from "./serve-flow.js";
+import * as listFlows from "./list-flows.js";
+import * as inspectFlow from "./inspect-flow.js";
+import * as validateFlow from "./validate-flow.js";
 
 export interface ToolDefinition {
   name: string;
@@ -88,4 +94,11 @@ export const allTools: ToolDefinition[] = [
   // Change tracking
   watch as ToolDefinition,
   monitor as ToolDefinition,
+  // Imperium Flows
+  recordFlow as ToolDefinition,
+  runFlow as ToolDefinition,
+  serveFlow as ToolDefinition,
+  listFlows as ToolDefinition,
+  inspectFlow as ToolDefinition,
+  validateFlow as ToolDefinition,
 ];

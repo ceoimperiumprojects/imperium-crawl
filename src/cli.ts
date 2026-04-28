@@ -247,6 +247,12 @@ function getRequestedCmd(): string | null {
   return arg; // e.g., "scrape", "list-jobs", "setup"
 }
 
+function positionalKeyForCmd(cmd: string): "flow" | "family" | null {
+  if (["run-flow", "inspect-flow", "validate-flow"].includes(cmd)) return "flow";
+  if (cmd === "serve-flow") return "family";
+  return null;
+}
+
 // ── Table Renderers ──────────────────────────────────────────────────
 
 function tryRenderTable(toolName: string, data: unknown): string | null {
@@ -345,7 +351,7 @@ export async function buildCli(): Promise<Command> {
   program
     .name("imperiumcrawl")
     .description(
-      "27-tool web scraping, crawling, search, media download, and API discovery CLI.\nRun without arguments in TTY for interactive TUI.",
+      "39-tool web scraping, crawling, search, media download, API discovery, and reusable browser workflow CLI.\nRun without arguments in TTY for interactive TUI.",
     )
     .version(PACKAGE_VERSION)
     .addOption(
@@ -380,22 +386,31 @@ export async function buildCli(): Promise<Command> {
 
   for (const { cmd, description } of TOOL_MANIFEST) {
     const sub = program.command(cmd).description(description);
+    const positionalKey = positionalKeyForCmd(cmd);
+    if (positionalKey === "flow") sub.argument("[flow]", "Flow reference in '<family>/<variant>' form");
+    if (positionalKey === "family") sub.argument("[family]", "Optional flow family to expose");
 
     if (cmd === requestedCmd) {
       // Load the full tool module for this command only.
       // This is the only heavy import at startup — all others are skipped.
       const toolModule = await import(`./tools/${cmd}.js`) as ToolDefinition;
       addOptionsFromSchema(sub, toolModule.schema);
-      sub.action(async (localOpts: Record<string, unknown>) => {
+      sub.action(async (...args: unknown[]) => {
+        const last = args[args.length - 1] as { opts?: () => Record<string, unknown> } | Record<string, unknown>;
+        const localOpts = typeof (last as { opts?: unknown }).opts === "function"
+          ? (last as { opts: () => Record<string, unknown> }).opts()
+          : last as Record<string, unknown>;
+        if (positionalKey && typeof args[0] === "string") localOpts[positionalKey] = args[0];
         await runTool(toolModule, localOpts, program);
       });
     } else {
       // For all other commands: register with just name + description.
       // Options are loaded lazily if the command is somehow invoked.
-      sub.action(async (_localOpts: Record<string, unknown>) => {
+      sub.action(async (...args: unknown[]) => {
         const toolModule = await import(`./tools/${cmd}.js`) as ToolDefinition;
         // Re-parse options now that we have the schema
         const rawOpts = sub.opts();
+        if (positionalKey && typeof args[0] === "string") rawOpts[positionalKey] = args[0];
         await runTool(toolModule, rawOpts, program);
       });
     }

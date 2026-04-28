@@ -6,11 +6,11 @@
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
-33 tools. Zero API keys required. One `npx` command.
+39 tools. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Tests](https://img.shields.io/badge/tests-572%20passing-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-580%20passing-brightgreen.svg)]()
 [![npm downloads](https://img.shields.io/npm/dm/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 
 </div>
@@ -51,7 +51,7 @@ npm install -g imperium-crawl
 npm install -g ./imperium-crawl-2.5.0.tgz
 ```
 
-> That's it. 27 of 33 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 33 of 39 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -127,7 +127,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-27 of 33 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+33 of 39 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -244,7 +244,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 33 Tools
+## All 39 Tools
 
 ### 📄 Scraping (no API key needed)
 
@@ -363,6 +363,23 @@ imperium-crawl monitor --config ./monitor.json --output-dir ./data/monitor
     }
   ]
 }
+```
+
+### 🔁 Imperium Flows (no API key needed; browser workflows may require Playwright)
+
+| Tool | What It Does |
+|------|-------------|
+| **record_flow** | Record a headed browser workflow as a generic flow family/variant. Stores smart selector metadata and reusable input placeholders. |
+| **run_flow** | Run a saved flow with runtime JSON input, CAPTCHA policy, browser mode, and evidence collection. |
+| **serve_flow** | Expose saved flows through a local HTTP API. Requires bearer auth when bound publicly. |
+| **list_flows** | List project-local and global flow definitions. |
+| **inspect_flow** | Inspect a saved flow JSON definition. |
+| **validate_flow** | Validate a flow schema and report inputs, steps, and storage path. |
+
+```bash
+imperium-crawl record-flow --family generic-search --variant site-a --url https://example.com
+imperium-crawl run-flow generic-search/site-a --input '{"query":"example"}'
+imperium-crawl serve-flow generic-search --port 8787
 ```
 
 ---
@@ -552,7 +569,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 33 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 39 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Two Ways to Connect
 
@@ -620,7 +637,7 @@ Every tool tested against production websites with real anti-bot defenses:
 | 📥 **download** | YouTube video, web page images | Auto-detect URL type, download media files — images, video, og:image |
 | 📡 **rss** | Hacker News RSS | Parsed feed items with title, link, date, author, categories |
 
-> **33 tools. 34 hidden APIs on Airbnb. Live BTC feed. Zero API keys for scraping.**
+> **39 tools. 34 hidden APIs on Airbnb. Live BTC feed. Reusable browser flows. Zero API keys for scraping.**
 
 ---
 

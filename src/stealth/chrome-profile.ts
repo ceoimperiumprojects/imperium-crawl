@@ -28,6 +28,7 @@ export interface PageHandle {
 export interface AcquirePageOptions {
   chromeProfile?: string;
   proxyUrl?: string;
+  headless?: boolean;
 }
 
 /**
@@ -70,13 +71,13 @@ async function withProfileLock<T>(profilePath: string, fn: () => Promise<T>): Pr
 
 // ── Profile Page Acquisition ──
 
-async function acquireProfilePage(profilePath: string, proxyUrl?: string): Promise<PageHandle> {
+async function acquireProfilePage(profilePath: string, proxyUrl?: string, headless = true): Promise<PageHandle> {
   const { chromium } = await import("rebrowser-playwright");
 
   const { timeZone, locale } = Intl.DateTimeFormat().resolvedOptions();
 
   const launchOptions: Record<string, unknown> = {
-    headless: true,
+    headless,
     args: STEALTH_ARGS,
     timezoneId: timeZone,
     locale,
@@ -116,7 +117,31 @@ async function acquireProfilePage(profilePath: string, proxyUrl?: string): Promi
 
 // ── Pool Page Acquisition (existing behavior) ──
 
-async function acquirePoolPage(proxyUrl?: string): Promise<PageHandle> {
+async function acquirePoolPage(proxyUrl?: string, headless = true): Promise<PageHandle> {
+  if (!headless) {
+    const { chromium } = await import("rebrowser-playwright");
+    const { timeZone, locale } = Intl.DateTimeFormat().resolvedOptions();
+    const browser = await chromium.launch({
+      headless: false,
+      args: STEALTH_ARGS,
+      ...(proxyUrl && { proxy: { server: proxyUrl } }),
+    });
+    const context = await browser.newContext({
+      viewport: DEFAULT_VIEWPORT,
+      timezoneId: timeZone,
+      locale,
+    });
+    const page = await context.newPage();
+    return {
+      page,
+      context,
+      isProfile: false,
+      cleanup: async () => {
+        await browser.close();
+      },
+    };
+  }
+
   const pool = getPool();
   const browser = await pool.acquire(proxyUrl);
   let page: Page;
@@ -173,9 +198,9 @@ export async function acquirePage(options?: AcquirePageOptions): Promise<PageHan
 
   if (profilePath) {
     return withProfileLock(profilePath, () =>
-      acquireProfilePage(profilePath, options?.proxyUrl),
+      acquireProfilePage(profilePath, options?.proxyUrl, options?.headless ?? true),
     );
   }
 
-  return acquirePoolPage(options?.proxyUrl);
+  return acquirePoolPage(options?.proxyUrl, options?.headless ?? true);
 }

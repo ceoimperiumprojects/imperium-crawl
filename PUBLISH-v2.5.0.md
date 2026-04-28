@@ -6,10 +6,10 @@ Pre-built tarball lives at:
 ## Pre-publish
 
 - [ ] `npm run build` (verify `dist/` is current — Agent 5 already ran it, re-run if you've touched any `src/`)
-- [ ] `npm test` (current local run: 572 passing + 5 skipped + 1 preexisting Playwright screenshot timeout — unrelated)
+- [ ] `npm test` (current focused local run: build passes; 35 focused Flow/CAPTCHA/recorder tests pass; full suite has 1 preexisting Playwright screenshot timeout — unrelated)
 - [ ] `npm pack --dry-run` (eyeball what ships — should match the existing `.tgz`)
 - [ ] CHANGELOG.md reviewed
-- [ ] README.md reflects 33 tools + v2.5.0 tools section
+- [ ] README.md reflects 39 tools + v2.5.0 tools section
 - [ ] `git status` clean except intentional changes
 - [ ] Commit + tag (see below)
 - [ ] Push: `git push && git push --tags`
@@ -21,25 +21,29 @@ cd /run/media/pavle/Data/Projekti-desktop/Pumpmyride
 
 git add \
   src/tools/pdf-extract.ts src/tools/watch.ts src/tools/monitor.ts \
+  src/flows src/tools/record-flow.ts src/tools/run-flow.ts src/tools/serve-flow.ts \
+  src/tools/list-flows.ts src/tools/inspect-flow.ts src/tools/validate-flow.ts \
   tests/pdf-extract.test.ts tests/watch.test.ts tests/monitor.test.ts \
+  tests/flows.test.ts \
   src/tools/index.ts src/tools/manifest.ts src/constants.ts \
   tests/tool-registry.test.ts \
   package.json package-lock.json \
   README.md CHANGELOG.md PUBLISH-v2.5.0.md
 
 git commit -m "$(cat <<'EOF'
-feat: add pdf-extract, watch, monitor commands (v2.5.0)
+feat: add pdf extraction, monitoring, and flow tools (v2.5.0)
 
 - pdf-extract: native PDF text/table/metadata extraction via pdfjs-dist
 - watch: hash-based URL change detection with webhook alerts
 - monitor: multi-URL daily digest generator
+- Imperium Flows: record, run, serve, list, inspect, and validate reusable browser workflows
 
-Tests: 19/19 new passing (572 passed / 5 skipped / 1 preexisting Playwright timeout unrelated)
-Deferred to v2.6.0: OCR fallback, daemon mode, LLM summarize
+Tests: build passing; focused Flow/CAPTCHA/recorder tests passing
+Deferred: OCR fallback, daemon mode, LLM summarize, Chrome extension recorder
 EOF
 )"
 
-git tag -a v2.5.0 -m "v2.5.0 — pdf-extract, watch, monitor"
+git tag -a v2.5.0 -m "v2.5.0 — pdf-extract, watch, monitor, Imperium Flows"
 ```
 
 ## Publish (the one-liner)
@@ -61,6 +65,9 @@ cd /run/media/pavle/Data/Projekti-desktop/Pumpmyride && npm login && npm publish
   imperium-crawl pdf-extract --help
   imperium-crawl watch --help
   imperium-crawl monitor --help
+  imperium-crawl record-flow --help
+  imperium-crawl run-flow --help
+  imperium-crawl serve-flow --help
   ```
 - [ ] Social post (drafts below)
 
@@ -91,7 +98,7 @@ Never `npm unpublish` after 72h — it's permanent and breaks downstream.
 ```
 imperium-crawl v2.5.0 je live na npm-u. 🚀
 
-Dodato 3 nove komande, sve zero-API-key, sve native:
+Dodato 9 novih komandi, sve zero-API-key za core workflow:
 
 • pdf-extract — izvuci tekst, tabele i metadata iz bilo kog PDF-a
    Testirano na 98 strana CBAM Guidance dokumenta — 199K karaktera, confidence 0.99.
@@ -102,12 +109,15 @@ Dodato 3 nove komande, sve zero-API-key, sve native:
 • monitor — multi-URL intelligence digest.
    JSON config, markdown report. Daily competitive intel u 10 linija koda.
 
-33 alata sad, 572 passing testova, 0 dolara.
+• Imperium Flows — snimi browser workflow jednom, pokreni ga iz CLI-ja ili izloži kao API.
+   Headed recording, CAPTCHA-aware runtime, family/variant flow JSON.
+
+39 alata sad, 580 passing testova, 0 dolara.
 
 npm i -g imperium-crawl
 github.com/ceoimperiumprojects/imperium-crawl
 
-Next up (v2.6.0): OCR fallback + Claude Vision za skenirane PDF-ove, daemon mode za watch, LLM summarize u monitor-u.
+Next up: Chrome extension Flow Recorder, selector healing UI, OCR fallback + Claude Vision.
 
 Gradi se dalje.
 ```
@@ -117,13 +127,14 @@ Gradi se dalje.
 ```
 imperium-crawl v2.5.0 shipped 🚀
 
-3 new tools, zero API keys:
+9 new tools, zero API keys:
 
 • pdf-extract — native PDF → text/tables/metadata (tested on 98-page CBAM doc)
 • watch — hash-based URL change detection, cron-friendly
 • monitor — multi-URL intelligence digest
+• Imperium Flows — record browser workflows, run them anywhere, expose as API
 
-33 tools. 572 passing tests. MIT.
+39 tools. 580 passing tests. MIT.
 
 npm i -g imperium-crawl
 ```
