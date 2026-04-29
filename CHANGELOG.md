@@ -5,6 +5,14 @@ All notable changes to `imperium-crawl` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.3] — 2026-04-29
+
+### Fixed
+
+- **README consistency** — Fixed tool count from 33 to 39 in feature highlights and comparison table. Added missing `batch_download` tool to the "All 39 Tools" section. All 39 tools are now correctly documented.
+
+---
+
 ## [2.5.2] — 2026-04-29
 
 ### Changed

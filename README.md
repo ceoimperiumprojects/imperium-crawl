@@ -177,7 +177,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **33 Tools, 2 Modes**
+🧰 **39 Tools, 2 Modes**
 CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **14 Built-in Recipes**
@@ -193,7 +193,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
 |---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
 | Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
-| Total tools | **33** | 5 | 2 | 4 | N/A |
+| Total tools | **39** | 5 | 2 | 4 | N/A |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
 | Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -350,6 +350,7 @@ Second visit to cloudflare.com:
 | Tool | What It Does |
 |------|-------------|
 | **download** | Download media files from any URL — images, video, YouTube, TikTok, bulk. **v2.5.1**: Browser-based image extraction with 100% coverage (lazy-load, shadow DOM, iframes, JSON-LD, CSS backgrounds). Target specific images via `--selector`, `--index`, `--alt-match`. Auto-click "load more" buttons. Referer injection fixes 403 on CDNs. |
+| **batch_download** | Download multiple files (PDFs, images, documents) in parallel with session cookie support. Uses L1 HTTP fetch — 10x faster than browser-based downloads. Ideal for bulk file retrieval from authenticated sessions. |
 | **rss** | Fetch and parse RSS/Atom feeds. Filter by date, output as JSON or Markdown. |
 
 ### 📦 Batch Processing (no API key needed)
