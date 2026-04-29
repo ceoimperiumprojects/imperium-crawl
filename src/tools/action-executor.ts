@@ -52,6 +52,8 @@ export type ActionInput = {
   extract_script?: string;
   max_pages?: number;
   wait_after_click?: number;
+  keywords?: string[];
+  max_clicks?: number;
   cookies?: Array<{
     name: string;
     value: string;
@@ -377,6 +379,46 @@ export async function executeAction(
         }
 
         return { type: "paginate", success: true, result: allData };
+      }
+
+      case "auto_click": {
+        const defaultKeywords = [
+          "show more", "load more", "gallery", "view images", "view photos",
+          "prikaži više", "učitaj još", "galerija", "slike", "fotografije",
+          "photos", "images", "see more", "more images", "more photos",
+          "expand", "prikazi jos", "jos slika", "vise slika",
+          "ucitaj vise", "prikazi vise", "prikaži još", "učitaj više",
+        ];
+        const keywords = action.keywords ?? defaultKeywords;
+        const maxClicks = action.max_clicks ?? 5;
+        const clicked: string[] = [];
+
+        for (let round = 0; round < maxClicks; round++) {
+          const found: string[] = await page.evaluate((kw: string[]) => {
+            const clickedTexts: string[] = [];
+            const buttons = Array.from(document.querySelectorAll("button, a, [role=button], .btn, .button, [class*=gallery], [class*=image], [class*=photo], [class*=more], [class*=load], [class*=expand], [id*=gallery], [id*=image], [id*=photo], [id*=more]"));
+            for (const btn of buttons) {
+              const el = btn as HTMLElement;
+              const text = (el.textContent || el.title || el.getAttribute("aria-label") || "").toLowerCase();
+              const matched = kw.some((k) => text.includes(k.toLowerCase()));
+              if (matched && el.offsetParent !== null) {
+                try {
+                  el.click();
+                  el.scrollIntoView({ behavior: "instant", block: "center" });
+                  clickedTexts.push(text.slice(0, 100));
+                } catch {}
+              }
+            }
+            return clickedTexts;
+          }, keywords);
+
+          if (found.length === 0) break;
+          clicked.push(...found);
+          await page.waitForTimeout(action.wait_after_click ?? 2500);
+          await page.waitForLoadState("networkidle", { timeout: 5000 }).catch(() => {});
+        }
+
+        return { type: "auto_click", success: true, result: { clicked: clicked.length, buttons: clicked } };
       }
 
       case "auth_login": {

@@ -46,6 +46,7 @@ const actionSchema = z.object({
     "auth_login",
     "paginate",
     "refresh",
+    "auto_click",
   ]),
   selector: z.string().max(500).optional().describe("CSS selector (for click, type, hover, select, press, wait). Mutually exclusive with ref."),
   ref: z.string().regex(/^@?e\d+$/).optional().describe("Ref from snapshot (e.g. 'e5' or '@e5'). Resolves to semantic locator. Mutually exclusive with selector."),
@@ -67,6 +68,8 @@ const actionSchema = z.object({
   extract_script: z.string().max(50000).optional().describe("JS to evaluate on each page during pagination. Should return JSON string of extracted data."),
   max_pages: z.number().min(1).max(100).default(10).optional().describe("Maximum pages to paginate through (default 10)"),
   wait_after_click: z.number().min(0).max(30000).default(2000).optional().describe("Ms to wait after clicking Next before extracting (default 2000)"),
+  keywords: z.array(z.string().max(100)).max(50).optional().describe("Custom keywords for auto_click action (default: common gallery/more button phrases)"),
+  max_clicks: z.number().min(1).max(50).default(5).optional().describe("Maximum auto-click rounds (default 5)"),
   cookies: z.array(z.object({
     name: z.string(),
     value: z.string(),

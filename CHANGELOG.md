@@ -5,6 +5,28 @@ All notable changes to `imperium-crawl` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.5.1] — 2026-04-29
+
+### Added
+
+- **Browser-based image extraction overhaul** — `download` tool now uses L3 headless browser for 100% image coverage. Executes full page render with JavaScript, lazy-load triggering, shadow DOM walk, and same-origin iframe scan.
+- **Image discovery sources** — Extracts from: `<img>` (src, data-src, srcset), `<picture>` + `<source>`, inline `style="background-image"`, all `<style>` tag CSS rules, shadow DOM recursively, JSON-LD `<script type="application/ld+json">`, inline `<script>` globals (`__INITIAL_STATE__`, `__DATA__`), and same-origin iframes.
+- **Image targeting** — Precise filtering via `--selector`, `--index`, `--alt-match`, `--min-width`, `--max-width`. Select exactly the image you need instead of bulk-downloading.
+- **Lazy-load trigger** — `--scroll-full` (default: true) scrolls the entire page to force lazy-loaded images into DOM before extraction.
+- **Auto-click** — `--auto-click` finds and clicks "Load more" / "Gallery" / "Show more" buttons (multilingual keyword matching) to reveal hidden images before extraction. Also available as standalone `interact` action: `auto_click`.
+- **Referer injection** — All image downloads include `Referer: <page_url>` header, fixing 403 errors on image CDN anti-hotlink protection.
+- **Image dimension filtering** — `--min-width` / `--max-width` to skip thumbnails and oversized assets.
+- **`--wait-for` selector** — Pause extraction until a specific element appears (useful for SPAs that load galleries asynchronously).
+- **`--iframe-scan`** — Recursively scan same-origin iframes for images.
+- **`--limit`** — Hard cap on number of images per page (default: 500).
+
+### Changed
+
+- `download` tool description updated to reflect browser-based image extraction.
+- Default image download behavior (no flags) now uses browser extraction instead of L2 HTTP fetch + Cheerio, dramatically improving accuracy on JS-heavy oglasne platforme.
+
+---
+
 ## [2.5.0] — 2026-04-20
 
 ### Added

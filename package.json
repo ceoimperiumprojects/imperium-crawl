@@ -1,6 +1,6 @@
 {
   "name": "imperium-crawl",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "description": "39-tool open-source CLI for web scraping, PDF extraction, content monitoring, reusable browser flows, RSS aggregation, and custom skills. Zero API keys for core tools.",
   "type": "module",
   "bin": {

@@ -5,6 +5,7 @@ import { MAX_URL_LENGTH } from "../constants.js";
 import { smartFetch } from "../stealth/index.js";
 import { isPlaywrightAvailable } from "../stealth/browser.js";
 import { acquirePage } from "../stealth/chrome-profile.js";
+import { extractImagesFromPage } from "../stealth/browser-image-extract.js";
 import { recordBrowserOutcome } from "../knowledge/index.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
@@ -14,7 +15,7 @@ import * as cheerio from "cheerio";
 export const name = "download";
 
 export const description =
-  "Download media files (images, videos) from URLs. Supports direct files, page media extraction, YouTube, TikTok, and bulk downloads.";
+  "Download media files (images, videos) from URLs. Supports direct files, page media extraction, YouTube, TikTok, and bulk downloads. Browser-based image extraction with 100% coverage: lazy-load, shadow DOM, JSON-LD, CSS backgrounds, same-origin iframes.";
 
 export const schema = z.object({
   url: z.string().max(MAX_URL_LENGTH).optional().describe("URL to download from (page, direct file, or video)"),
@@ -25,7 +26,18 @@ export const schema = z.object({
   og_only: z.boolean().default(false).describe("Download only og:image / twitter:image from the page"),
   video: z.boolean().default(false).describe("Download video elements from the page"),
   all: z.boolean().default(false).describe("Download all media (images + video) from the page"),
-  session_id: z.string().max(200).optional().describe("Session ID to inject cookies from for authenticated downloads (enables L1/L2 binary download without browser)"),
+  session_id: z.string().max(200).optional().describe("Session ID to inject cookies from for authenticated downloads"),
+  // ── Image targeting (v2.5.1) ──
+  selector: z.string().optional().describe("CSS selector to target a specific image"),
+  index: z.number().optional().describe("Select image by index (0-based) from discovered list"),
+  alt_match: z.string().optional().describe("Regex pattern to match image alt text"),
+  min_width: z.number().optional().describe("Minimum image width in pixels"),
+  max_width: z.number().optional().describe("Maximum image width in pixels"),
+  wait_for: z.string().optional().describe("Wait for CSS selector to exist before extracting"),
+  scroll_full: z.boolean().default(true).describe("Scroll full page to trigger lazy loading"),
+  auto_click: z.boolean().default(false).describe("Auto-click 'load more' / 'gallery' buttons"),
+  iframe_scan: z.boolean().default(false).describe("Scan same-origin iframes for images"),
+  limit: z.number().default(500).describe("Maximum number of images to download"),
 });
 
 export type DownloadInput = z.infer<typeof schema>;
@@ -101,15 +113,31 @@ async function getSessionCookieHeader(sessionId: string | undefined, url: string
   return header || undefined;
 }
 
-async function downloadDirect(url: string, outputDir: string, filenameHint?: string, sessionId?: string): Promise<DownloadResult> {
+async function downloadDirect(
+  url: string,
+  outputDir: string,
+  filenameHint?: string,
+  sessionId?: string,
+  referer?: string,
+): Promise<DownloadResult> {
   const headers: Record<string, string> = {
     ...generateHeaders(undefined, url) as Record<string, string>,
   };
 
-  // Inject session cookies for authenticated downloads (L1-level, no browser needed)
+  // Inject session cookies for authenticated downloads
   const cookieHeader = await getSessionCookieHeader(sessionId, url);
   if (cookieHeader) {
     headers["Cookie"] = cookieHeader;
+  }
+
+  // Inject referer for image CDN anti-hotlink protection
+  if (referer) {
+    headers["Referer"] = referer;
+  }
+
+  // Optimize Accept header for images when referer is present
+  if (referer) {
+    headers["Accept"] = "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8";
   }
 
   const response = await fetch(url, {
@@ -168,7 +196,7 @@ async function downloadDirect(url: string, outputDir: string, filenameHint?: str
   return { path: finalPath, size: buffer.length, source: url };
 }
 
-// ── Page Media Extraction ──
+// ── Legacy Page Media Extraction (used for video mode + fallback) ──
 
 interface ExtractedMedia {
   images: string[];
@@ -211,7 +239,6 @@ function extractMediaUrls(html: string, pageUrl: string): ExtractedMedia {
       seen.add(url);
       images.push(url);
     }
-    // Also check srcset
     const srcset = $(el).attr("srcset");
     if (srcset) {
       const urls = srcset.split(",").map((s) => s.trim().split(/\s+/)[0]);
@@ -254,7 +281,6 @@ async function downloadYouTube(url: string, outputDir: string): Promise<Download
   const info = await ytdl.getInfo(url);
   const title = sanitizeFilename(info.videoDetails.title || `youtube-${info.videoDetails.videoId}`);
 
-  // Pick best format with both audio and video, preferring mp4
   const format = ytdl.chooseFormat(info.formats, {
     quality: "highest",
     filter: (f) => f.hasVideo && f.hasAudio && f.container === "mp4",
@@ -267,9 +293,8 @@ async function downloadYouTube(url: string, outputDir: string): Promise<Download
     throw new Error("No suitable video format found");
   }
 
-  // Download using fetch with the format URL
   const response = await fetch(format.url, {
-    signal: AbortSignal.timeout(300_000), // 5 min timeout for large files
+    signal: AbortSignal.timeout(300_000),
     redirect: "follow",
   });
 
@@ -303,7 +328,6 @@ async function downloadTikTok(url: string, outputDir: string): Promise<DownloadR
     recordBrowserOutcome({ url, success: true, responseTimeMs: Date.now() - fetchStart });
     await page.waitForTimeout(3000);
 
-    // Extract video src from the page
     const videoSrc = await page.evaluate(() => {
       const video = document.querySelector("video");
       if (video?.src) return video.src;
@@ -316,7 +340,6 @@ async function downloadTikTok(url: string, outputDir: string): Promise<DownloadR
       throw new Error("Could not find video element on TikTok page");
     }
 
-    // Download from browser context (may have session cookies)
     const videoBase64 = await page.evaluate(async (src: string) => {
       const resp = await fetch(src);
       if (!resp.ok) return null;
@@ -335,7 +358,6 @@ async function downloadTikTok(url: string, outputDir: string): Promise<DownloadR
 
     const buffer = Buffer.from(videoBase64, "base64");
 
-    // Extract video ID from URL
     const match = url.match(/video\/(\d+)/);
     const videoId = match ? match[1] : Date.now().toString();
     const filename = `tiktok-${videoId}.mp4`;
@@ -345,6 +367,145 @@ async function downloadTikTok(url: string, outputDir: string): Promise<DownloadR
     await fs.writeFile(filePath, buffer);
 
     return { path: filePath, size: buffer.length, source: url };
+  } finally {
+    await handle.cleanup();
+  }
+}
+
+// ── Browser-based Image Extraction (v2.5.1) ──
+
+async function extractAndDownloadImages(
+  url: string,
+  input: DownloadInput,
+): Promise<{ results: DownloadResult[]; errors: Array<{ url: string; error: string }> }> {
+  const results: DownloadResult[] = [];
+  const errors: Array<{ url: string; error: string }> = [];
+
+  if (!(await isPlaywrightAvailable())) {
+    errors.push({ url, error: "rebrowser-playwright required for image extraction. Install: npm i rebrowser-playwright" });
+    return { results, errors };
+  }
+
+  const handle = await acquirePage();
+  try {
+    const { page } = handle;
+    const fetchStart = Date.now();
+
+    await page.goto(url, {
+      waitUntil: "load",
+      timeout: 30_000,
+    });
+
+    // Wait for network to settle (SPAs)
+    await Promise.race([
+      page.waitForLoadState("networkidle").catch(() => {}),
+      new Promise((r) => setTimeout(r, 5000)),
+    ]);
+
+    recordBrowserOutcome({ url, success: true, responseTimeMs: Date.now() - fetchStart });
+
+    // ── og_only fast path ──
+    if (input.og_only) {
+      const ogUrls: string[] = await page.evaluate(() => {
+        const urls: string[] = [];
+        const seen = new Set<string>();
+        const resolve = (href: string) => {
+          if (!href) return null;
+          try { return new URL(href, document.location.href).href; } catch { return null; }
+        };
+        document.querySelectorAll('meta[property="og:image"], meta[name="twitter:image"], meta[property="twitter:image"]').forEach((el) => {
+          const content = el.getAttribute("content");
+          const u = resolve(content || "");
+          if (u && !seen.has(u)) { seen.add(u); urls.push(u); }
+        });
+        return urls;
+      });
+
+      if (ogUrls.length === 0) {
+        errors.push({ url, error: "No og:image / twitter:image found on page" });
+        return { results, errors };
+      }
+
+      for (const ogUrl of ogUrls) {
+        try {
+          const hostname = new URL(url).hostname.replace(/^www\./, "");
+          const hint = `${sanitizeFilename(hostname)}-og${extname(new URL(ogUrl).pathname) || ".jpg"}`;
+          const r = await downloadDirect(ogUrl, input.output, hint, input.session_id, url);
+          results.push(r);
+        } catch (err) {
+          debugLog("download", `Failed to download og:image ${ogUrl}`, err);
+          errors.push({ url: ogUrl, error: err instanceof Error ? err.message : String(err) });
+        }
+      }
+      return { results, errors };
+    }
+
+    // ── Full image extraction ──
+    const images = await extractImagesFromPage(page, {
+      scrollFull: input.scroll_full,
+      autoClick: input.auto_click,
+      iframeScan: input.iframe_scan,
+      waitForSelector: input.wait_for,
+      minWidth: input.min_width || 0,
+      maxWidth: input.max_width || 99999,
+      limit: input.limit,
+    });
+
+    if (images.length === 0) {
+      errors.push({ url, error: "No images found on page after full extraction" });
+      return { results, errors };
+    }
+
+    debugLog("download", `Found ${images.length} images, applying filters...`);
+
+    // Apply targeting filters
+    let filtered = images;
+
+    if (input.selector) {
+      filtered = filtered.filter((img) =>
+        img.selector === input.selector || img.selector.includes(input.selector!),
+      );
+    }
+
+    if (input.alt_match) {
+      try {
+        const regex = new RegExp(input.alt_match, "i");
+        filtered = filtered.filter((img) => regex.test(img.alt));
+      } catch {
+        errors.push({ url, error: `Invalid alt_match regex: ${input.alt_match}` });
+      }
+    }
+
+    if (typeof input.index === "number") {
+      if (input.index >= 0 && input.index < filtered.length) {
+        filtered = [filtered[input.index]];
+      } else {
+        errors.push({ url, error: `Index ${input.index} out of range (found ${filtered.length} images)` });
+        return { results, errors };
+      }
+    }
+
+    if (filtered.length === 0) {
+      errors.push({ url, error: "All images filtered out by targeting criteria" });
+      return { results, errors };
+    }
+
+    // Download filtered images
+    for (let i = 0; i < filtered.length; i++) {
+      const img = filtered[i];
+      try {
+        const hostname = new URL(url).hostname.replace(/^www\./, "");
+        const ext = extname(new URL(img.url).pathname) || ".jpg";
+        const hint = `${sanitizeFilename(hostname)}-${String(i + 1).padStart(3, "0")}${ext}`;
+        const r = await downloadDirect(img.url, input.output, hint, input.session_id, url);
+        results.push(r);
+      } catch (err) {
+        debugLog("download", `Failed to download image ${img.url}`, err);
+        errors.push({ url: img.url, error: err instanceof Error ? err.message : String(err) });
+      }
+    }
+
+    return { results, errors };
   } finally {
     await handle.cleanup();
   }
@@ -397,42 +558,68 @@ export async function execute(input: DownloadInput) {
             break;
           }
           case "webpage": {
-            // Fetch page and extract media
-            const pageResult = await smartFetch(url, { maxLevel: 2, sessionId: input.session_id });
-            const media = extractMediaUrls(pageResult.html, pageResult.url);
+            const needsImages = input.images || input.og_only || input.all ||
+              (!input.video && !input.images && !input.og_only && !input.video && !input.all);
+            // ^ default behavior (no flags) is image download
 
-            let toDownload: string[] = [];
-
-            if (input.og_only) {
-              toDownload = media.ogImages;
-            } else if (input.images) {
-              toDownload = [...media.ogImages, ...media.images];
-            } else if (input.video) {
-              toDownload = media.videos;
-            } else if (input.all) {
-              toDownload = [...media.ogImages, ...media.images, ...media.videos];
-            } else {
-              // Default: og:image if available, else first few images
-              toDownload = media.ogImages.length > 0 ? media.ogImages : media.images.slice(0, 5);
+            if (needsImages) {
+              // v2.5.1: Full browser-based image extraction
+              const { results: imgResults, errors: imgErrors } = await extractAndDownloadImages(url, input);
+              results.push(...imgResults);
+              errors.push(...imgErrors);
             }
 
-            if (toDownload.length === 0) {
-              errors.push({ url, error: "No media found on page" });
-              break;
+            if (input.video || input.all) {
+              // Legacy video extraction (L2 fetch + cheerio)
+              const pageResult = await smartFetch(url, { maxLevel: 2, sessionId: input.session_id });
+              const media = extractMediaUrls(pageResult.html, pageResult.url);
+
+              const toDownload = input.all
+                ? [...media.ogImages, ...media.images, ...media.videos]
+                : media.videos;
+
+              if (toDownload.length === 0 && !needsImages) {
+                errors.push({ url, error: "No media found on page" });
+                break;
+              }
+
+              for (const mediaUrl of toDownload) {
+                try {
+                  const hostname = new URL(url).hostname.replace(/^www\./, "");
+                  const ext = extname(new URL(mediaUrl).pathname) || ".mp4";
+                  const hint = `${sanitizeFilename(hostname)}-video${ext}`;
+                  const r = await downloadDirect(mediaUrl, input.output, hint, input.session_id, url);
+                  results.push(r);
+                } catch (err) {
+                  debugLog("download", `Failed to download video ${mediaUrl}`, err);
+                  errors.push({ url: mediaUrl, error: err instanceof Error ? err.message : String(err) });
+                }
+              }
             }
 
-            // Download in sequence to avoid overwhelming target server
-            let count = 0;
-            for (const mediaUrl of toDownload) {
-              try {
-                count++;
-                const hostname = new URL(url).hostname.replace(/^www\./, "");
-                const hint = `${sanitizeFilename(hostname)}-${count}${extname(new URL(mediaUrl).pathname) || ".jpg"}`;
-                const r = await downloadDirect(mediaUrl, input.output, hint, input.session_id);
-                results.push(r);
-              } catch (err) {
-                debugLog("download", `Failed to download ${mediaUrl}`, err);
-                errors.push({ url: mediaUrl, error: err instanceof Error ? err.message : String(err) });
+            // If no image/video flags at all and browser extraction failed, fallback to legacy
+            if (!input.images && !input.og_only && !input.video && !input.all && results.length === 0) {
+              const pageResult = await smartFetch(url, { maxLevel: 2, sessionId: input.session_id });
+              const media = extractMediaUrls(pageResult.html, pageResult.url);
+              const toDownload = media.ogImages.length > 0 ? media.ogImages : media.images.slice(0, 5);
+
+              if (toDownload.length === 0) {
+                errors.push({ url, error: "No media found on page" });
+                break;
+              }
+
+              for (let i = 0; i < toDownload.length; i++) {
+                try {
+                  const mediaUrl = toDownload[i];
+                  const hostname = new URL(url).hostname.replace(/^www\./, "");
+                  const ext = extname(new URL(mediaUrl).pathname) || ".jpg";
+                  const hint = `${sanitizeFilename(hostname)}-${String(i + 1).padStart(3, "0")}${ext}`;
+                  const r = await downloadDirect(mediaUrl, input.output, hint, input.session_id, url);
+                  results.push(r);
+                } catch (err) {
+                  debugLog("download", `Failed to download image ${toDownload[i]}`, err);
+                  errors.push({ url: toDownload[i], error: err instanceof Error ? err.message : String(err) });
+                }
               }
             }
             break;
