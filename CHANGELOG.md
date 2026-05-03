@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`camofox-status` tool** — Check CamoFox installation, version, server health, and whether an update is available.
 - **`camofox-update` tool** — Pull the latest CamoFox release from npm with one command. Compares installed vs latest, runs `npm install @latest`, shows changelog link.
 - **Central type exports** (`src/types.ts`) — Re-exports the most commonly used types (`ToolDefinition`, `StoredCookie`, `ActionInput`, `StealthLevel`, `SkillConfig`, `FlowDefinition`, etc.) for better discoverability.
+- **Chrome Extension (Imperium Recorder)** — `chrome-extension/` — Record browser workflows directly from your real Chrome profile. Side panel UI captures clicks, typing, scrolling, and navigation. Exports to imperium-crawl flow format. Works with your existing cookies/sessions — no separate browser needed.
 
 ### Changed
 

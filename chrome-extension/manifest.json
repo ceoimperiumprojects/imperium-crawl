@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Imperium Recorder",
+  "version": "1.0.0",
+  "description": "Record browser workflows as imperium-crawl flows. Control your browser from AI agents. Uses your real Chrome profile — no separate browser needed.",
+  "permissions": [
+    "sidePanel",
+    "tabs",
+    "storage",
+    "scripting",
+    "activeTab",
+    "downloads"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "all_frames": false
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "Imperium Recorder"
+  }
+}

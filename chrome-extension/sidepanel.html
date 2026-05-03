@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imperium Recorder</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #e53935;
+    --accent-hover: #ff5252;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --yellow: #d2991d;
+    --purple: #bc8cff;
+    --radius: 8px;
+    --font: system-ui, -apple-system, sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Header ──────────────────────────────────────────────── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-left { display: flex; align-items: center; gap: 10px; }
+  .logo { font-size: 18px; }
+  .title { font-weight: 700; font-size: 14px; letter-spacing: -0.3px; }
+  .version { font-size: 10px; color: var(--muted); }
+
+  /* ── Tab info ────────────────────────────────────────────── */
+  .tab-info {
+    padding: 10px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+  .tab-url {
+    color: var(--blue);
+    word-break: break-all;
+    max-height: 32px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tab-stats {
+    color: var(--muted);
+    margin-top: 2px;
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ── Controls ────────────────────────────────────────────── */
+  .controls {
+    padding: 12px 16px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { border-color: #484f58; background: #21262d; }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+  .btn-primary.recording { animation: pulse 1.5s ease-in-out infinite; }
+  .btn-green { background: #238636; border-color: #238636; color: #fff; }
+  .btn-green:hover { background: #2ea043; border-color: #2ea043; }
+  .btn-ghost { background: transparent; border: none; padding: 6px 10px; }
+  .btn-sm { padding: 4px 10px; font-size: 11px; }
+  .btn-icon { padding: 6px; }
+  .btn-group { display: flex; }
+  .btn-group .btn { border-radius: 0; margin-left: -1px; }
+  .btn-group .btn:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .btn-group .btn:last-child { border-radius: 0 var(--radius) var(--radius) 0; }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.4); }
+    50% { box-shadow: 0 0 0 6px rgba(229,57,53,0); }
+  }
+
+  /* ── Action list ──────────────────────────────────────────── */
+  .section-title {
+    padding: 8px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .action-list {
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .action-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .action-item:hover { background: var(--surface); }
+
+  .action-icon {
+    width: 24px; height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .ai-click { background: rgba(88,166,255,0.15); color: var(--blue); }
+  .ai-type { background: rgba(188,140,255,0.15); color: var(--purple); }
+  .ai-nav { background: rgba(63,185,80,0.15); color: var(--green); }
+  .ai-scroll { background: rgba(210,153,29,0.15); color: var(--yellow); }
+  .ai-wait { background: rgba(139,148,158,0.15); color: var(--muted); }
+  .ai-other { background: rgba(139,148,158,0.1); color: var(--muted); }
+
+  .action-detail { flex: 1; min-width: 0; }
+  .action-type { font-weight: 600; font-size: 11px; text-transform: uppercase; }
+  .action-target { font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .action-url { font-size: 10px; color: var(--muted); opacity: 0.7; }
+  .action-idx { color: var(--muted); font-size: 11px; width: 20px; text-align: right; flex-shrink: 0; }
+
+  .empty-state {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .empty-state .emoji { font-size: 32px; margin-bottom: 8px; }
+
+  /* ── Flow panel ────────────────────────────────────────────── */
+  .flow-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(48,54,61,0.5);
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+  .flow-item:hover { background: var(--surface); }
+  .flow-name { font-weight: 600; font-size: 12px; }
+  .flow-meta { font-size: 10px; color: var(--muted); }
+
+  /* ── Save modal ───────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    width: calc(100% - 32px);
+    max-width: 320px;
+  }
+  .modal h3 { margin-bottom: 12px; font-size: 14px; }
+  .modal label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .modal input, .modal textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .modal textarea { resize: vertical; min-height: 60px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 8px; }
+
+  /* ── Toast ────────────────────────────────────────────────── */
+  .toast {
+    position: fixed; bottom: 16px; left: 16px; right: 16px; z-index: 200;
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    background: var(--green);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+    animation: slideUp 0.3s ease;
+  }
+  .toast.error { background: var(--accent); }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  /* ── Scrollbar ────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  /* ── Tabs ─────────────────────────────────────────────────── */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    flex: 1; padding: 8px; background: none; border: none;
+    color: var(--muted); font-family: var(--font); font-size: 12px;
+    font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab-btn:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- ── Header ────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-left">
+    <span class="logo">🦊</span>
+    <div>
+      <div class="title">Imperium Recorder</div>
+      <div class="version">v1.0.0</div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="btn btn-sm" id="btnRecord" title="Start/Stop Recording">⏺ Record</button>
+    <button class="btn btn-sm btn-ghost" id="btnSettings" title="Settings">⚙</button>
+  </div>
+</div>
+
+<!-- ── Tab info ─────────────────────────────────────────────────── -->
+<div class="tab-info">
+  <div class="tab-url" id="tabUrl">No page loaded</div>
+  <div class="tab-stats">
+    <span id="tabActions">0 actions</span>
+    <span id="tabStatus" style="color:#8b949e">idle</span>
+  </div>
+</div>
+
+<!-- ── Tabs ─────────────────────────────────────────────────────── -->
+<div class="tabs">
+  <button class="tab-btn active" data-panel="record">Record</button>
+  <button class="tab-btn" data-panel="flows">Flows</button>
+  <button class="tab-btn" data-panel="agent">Agent</button>
+</div>
+
+<!-- ── Record panel ─────────────────────────────────────────────── -->
+<div id="panelRecord">
+  <div class="controls">
+    <button class="btn btn-primary" id="btnToggleRecord">
+      <span id="btnToggleIcon">⏺</span>
+      <span id="btnToggleText">Start Recording</span>
+    </button>
+    <button class="btn" id="btnClear" disabled>Clear</button>
+    <button class="btn btn-green" id="btnExport">💾 Save Flow</button>
+  </div>
+
+  <div class="section-title">
+    Recorded Actions
+    <span id="actionCount">0</span>
+  </div>
+  <div class="action-list" id="actionList">
+    <div class="empty-state">
+      <div class="emoji">🎬</div>
+      <div>Click Record to start capturing actions</div>
+      <div style="font-size:11px;margin-top:4px">Clicks, typing, scrolling — all saved as imperium-crawl flows</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Flows panel ─────────────────────────────────────────────── -->
+<div id="panelFlows" style="display:none">
+  <div class="controls">
+    <button class="btn btn-sm" id="btnRefreshFlows">🔄 Refresh</button>
+    <button class="btn btn-sm" id="btnExportAll">📥 Export All</button>
+  </div>
+  <div class="section-title">Saved Flows</div>
+  <div class="action-list" id="flowList">
+    <div class="empty-state">
+      <div class="emoji">📭</div>
+      <div>No flows saved yet</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Agent panel ─────────────────────────────────────────────── -->
+<div id="panelAgent" style="display:none">
+  <div class="controls">
+    <button class="btn btn-primary" id="btnAgentToggle">▶ Start Agent Bridge</button>
+  </div>
+  <div style="padding:16px;font-size:12px;color:var(--muted);line-height:1.8">
+    <p><b>Agent Bridge</b> lets AI agents (Claude Code, OpenClaw, Cursor) control your browser directly.</p>
+    <br>
+    <p>When active, agents can:</p>
+    <p>🖱 Navigate, click, type on pages</p>
+    <p>📸 Take screenshots</p>
+    <p>📄 Extract page content</p>
+    <p>🔄 Run recorded flows</p>
+    <br>
+    <p style="font-size:11px;opacity:0.7">
+      The bridge uses WebSocket on port 9876. Connect from any agent with:<br>
+      <code style="background:var(--bg);padding:2px 6px;border-radius:3px;margin-top:4px;display:inline-block">
+        ws://localhost:9876
+      </code>
+    </p>
+  </div>
+</div>
+
+<!-- ── Save modal (hidden) ──────────────────────────────────────── -->
+<div class="modal-overlay" id="modalSave" style="display:none">
+  <div class="modal">
+    <h3>💾 Save Flow</h3>
+    <label>Family</label>
+    <input type="text" id="inputFamily" placeholder="e.g. site-login, data-extract" autocomplete="off">
+    <label>Variant</label>
+    <input type="text" id="inputVariant" placeholder="e.g. production, staging" autocomplete="off">
+    <label>Description (optional)</label>
+    <textarea id="inputDesc" placeholder="What does this flow do?"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-sm" id="btnSaveCancel">Cancel</button>
+      <button class="btn btn-sm btn-green" id="btnSaveConfirm">Save Flow</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast container ──────────────────────────────────────────── -->
+<div id="toastContainer"></div>
+
+<script src="sidepanel.js"></script>
+</body>
+</html>

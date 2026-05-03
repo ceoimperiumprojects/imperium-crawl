@@ -29,6 +29,7 @@ Thumbs.db
 *.tgz
 *.png
 !assets/*.png
+!chrome-extension/icons/*.png
 *.pptx
 media/
 autoresearch/run-loop.sh

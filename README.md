@@ -28,6 +28,7 @@
 - **Zero breaking changes** — Same tool API, same response format, same env vars. Just add `engine: "camofox"`.
 - **Codebase reorganized** — CLI in `src/cli/`, core in `src/core/`, tests in 14 category folders.
 - **41 tools total** — Added `camofox_status` and `camofox_update`.
+- **Chrome Extension** — `chrome-extension/` — Imperium Recorder side panel. Record workflows in your real Chrome profile, export as imperium-crawl flows. [Install guide →](chrome-extension/README.md)
 
 ```bash
 # Download ALL images from any page (100% coverage)
