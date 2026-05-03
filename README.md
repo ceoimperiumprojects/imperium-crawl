@@ -178,7 +178,7 @@ Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatic
 🧠 **Self-Improving**
 Adaptive learning engine remembers what works per domain. Second visit is 3x faster. The more you use it, the smarter it gets.
 
-🧰 **39 Tools, 2 Modes**
+🧰 **41 Tools, 2 Modes**
 CLI tool or interactive TUI. Scraping, crawling, search, extraction, API discovery, WebSocket monitoring, browser automation, batch processing.
 
 📜 **14 Built-in Recipes**
@@ -194,7 +194,7 @@ Teach it once, run forever. Auto-detect patterns on any page, save as reusable s
 | Feature | **imperium-crawl** | Firecrawl | Crawl4AI | Browserbase | Puppeteer |
 |---------|:------------------:|:---------:|:--------:|:-----------:|:---------:|
 | Price | **Free forever** | $19+/month | Free | $0.01/min | Free |
-| Total tools | **39** | 5 | 2 | 4 | N/A |
+| Total tools | **41** | 5 | 2 | 4 | N/A |
 | Stealth levels | **3 (auto-escalate)** | Cloud-based | 1 | Cloud-based | None |
 | Anti-bot detection | **7 systems** | Partial | Partial | Partial | None |
 | TLS fingerprinting | **JA3/JA4** | No | No | No | No |
@@ -287,7 +287,7 @@ Second visit to cloudflare.com:
 
 ---
 
-## All 39 Tools
+## All 41 Tools
 
 ### 📄 Scraping (no API key needed)
 
