@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getJobsDir } from "../config.js";
+import { getJobsDir } from "../core/config.js";
 import type { BatchJob } from "./types.js";
 
 export class JobStore {

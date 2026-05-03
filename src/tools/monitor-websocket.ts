@@ -3,7 +3,7 @@ import { isPlaywrightAvailable } from "../stealth/browser.js";
 import { acquirePage } from "../stealth/chrome-profile.js";
 import { resolveProxy } from "../stealth/proxy.js";
 import { normalizeUrl } from "../utils/url.js";
-import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_DURATION_SECONDS, MAX_TIMEOUT_MS, MAX_MESSAGES } from "../constants.js";
+import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_DURATION_SECONDS, MAX_TIMEOUT_MS, MAX_MESSAGES } from "../core/constants.js";
 
 export const name = "monitor_websocket";
 

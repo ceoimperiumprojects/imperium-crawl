@@ -1,7 +1,7 @@
 {
   "name": "imperium-crawl",
-  "version": "2.5.3",
-  "description": "39-tool open-source CLI for web scraping, PDF extraction, content monitoring, reusable browser flows, RSS aggregation, and custom skills. Zero API keys for core tools.",
+  "version": "2.6.0",
+  "description": "41-tool open-source CLI for web scraping, PDF extraction, content monitoring, reusable browser flows, RSS aggregation, and custom skills. CamoFox C++ anti-detection engine. Zero API keys for core tools.",
   "type": "module",
   "bin": {
     "imperium-crawl": "dist/index.js",
@@ -14,7 +14,9 @@
     "./stealth/*": "./dist/stealth/*.js",
     "./sessions": "./dist/sessions/index.js",
     "./sessions/*": "./dist/sessions/*.js",
-    "./utils/*": "./dist/utils/*.js"
+    "./utils/*": "./dist/utils/*.js",
+    "./core/*": "./dist/core/*.js",
+    "./cli/*": "./dist/cli/*.js"
   },
   "files": [
     "dist",
@@ -22,6 +24,7 @@
   ],
   "scripts": {
     "build": "tsc && shx chmod +x dist/index.js",
+    "check": "tsc --noEmit",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "test": "vitest run",
@@ -74,6 +77,7 @@
     "zod": "^3.24.2"
   },
   "optionalDependencies": {
+    "@askjo/camofox-browser": "^1.8.0",
     "fingerprint-injector": "^2.1.62",
     "rebrowser-playwright": "^1.51.1"
   },

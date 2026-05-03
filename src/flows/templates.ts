@@ -1,4 +1,4 @@
-import { resolveString } from "../skills/parameters.js";
+import { resolveString } from "../skills/index.js";
 import type { FlowDefinition, FlowStep } from "./types.js";
 
 export function resolveFlowInputs(flow: FlowDefinition, input: Record<string, string> = {}): Record<string, string> {

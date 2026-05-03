@@ -3,7 +3,7 @@ import { normalizeUrl } from "../utils/url.js";
 import { isPlaywrightAvailable } from "../stealth/index.js";
 import { browserFetch } from "../stealth/browser.js";
 import { recordBrowserOutcome } from "../knowledge/index.js";
-import { MAX_URL_LENGTH } from "../constants.js";
+import { MAX_URL_LENGTH } from "../core/constants.js";
 
 export const name = "screenshot";
 

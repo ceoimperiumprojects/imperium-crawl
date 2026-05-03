@@ -34,7 +34,7 @@ export async function execute(input: KnowledgeInput) {
 
   // Access internal store via get() — scan known domains
   // We need to read the file directly since store is private
-  const { getKnowledgeFilePath } = await import("../config.js");
+  const { getKnowledgeFilePath } = await import("../core/config.js");
   const fs = await import("node:fs/promises");
 
   let allKnowledge: Record<string, import("../knowledge/predictor.js").DomainKnowledge> = {};

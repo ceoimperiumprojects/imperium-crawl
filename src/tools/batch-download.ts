@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { promises as fs } from "fs";
 import { join, basename, extname } from "path";
-import { MAX_URL_LENGTH, DEFAULT_CONCURRENCY } from "../constants.js";
+import { MAX_URL_LENGTH, DEFAULT_CONCURRENCY } from "../core/constants.js";
 import { ConcurrencyLimiter } from "../utils/fetcher.js";
 import { generateHeaders } from "../stealth/headers.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";

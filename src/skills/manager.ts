@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getSkillsDir } from "../config.js";
+import { getSkillsDir } from "../core/config.js";
 import type { SkillParameters } from "./parameters.js";
 
 const SKILL_NAME_RE = /^[a-zA-Z0-9_-]+$/;

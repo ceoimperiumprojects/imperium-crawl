@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getSessionsDir } from "../config.js";
+import { getSessionsDir } from "../core/config.js";
 import type { StoredSession, StoredCookie } from "./types.js";
 import { encryptData, decryptData, isEncryptedPayload, ensureEncryptionKey } from "./encryption.js";
 

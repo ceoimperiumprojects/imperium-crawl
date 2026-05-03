@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getKnowledgeFilePath } from "../config.js";
+import { getKnowledgeFilePath } from "../core/config.js";
 import { getDomain } from "../utils/url.js";
 import {
   type DomainKnowledge,

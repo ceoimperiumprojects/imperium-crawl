@@ -1,5 +1,5 @@
 import robotsParser from "robots-parser";
-import { DEFAULT_ROBOTS_CACHE_TTL_MS } from "../constants.js";
+import { DEFAULT_ROBOTS_CACHE_TTL_MS } from "../core/constants.js";
 import { getBaseUrl } from "./url.js";
 
 interface Robot {

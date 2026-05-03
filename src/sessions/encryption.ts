@@ -14,7 +14,7 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { SKILLS_DIR_NAME } from "../constants.js";
+import { SKILLS_DIR_NAME } from "../core/constants.js";
 
 const ALGORITHM = "aes-256-gcm";
 const KEY_LENGTH = 32;

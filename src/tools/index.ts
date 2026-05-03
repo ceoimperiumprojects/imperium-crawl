@@ -39,6 +39,8 @@ import * as serveFlow from "./serve-flow.js";
 import * as listFlows from "./list-flows.js";
 import * as inspectFlow from "./inspect-flow.js";
 import * as validateFlow from "./validate-flow.js";
+import * as camofoxStatus from "./camofox-status.js";
+import * as camofoxUpdate from "./camofox-update.js";
 
 export interface ToolDefinition {
   name: string;
@@ -101,4 +103,7 @@ export const allTools: ToolDefinition[] = [
   listFlows as ToolDefinition,
   inspectFlow as ToolDefinition,
   validateFlow as ToolDefinition,
+  // CamoFox
+  camofoxStatus as ToolDefinition,
+  camofoxUpdate as ToolDefinition,
 ];

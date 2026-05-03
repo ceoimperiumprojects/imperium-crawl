@@ -5,6 +5,32 @@ All notable changes to `imperium-crawl` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.6.0] — 2026-05-03
+
+### Added
+
+- **CamoFox browser engine** — Integration with [CamoFox](https://github.com/jo-inc/camofox-browser), a Firefox-forks with C++ anti-fingerprinting that bypasses Cloudflare, Google, and most bot detection. No shims, no tells — patches at the C++ level.
+- **Engine abstraction layer** (`src/engines/`) — Unified `BrowserEngine` interface allowing tool code to switch between Playwright and CamoFox with a single `engine` flag. CamoFox auto-starts on first use, includes health checking, and gracefully shuts down.
+- **`camofox-status` tool** — Check CamoFox installation, version, server health, and whether an update is available.
+- **`camofox-update` tool** — Pull the latest CamoFox release from npm with one command. Compares installed vs latest, runs `npm install @latest`, shows changelog link.
+- **Central type exports** (`src/types.ts`) — Re-exports the most commonly used types (`ToolDefinition`, `StoredCookie`, `ActionInput`, `StealthLevel`, `SkillConfig`, `FlowDefinition`, etc.) for better discoverability.
+
+### Changed
+
+- **Codebase reorganized** — CLI files moved to `src/cli/`, core utilities to `src/core/`, recipe JSONs to `src/recipes/data/`. Cross-module imports cleaned up.
+- **WIP isolation** — In-progress files moved to `src/wip/` and excluded from TypeScript compilation. No more build failures from half-finished features.
+- **Barrel exports** — Added `index.ts` barrel files for `social/`, `network/`, `security/`, and `skills/` modules. Cleaner imports, hidden internal structure.
+- **Test organization** — 38 test files reorganized into 14 category subdirectories mirroring the source structure.
+- **Tool count** — 39 → 41 tools (added `camofox_status`, `camofox_update`).
+- **Version bump** — 580 tests passing, 2 pre-existing timeouts, 5 skipped.
+
+### Removed
+
+- Legacy planning documents (`PUBLISH-v2.5.0.md`, `HOSTED-LAUNCH/`, `VISION.md`) — cleaned up.
+- Old `.tgz` archives from root directory.
+
+---
+
 ## [2.5.3] — 2026-04-29
 
 ### Fixed

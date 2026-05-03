@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { promises as fs } from "fs";
 import { join, basename, extname } from "path";
-import { MAX_URL_LENGTH } from "../constants.js";
+import { MAX_URL_LENGTH } from "../core/constants.js";
 import { smartFetch } from "../stealth/index.js";
 import { isPlaywrightAvailable } from "../stealth/browser.js";
 import { acquirePage } from "../stealth/chrome-profile.js";

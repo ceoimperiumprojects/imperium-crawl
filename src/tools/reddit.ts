@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { smartFetch } from "../stealth/index.js";
-import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../constants.js";
-import { sanitizeText } from "../social/parsers.js";
-import { socialAiFallback } from "../social/ai-fallback.js";
+import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../core/constants.js";
+import { sanitizeText } from "../social/index.js";
+import { socialAiFallback } from "../social/index.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
-import type { SocialPost, SocialComment, SocialProfile, SocialSearchResult } from "../social/types.js";
+import type { SocialPost, SocialComment, SocialProfile, SocialSearchResult } from "../social/index.js";
 
 export const name = "reddit";
 

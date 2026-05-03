@@ -1,7 +1,7 @@
 import { smartFetch, StealthError, type FetchResult, type StealthLevel, type StealthOptions } from "../stealth/index.js";
 import { isAllowed } from "./robots.js";
 import { getDomain } from "./url.js";
-import { DEFAULT_CONCURRENCY, DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS } from "../constants.js";
+import { DEFAULT_CONCURRENCY, DEFAULT_TIMEOUT_MS, MAX_TIMEOUT_MS } from "../core/constants.js";
 import { getKnowledgeEngine } from "../knowledge/index.js";
 
 // ── Concurrency Limiter ──

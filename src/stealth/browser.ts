@@ -1,5 +1,5 @@
-import { getTwoCaptchaApiKey } from "../config.js";
-import { HUMAN_DELAY_MIN_MS, HUMAN_DELAY_MAX_MS } from "../constants.js";
+import { getTwoCaptchaApiKey } from "../core/config.js";
+import { HUMAN_DELAY_MIN_MS, HUMAN_DELAY_MAX_MS } from "../core/constants.js";
 import { trySolveCaptcha, hasCaptcha } from "../captcha/index.js";
 import { acquirePage } from "./chrome-profile.js";
 import type { StoredCookie } from "../sessions/types.js";

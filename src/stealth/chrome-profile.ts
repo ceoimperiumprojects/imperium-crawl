@@ -9,8 +9,8 @@
  * concurrent access (Chrome/Playwright locks the profile directory).
  */
 
-import { getChromeProfilePath } from "../config.js";
-import { STEALTH_ARGS, DEFAULT_VIEWPORT } from "../constants.js";
+import { getChromeProfilePath } from "../core/config.js";
+import { STEALTH_ARGS, DEFAULT_VIEWPORT } from "../core/constants.js";
 import { getPool } from "./browser-pool.js";
 
 type Page = import("rebrowser-playwright").Page;

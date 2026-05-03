@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { generateHeaders } from "../stealth/headers.js";
 import { resolveProxy } from "../stealth/proxy.js";
-import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_BODY_LENGTH, MAX_TIMEOUT_MS } from "../constants.js";
+import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_BODY_LENGTH, MAX_TIMEOUT_MS } from "../core/constants.js";
 
 export const name = "query_api";
 

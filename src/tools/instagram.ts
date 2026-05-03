@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { smartFetch } from "../stealth/index.js";
 import { issueRequest } from "../brave-api/index.js";
-import { hasBraveApiKey } from "../config.js";
-import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../constants.js";
-import { parseCompactNumber, sanitizeText, extractScriptJson } from "../social/parsers.js";
+import { hasBraveApiKey } from "../core/config.js";
+import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../core/constants.js";
+import { parseCompactNumber, sanitizeText, extractScriptJson } from "../social/index.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
-import type { InstagramProfile, InstagramPost, InstagramDiscoverResult } from "../social/types.js";
+import type { InstagramProfile, InstagramPost, InstagramDiscoverResult } from "../social/index.js";
 
 export const name = "instagram";
 

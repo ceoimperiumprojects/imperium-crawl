@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { issueRequest } from "../brave-api/index.js";
-import { hasBraveApiKey } from "../config.js";
-import { MAX_QUERY_LENGTH } from "../constants.js";
+import { hasBraveApiKey } from "../core/config.js";
+import { MAX_QUERY_LENGTH } from "../core/constants.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 
 export const name = "news_search";

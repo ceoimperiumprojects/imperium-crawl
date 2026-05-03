@@ -19,7 +19,7 @@ import { fetchPage } from "../utils/fetcher.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
-import { MAX_URL_LENGTH } from "../constants.js";
+import { MAX_URL_LENGTH } from "../core/constants.js";
 
 export const name = "watch";
 

@@ -1,13 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { htmlToMarkdown } from "../utils/markdown.js";
-import { getTwoCaptchaApiKey } from "../config.js";
+import { getTwoCaptchaApiKey } from "../core/config.js";
 import { acquirePage } from "../stealth/chrome-profile.js";
 import { getPool } from "../stealth/browser-pool.js";
 import { trySolveCaptcha, hasCaptcha, detectCaptcha } from "../captcha/index.js";
-import { executeAction } from "../tools/action-executor.js";
-import type { ActionInput } from "../tools/action-executor.js";
-import { getRequestLog } from "../network/interceptor.js";
+import { executeAction } from "../core/action-executor.js";
+import type { ActionInput } from "../core/action-executor.js";
+import { getRequestLog } from "../network/index.js";
 import { loadFlow } from "./storage.js";
 import { resolveFlowInputs, resolveStepTemplates } from "./templates.js";
 import { resolveSmartTarget } from "./smart-target.js";

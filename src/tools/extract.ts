@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { fetchPage } from "../utils/fetcher.js";
 import { normalizeUrl } from "../utils/url.js";
-import { MAX_URL_LENGTH, MAX_SELECTOR_LENGTH, MAX_SELECTOR_KEYS } from "../constants.js";
+import { MAX_URL_LENGTH, MAX_SELECTOR_LENGTH, MAX_SELECTOR_KEYS } from "../core/constants.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { createLLMClient, hasLLMConfigured } from "../llm/index.js";
 import { extractWithLLM } from "../llm/extractor.js";

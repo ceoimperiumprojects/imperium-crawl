@@ -11,8 +11,8 @@ import {
   type SmartTarget,
 } from "../flows/index.js";
 import { normalizeUrl } from "../utils/url.js";
-import { executeAction, type ActionInput } from "./action-executor.js";
-import { detectParameterCandidates } from "../skills/parameters.js";
+import { executeAction, type ActionInput } from "../core/action-executor.js";
+import { detectParameterCandidates } from "../skills/index.js";
 
 export const name = "record_flow";
 export const description = "Record a headed browser workflow and save it as a generic Imperium Flow family/variant.";
@@ -325,7 +325,7 @@ export async function execute(input: RecordFlowInput) {
     validateFlowName(input.variant, "variant");
     const url = normalizeUrl(input.url);
     const { chromium } = await import("rebrowser-playwright");
-    const { STEALTH_ARGS } = await import("../constants.js");
+    const { STEALTH_ARGS } = await import("../core/constants.js");
     const browser = await chromium.launch({ headless: false, args: STEALTH_ARGS });
     const context = await browser.newContext();
     const page = await context.newPage();

@@ -4,7 +4,7 @@ import { normalizeUrl } from "../utils/url.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { createLLMClient, hasLLMConfigured } from "../llm/index.js";
 import { extractWithLLM } from "../llm/extractor.js";
-import { MAX_URL_LENGTH } from "../constants.js";
+import { MAX_URL_LENGTH } from "../core/constants.js";
 
 export const name = "ai_extract";
 

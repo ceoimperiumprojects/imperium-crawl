@@ -6,8 +6,8 @@ import { normalizeUrl } from "../utils/url.js";
 import { recordBrowserOutcome } from "../knowledge/index.js";
 import { getSessionManager } from "../sessions/index.js";
 import { getEnhancedSnapshot, getSnapshotStore, annotateScreenshot } from "../snapshot/index.js";
-import { installDomainFilter } from "../security/domain-filter.js";
-import { MAX_URL_LENGTH, MAX_TIMEOUT_MS } from "../constants.js";
+import { installDomainFilter } from "../security/index.js";
+import { MAX_URL_LENGTH, MAX_TIMEOUT_MS } from "../core/constants.js";
 
 export const name = "snapshot";
 

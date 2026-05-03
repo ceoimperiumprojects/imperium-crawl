@@ -2,7 +2,7 @@ import { z } from "zod";
 import * as cheerio from "cheerio";
 import type { AnyNode } from "domhandler";
 import { fetchPage } from "../utils/fetcher.js";
-import * as manager from "../skills/manager.js";
+import * as manager from "../skills/index.js";
 import type {
   SkillConfig,
   ExtractSkillConfig,
@@ -12,8 +12,8 @@ import type {
   InfluencerDiscoverySkillConfig,
   InteractSkillConfig,
   ChainSkillConfig,
-} from "../skills/manager.js";
-import { MAX_URL_LENGTH, MAX_ITEMS } from "../constants.js";
+} from "../skills/index.js";
+import { MAX_URL_LENGTH, MAX_ITEMS } from "../core/constants.js";
 import { toolResult } from "../utils/tool-response.js";
 
 export const name = "run_skill";

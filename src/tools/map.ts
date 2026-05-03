@@ -2,7 +2,7 @@ import { z } from "zod";
 import { fetchPage } from "../utils/fetcher.js";
 import { normalizeUrl, isSameOrigin } from "../utils/url.js";
 import { getSitemapUrls } from "../utils/robots.js";
-import { MAX_URL_LENGTH, MAX_URLS } from "../constants.js";
+import { MAX_URL_LENGTH, MAX_URLS } from "../core/constants.js";
 import * as cheerio from "cheerio";
 
 export const name = "map";

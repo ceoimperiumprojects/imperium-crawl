@@ -13,7 +13,7 @@ import {
   DEFAULT_CONCURRENCY,
   DEFAULT_TIMEOUT_MS,
   MAX_TIMEOUT_MS,
-} from "../constants.js";
+} from "../core/constants.js";
 
 export const name = "batch_scrape";
 

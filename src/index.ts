@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import "dotenv/config";
-import { applyCliConfig } from "./cli-config.js";
+import { applyCliConfig } from "./cli/config.js";
 import { initProxyRotator } from "./stealth/proxy.js";
 import { getPool } from "./stealth/browser-pool.js";
 
@@ -36,15 +36,15 @@ async function main() {
   const hasSubcommand = !!process.argv[2];
 
   if (hasSubcommand) {
-    const { runCli } = await import("./cli.js");
+    const { runCli } = await import("./cli/engine.js");
     await runCli();
   } else if (process.stdout.isTTY) {
     // TTY + no args → interactive TUI
-    const { runTui } = await import("./cli-tui.js");
+    const { runTui } = await import("./cli/tui.js");
     await runTui();
   } else {
     // Non-TTY + no args → show help
-    const { runCli } = await import("./cli.js");
+    const { runCli } = await import("./cli/engine.js");
     process.argv.push("--help");
     await runCli();
   }

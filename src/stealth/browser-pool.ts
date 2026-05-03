@@ -8,7 +8,7 @@
  * that closes on release (never blocks the caller).
  */
 
-import { DEFAULT_BROWSER_POOL_SIZE, DEFAULT_BROWSER_IDLE_TIMEOUT_MS, STEALTH_ARGS } from "../constants.js";
+import { DEFAULT_BROWSER_POOL_SIZE, DEFAULT_BROWSER_IDLE_TIMEOUT_MS, STEALTH_ARGS } from "../core/constants.js";
 
 // Playwright types (lazy imported)
 type Browser = import("rebrowser-playwright").Browser;

@@ -1,4 +1,4 @@
-import { BRAVE_API_BASE } from "../constants.js";
+import { BRAVE_API_BASE } from "../core/constants.js";
 
 export class BraveApiError extends Error {
   constructor(

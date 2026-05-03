@@ -10,14 +10,14 @@ import type { StoredCookie } from "../sessions/index.js";
 import {
   MAX_URL_LENGTH,
   MAX_TIMEOUT_MS,
-} from "../constants.js";
+} from "../core/constants.js";
 import { getSnapshotStore, getEnhancedSnapshot } from "../snapshot/index.js";
-import { checkPolicy } from "../security/action-policy.js";
-import { installDomainFilter } from "../security/domain-filter.js";
-import { setupInterception, getRequestLog } from "../network/interceptor.js";
-import type { InterceptRule } from "../network/types.js";
-import { executeAction, humanDelay } from "./action-executor.js";
-import type { ActionResult } from "./action-executor.js";
+import { checkPolicy } from "../security/index.js";
+import { installDomainFilter } from "../security/index.js";
+import { setupInterception, getRequestLog } from "../network/index.js";
+import type { InterceptRule } from "../network/index.js";
+import { executeAction, humanDelay } from "../core/action-executor.js";
+import type { ActionResult } from "../core/action-executor.js";
 
 export const name = "interact";
 

@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="assets/hero-banner.png" alt="imperium-crawl — 3-level auto-escalating stealth engine" width="800" />
+<img src="assets/hero-banner.png" alt="imperium-crawl — 4-level auto-escalating stealth engine with CamoFox" width="800" />
 
 # imperium-crawl
 
 **The most powerful open-source CLI tool for web scraping, crawling, and data extraction.**
 
-39 tools. Zero API keys required. One `npx` command.
+41 tools. CamoFox C++ anti-detection. Zero API keys required. One `npx` command.
 
 [![npm version](https://img.shields.io/npm/v/imperium-crawl.svg)](https://www.npmjs.com/package/imperium-crawl)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -17,16 +17,17 @@
 
 ---
 
-## What's new in 2.5.1
+## What's new in 2.6.0
 
-**Browser-based image extraction overhaul** — 100% coverage on any website:
+**CamoFox browser engine** — Firefox fork with C++ anti-fingerprinting that bypasses Cloudflare, Google, and most bot detection:
 
-- **Full browser rendering (L3)** for image discovery — JavaScript, lazy-load, shadow DOM, same-origin iframes
-- **7 image sources**: `<img>`, `<picture>`, CSS `background-image`, shadow DOM, JSON-LD, inline scripts, iframes
-- **Precise targeting**: `--selector`, `--index`, `--alt-match`, `--min-width`, `--max-width`
-- **Auto-click** "Load more" / "Gallery" buttons with multilingual keyword matching
-- **Referer injection** fixes 403 errors on image CDN anti-hotlink protection
-- **New `auto_click` action** in `interact` tool for standalone browser automation
+- **C++-level patches** — `navigator.hardwareConcurrency`, WebGL, AudioContext, WebRTC spoofed before JavaScript sees them
+- **Engine abstraction** — Switch between Playwright and CamoFox with a single `engine` flag
+- **Auto-update** — `imperiumcrawl camofox-update` pulls the latest CamoFox release from npm
+- **Engine factory** — `import { resolveEngine } from "imperium-crawl/engines"` for agent-native use
+- **Zero breaking changes** — Same tool API, same response format, same env vars. Just add `engine: "camofox"`.
+- **Codebase reorganized** — CLI in `src/cli/`, core in `src/core/`, tests in 14 category folders.
+- **41 tools total** — Added `camofox_status` and `camofox_update`.
 
 ```bash
 # Download ALL images from any page (100% coverage)
@@ -65,7 +66,7 @@ npm install -g imperium-crawl
 npm install -g ./imperium-crawl-2.5.2.tgz
 ```
 
-> That's it. 33 of 39 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
+> That's it. 33 of 41 tools work with zero API keys. Add optional keys later to unlock search, AI extraction, and CAPTCHA solving.
 
 ---
 
@@ -169,7 +170,7 @@ Scraping 4 URLs (concurrency: 3)...
 ## Why imperium-crawl?
 
 🔓 **Zero API Keys Required**
-33 of 39 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
+33 of 41 tools work out of the box. No accounts, no tokens, no credit cards. Just `npx` and go.
 
 🛡️ **3-Level Auto-Escalating Stealth**
 Headers → TLS fingerprinting → headless browser + CAPTCHA solving. Automatically escalates until it gets through.
@@ -612,7 +613,7 @@ Turn any website into an API. No documentation needed.
 
 ## AI Agent Guide
 
-imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 39 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
+imperium-crawl ships with [`SKILL/`](./SKILL/) — a structured guide that teaches AI agents how to use all 41 tools effectively. Includes proven workflows, decision trees, error recovery, and advanced patterns.
 
 ### Two Ways to Connect
 
@@ -680,7 +681,7 @@ Every tool tested against production websites with real anti-bot defenses:
 | 📥 **download** | YouTube video, web page images | Auto-detect URL type, download media files — images, video, og:image |
 | 📡 **rss** | Hacker News RSS | Parsed feed items with title, link, date, author, categories |
 
-> **39 tools. 34 hidden APIs on Airbnb. Live BTC feed. Reusable browser flows. Zero API keys for scraping.**
+> **41 tools. 34 hidden APIs on Airbnb. Live BTC feed. Reusable browser flows. Zero API keys for scraping.**
 
 ---
 

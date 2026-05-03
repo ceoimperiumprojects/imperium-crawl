@@ -1,6 +1,6 @@
 import { z } from "zod";
-import * as manager from "../skills/manager.js";
-import type { ExtractSkillConfig } from "../skills/manager.js";
+import * as manager from "../skills/index.js";
+import type { ExtractSkillConfig } from "../skills/index.js";
 
 export const name = "list_skills";
 

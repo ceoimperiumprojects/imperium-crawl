@@ -4,7 +4,7 @@ import { fetchPage } from "../utils/fetcher.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { normalizeUrl } from "../utils/url.js";
 import { extractStructuredData, extractLinks } from "../utils/structured-data.js";
-import { MAX_URL_LENGTH, MAX_TIMEOUT_MS } from "../constants.js";
+import { MAX_URL_LENGTH, MAX_TIMEOUT_MS } from "../core/constants.js";
 import type { StealthLevel } from "../stealth/index.js";
 
 export const name = "scrape";

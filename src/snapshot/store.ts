@@ -7,7 +7,7 @@
  */
 
 import type { RefMap, RefEntry } from "./types.js";
-import { MAX_STORED_SNAPSHOTS } from "../constants.js";
+import { MAX_STORED_SNAPSHOTS } from "../core/constants.js";
 import { writeFileSync, readFileSync, unlinkSync, mkdirSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

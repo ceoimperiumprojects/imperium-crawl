@@ -1,6 +1,6 @@
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
-import { MIN_REPEATING_ELEMENTS } from "../constants.js";
+import { MIN_REPEATING_ELEMENTS } from "../core/constants.js";
 import type { SkillFieldSelectors } from "./manager.js";
 
 interface ElementGroup {

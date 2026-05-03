@@ -2,9 +2,9 @@ import { z } from "zod";
 import * as cheerio from "cheerio";
 import { fetchPage } from "../utils/fetcher.js";
 import { normalizeUrl } from "../utils/url.js";
-import { detectPatterns, detectPagination } from "../skills/detector.js";
-import * as manager from "../skills/manager.js";
-import { MAX_URL_LENGTH, MAX_STRING_LENGTH, MAX_PAGES } from "../constants.js";
+import { detectPatterns, detectPagination } from "../skills/index.js";
+import * as manager from "../skills/index.js";
+import { MAX_URL_LENGTH, MAX_STRING_LENGTH, MAX_PAGES } from "../core/constants.js";
 
 export const name = "create_skill";
 

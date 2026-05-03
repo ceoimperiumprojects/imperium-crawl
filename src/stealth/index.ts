@@ -4,10 +4,10 @@ import { detectAntiBot, parseCookieNames } from "./antibot-detector.js";
 import { stealthFetch } from "./tls.js";
 import { browserFetch, isPlaywrightAvailable } from "./browser.js";
 import { resolveProxy } from "./proxy.js";
-import { DEFAULT_TIMEOUT_MS } from "../constants.js";
+import { DEFAULT_TIMEOUT_MS } from "../core/constants.js";
 import { getDomain } from "../utils/url.js";
 import { getKnowledgeEngine } from "../knowledge/index.js";
-import { getTwoCaptchaApiKey } from "../config.js";
+import { getTwoCaptchaApiKey } from "../core/config.js";
 import type { StoredCookie } from "../sessions/types.js";
 
 /**

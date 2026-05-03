@@ -2,13 +2,13 @@ import { z } from "zod";
 import { smartFetch } from "../stealth/index.js";
 import { isPlaywrightAvailable } from "../stealth/browser.js";
 import { acquirePage } from "../stealth/chrome-profile.js";
-import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../constants.js";
-import { extractScriptJson, parseCompactNumber, sanitizeText } from "../social/parsers.js";
-import { hasWhisperConfigured, transcribeAudio } from "../social/whisper.js";
-import { socialAiFallback } from "../social/ai-fallback.js";
+import { MAX_QUERY_LENGTH, MAX_ITEMS } from "../core/constants.js";
+import { extractScriptJson, parseCompactNumber, sanitizeText } from "../social/index.js";
+import { hasWhisperConfigured, transcribeAudio } from "../social/index.js";
+import { socialAiFallback } from "../social/index.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
-import type { SocialVideo, SocialComment, SocialProfile, SocialSearchResult } from "../social/types.js";
+import type { SocialVideo, SocialComment, SocialProfile, SocialSearchResult } from "../social/index.js";
 
 export const name = "youtube";
 

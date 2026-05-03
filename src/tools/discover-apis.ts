@@ -4,7 +4,7 @@ import { acquirePage } from "../stealth/chrome-profile.js";
 import { resolveProxy } from "../stealth/proxy.js";
 import { normalizeUrl } from "../utils/url.js";
 import { recordBrowserOutcome } from "../knowledge/index.js";
-import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_WAIT_SECONDS, MAX_TIMEOUT_MS } from "../constants.js";
+import { DEFAULT_TIMEOUT_MS, MAX_URL_LENGTH, MAX_WAIT_SECONDS, MAX_TIMEOUT_MS } from "../core/constants.js";
 
 export const name = "discover_apis";
 

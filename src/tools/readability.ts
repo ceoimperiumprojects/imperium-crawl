@@ -4,7 +4,7 @@ import { Readability, isProbablyReaderable } from "@mozilla/readability";
 import { fetchPage } from "../utils/fetcher.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { normalizeUrl } from "../utils/url.js";
-import { MAX_URL_LENGTH } from "../constants.js";
+import { MAX_URL_LENGTH } from "../core/constants.js";
 
 export const name = "readability";
 

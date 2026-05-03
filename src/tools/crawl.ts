@@ -2,7 +2,7 @@ import { z } from "zod";
 import { fetchPage, ConcurrencyLimiter } from "../utils/fetcher.js";
 import { htmlToMarkdown } from "../utils/markdown.js";
 import { normalizeUrl, isSameOrigin } from "../utils/url.js";
-import { DEFAULT_MAX_DEPTH, DEFAULT_MAX_PAGES, DEFAULT_CONCURRENCY, MAX_URL_LENGTH, MAX_PAGES, MAX_CONCURRENCY, MAX_CRAWL_CONTENT_PER_PAGE } from "../constants.js";
+import { DEFAULT_MAX_DEPTH, DEFAULT_MAX_PAGES, DEFAULT_CONCURRENCY, MAX_URL_LENGTH, MAX_PAGES, MAX_CONCURRENCY, MAX_CRAWL_CONTENT_PER_PAGE } from "../core/constants.js";
 import * as cheerio from "cheerio";
 
 export const name = "crawl";

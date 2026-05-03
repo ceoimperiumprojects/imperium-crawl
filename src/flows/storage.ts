@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { SKILLS_DIR_NAME } from "../constants.js";
+import { SKILLS_DIR_NAME } from "../core/constants.js";
 import { FLOW_NAME_RE, flowSchema, type FlowDefinition, type FlowRef, type FlowStorageOptions } from "./types.js";
 
 export function validateFlowName(name: string, label = "flow name"): void {

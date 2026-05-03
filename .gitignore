@@ -35,7 +35,4 @@ autoresearch/run-loop.sh
 autoresearch/reports/
 
 # WIP files (not ready for commit)
-src/sessions/browser-connect.ts
-src/sessions/browser-state.ts
-src/sessions/inject-cookies.ts
-src/tools/browser.ts
+src/wip/

@@ -8,7 +8,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { SKILLS_DIR_NAME } from "../constants.js";
+import { SKILLS_DIR_NAME } from "../core/constants.js";
 import { encryptData, decryptData, isEncryptedPayload, ensureEncryptionKey } from "../sessions/encryption.js";
 
 const AUTH_SUBDIR = "auth";

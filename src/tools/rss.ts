@@ -1,6 +1,6 @@
 import { z } from "zod";
 import RSSParser from "rss-parser";
-import { MAX_URL_LENGTH } from "../constants.js";
+import { MAX_URL_LENGTH } from "../core/constants.js";
 import { toolResult, errorResult } from "../utils/tool-response.js";
 import { debugLog } from "../utils/debug.js";
 

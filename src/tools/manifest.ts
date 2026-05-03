@@ -218,4 +218,15 @@ export const TOOL_MANIFEST: ManifestEntry[] = [
     description:
       "Validate an Imperium Flow schema and report its inputs, steps, and storage path.",
   },
+  // CamoFox
+  {
+    cmd: "camofox-status",
+    description:
+      "Check CamoFox browser engine status — installation, version, and server health.",
+  },
+  {
+    cmd: "camofox-update",
+    description:
+      "Update CamoFox browser engine to the latest version. Checks npm registry, compares versions, and installs the latest release.",
+  },
 ];
