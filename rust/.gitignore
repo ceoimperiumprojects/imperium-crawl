@@ -1,0 +1,12 @@
+/target
+**/*.rs.bk
+Cargo.lock.bak
+*.pdb
+
+# IDE
+.idea
+.vscode
+
+# OS
+.DS_Store
+Thumbs.db

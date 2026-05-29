@@ -1,0 +1,132 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/imperium-crawl-cli",
+    "crates/imperium-crawl-core",
+    "crates/imperium-crawl-stealth",
+    "crates/imperium-crawl-browser",
+    "crates/imperium-crawl-sessions",
+    "crates/imperium-crawl-llm",
+    "crates/imperium-crawl-tools",
+    "crates/imperium-crawl-knowledge",
+    "crates/imperium-crawl-flows",
+]
+
+[workspace.package]
+version = "3.0.0-alpha.1"
+edition = "2021"
+rust-version = "1.80"
+authors = ["Imperium Tech <ceoimperiumprojects@gmail.com>"]
+license = "MIT"
+repository = "https://github.com/ceoimperiumprojects/imperium-crawl"
+
+[workspace.dependencies]
+# === Async runtime ===
+tokio = { version = "1.40", features = ["full"] }
+async-trait = "0.1"
+futures = "0.3"
+
+# === HTTP / TLS fingerprinting ===
+reqwest = { version = "0.12", default-features = false, features = ["json", "gzip", "brotli", "stream", "cookies", "rustls-tls"] }
+wreq = { version = "6.0.0-rc", features = ["cookies", "gzip", "brotli", "json", "stream", "socks", "ws", "charset"] }
+wreq-util = "3.0.0-rc"
+
+# === HTML / DOM ===
+scraper = "0.20"
+html5ever = "0.27"
+ego-tree = "0.10"
+selectors = "0.25"
+
+# === Browser automation ===
+chromiumoxide = { version = "0.7", features = ["tokio-runtime"] }
+
+# === Content extraction ===
+readability = "0.3"
+html2md = "0.2"
+
+# === PDF ===
+pdfium-render = "0.8"
+
+# === Feeds ===
+rss = "2.0"
+atom_syndication = "0.12"
+
+# === Serialization / Schema ===
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+toml = "0.8"
+schemars = "0.8"
+
+# === CLI ===
+clap = { version = "4.5", features = ["derive", "env", "wrap_help"] }
+inquire = "0.7"
+indicatif = "0.17"
+comfy-table = "7"
+owo-colors = "4"
+
+# === Crypto / Sessions ===
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+ring = "0.17"
+
+# === URLs / Utilities ===
+url = "2.5"
+robotxt = "0.6"
+dotenvy = "0.15"
+chrono = { version = "0.4", features = ["serde"] }
+dirs = "5"
+uuid = { version = "1", features = ["v4", "serde"] }
+base64 = "0.22"
+sha2 = "0.10"
+regex = "1"
+once_cell = "1"
+
+# === Concurrency ===
+tower = "0.5"
+governor = "0.7"
+
+# === Error handling ===
+anyhow = "1.0"
+thiserror = "1.0"
+
+# === Logging / Tracing ===
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# === LLM clients ===
+async-openai = "0.27"
+# Anthropic: no mature crate; build via reqwest custom in imperium-crawl-llm
+
+# === Testing ===
+mockito = "1.5"
+wiremock = "0.6"
+criterion = "0.5"
+tempfile = "3"
+insta = "1.40"
+
+# === Internal crates ===
+imperium-crawl-core = { path = "crates/imperium-crawl-core" }
+imperium-crawl-stealth = { path = "crates/imperium-crawl-stealth" }
+imperium-crawl-browser = { path = "crates/imperium-crawl-browser" }
+imperium-crawl-sessions = { path = "crates/imperium-crawl-sessions" }
+imperium-crawl-llm = { path = "crates/imperium-crawl-llm" }
+imperium-crawl-tools = { path = "crates/imperium-crawl-tools" }
+imperium-crawl-knowledge = { path = "crates/imperium-crawl-knowledge" }
+imperium-crawl-flows = { path = "crates/imperium-crawl-flows" }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+strip = "symbols"
+# `panic = "abort"` removed — html2md and a few transitive deps require unwind.
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[profile.bench]
+inherits = "release"
+debug = true

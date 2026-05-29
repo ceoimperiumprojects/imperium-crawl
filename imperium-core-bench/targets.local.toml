@@ -1,0 +1,400 @@
+# Imperium Core private benchmark targets.
+#
+# This file lives on the Data partition and must never be committed.
+# Put only authorized/private targets here. Do not store cookies, API keys,
+# bearer tokens, proxy credentials, or raw session payloads in this file.
+
+[metadata]
+schema_version = 1
+name = "imperium-core-private-targets"
+
+# ── S-Tier (10/10) — Prave anti-bot tvrđave ──────────────────────────────
+
+[[targets]]
+id = "real_battle_bestbuy"
+kind = "real_battle"
+url = "https://www.bestbuy.com"
+protection = "akamai"
+selector = "body"
+expected_text_contains = "Best Buy"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.bestbuy.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "s-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_nike"
+kind = "real_battle"
+url = "https://www.nike.com"
+protection = "akamai"
+selector = "body"
+expected_text_contains = "Nike"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.nike.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "s-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_walmart"
+kind = "real_battle"
+url = "https://www.walmart.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Walmart"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.walmart.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "s-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_zillow"
+kind = "real_battle"
+url = "https://www.zillow.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Zillow"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.zillow.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "s-tier", "real-estate"]
+
+[[targets]]
+id = "real_battle_redfin"
+kind = "real_battle"
+url = "https://www.redfin.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Redfin"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.redfin.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "s-tier", "real-estate"]
+
+[[targets]]
+id = "real_battle_ticketmaster"
+kind = "real_battle"
+url = "https://www.ticketmaster.com"
+protection = "akamai"
+selector = "body"
+expected_text_contains = "Ticketmaster"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.ticketmaster.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "s-tier", "events"]
+
+# ── A-Tier (8-9/10) — Jaka zaštita, poznati izazovi ──────────────────────
+
+[[targets]]
+id = "real_battle_target"
+kind = "real_battle"
+url = "https://www.target.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Target"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.target.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_etsy"
+kind = "real_battle"
+url = "https://www.etsy.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Etsy"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.etsy.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_wayfair"
+kind = "real_battle"
+url = "https://www.wayfair.com"
+protection = "akamai"
+selector = "body"
+expected_text_contains = "Wayfair"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.wayfair.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_booking"
+kind = "real_battle"
+url = "https://www.booking.com"
+protection = "perimeterx"
+selector = "body"
+expected_text_contains = "Booking.com"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.booking.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "travel"]
+
+[[targets]]
+id = "real_battle_expedia"
+kind = "real_battle"
+url = "https://www.expedia.com"
+protection = "akamai"
+selector = "body"
+expected_text_contains = "Expedia"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.expedia.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "travel"]
+
+[[targets]]
+id = "real_battle_kayak"
+kind = "real_battle"
+url = "https://www.kayak.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "KAYAK"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.kayak.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "travel"]
+
+[[targets]]
+id = "real_battle_coinmarketcap"
+kind = "real_battle"
+url = "https://coinmarketcap.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "CoinMarketCap"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://coinmarketcap.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "finance"]
+
+[[targets]]
+id = "real_battle_coingecko"
+kind = "real_battle"
+url = "https://www.coingecko.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "CoinGecko"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.coingecko.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "a-tier", "finance"]
+
+# ── B-Tier (6-7/10) — Solidna zaštita, moguće zaobići ────────────────────
+
+[[targets]]
+id = "real_battle_ebay"
+kind = "real_battle"
+url = "https://www.ebay.com"
+protection = "custom"
+selector = "body"
+expected_text_contains = "eBay"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.ebay.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "b-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_craigslist"
+kind = "real_battle"
+url = "https://www.craigslist.org"
+protection = "custom"
+selector = "body"
+expected_text_contains = "craigslist"
+api_discovery = false
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "b-tier", "ecommerce"]
+
+[[targets]]
+id = "real_battle_airbnb"
+kind = "real_battle"
+url = "https://www.airbnb.com"
+protection = "custom"
+selector = "body"
+expected_text_contains = "Airbnb"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.airbnb.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "b-tier", "travel"]
+
+[[targets]]
+id = "real_battle_glassdoor"
+kind = "real_battle"
+url = "https://www.glassdoor.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Glassdoor"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.glassdoor.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "b-tier", "jobs"]
+
+[[targets]]
+id = "real_battle_indeed"
+kind = "real_battle"
+url = "https://www.indeed.com"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "Indeed"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.indeed.com"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "b-tier", "jobs"]
+
+[[targets]]
+id = "real_battle_sec_edgar"
+kind = "real_battle"
+url = "https://www.sec.gov"
+protection = "cloudflare"
+selector = "body"
+expected_text_contains = "SEC"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.sec.gov"]
+api_max_endpoints = 20
+requires_v8 = true
+requires_auth = false
+labels = ["private", "authorized", "anti-bot", "b-tier", "government"]
+
+# ── C-Tier (4-5/10) — Laka zaštita, dobar baseline ───────────────────────
+
+[[targets]]
+id = "real_battle_hackernews"
+kind = "real_battle"
+url = "https://news.ycombinator.com"
+protection = "rate-limit"
+selector = "body"
+expected_text_contains = "Hacker News"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://hacker-news.firebaseio.com/v0"]
+api_max_endpoints = 10
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "c-tier", "tech", "baseline"]
+
+[[targets]]
+id = "real_battle_reddit"
+kind = "real_battle"
+url = "https://old.reddit.com"
+protection = "rate-limit"
+selector = "body"
+expected_text_contains = "reddit"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://www.reddit.com"]
+api_max_endpoints = 10
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "c-tier", "social", "baseline"]
+
+[[targets]]
+id = "real_battle_wikipedia"
+kind = "real_battle"
+url = "https://en.wikipedia.org"
+protection = "none"
+selector = "body"
+expected_text_contains = "Wikipedia"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://en.wikipedia.org/w/api.php"]
+api_max_endpoints = 10
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "c-tier", "reference", "baseline"]
+
+# ── D-Tier (1-3/10) — Bez zaštite, kontrolni targeti ─────────────────────
+
+[[targets]]
+id = "real_battle_example"
+kind = "real_battle"
+url = "https://example.com"
+protection = "none"
+selector = "h1"
+expected_text_contains = "Example Domain"
+api_discovery = false
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "d-tier", "control"]
+
+[[targets]]
+id = "real_battle_httpbin"
+kind = "real_battle"
+url = "https://httpbin.org"
+protection = "none"
+selector = "body"
+expected_text_contains = "httpbin"
+api_discovery = true
+api_expected_mode = "api_only"
+api_seed_urls = ["https://httpbin.org"]
+api_max_endpoints = 5
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "d-tier", "control"]
+
+[[targets]]
+id = "real_battle_books_to_scrape"
+kind = "real_battle"
+url = "https://books.toscrape.com"
+protection = "none"
+selector = "body"
+expected_text_contains = "Books to Scrape"
+api_discovery = false
+requires_v8 = false
+requires_auth = false
+labels = ["private", "authorized", "d-tier", "control", "sandbox"]

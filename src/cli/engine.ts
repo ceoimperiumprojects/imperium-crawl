@@ -393,7 +393,7 @@ export async function buildCli(): Promise<Command> {
     if (cmd === requestedCmd) {
       // Load the full tool module for this command only.
       // This is the only heavy import at startup — all others are skipped.
-      const toolModule = await import(`./tools/${cmd}.js`) as ToolDefinition;
+      const toolModule = await import(`../tools/${cmd}.js`) as ToolDefinition;
       addOptionsFromSchema(sub, toolModule.schema);
       sub.action(async (...args: unknown[]) => {
         const last = args[args.length - 1] as { opts?: () => Record<string, unknown> } | Record<string, unknown>;
@@ -407,7 +407,7 @@ export async function buildCli(): Promise<Command> {
       // For all other commands: register with just name + description.
       // Options are loaded lazily if the command is somehow invoked.
       sub.action(async (...args: unknown[]) => {
-        const toolModule = await import(`./tools/${cmd}.js`) as ToolDefinition;
+        const toolModule = await import(`../tools/${cmd}.js`) as ToolDefinition;
         // Re-parse options now that we have the schema
         const rawOpts = sub.opts();
         if (positionalKey && typeof args[0] === "string") rawOpts[positionalKey] = args[0];

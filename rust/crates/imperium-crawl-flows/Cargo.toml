@@ -1,0 +1,24 @@
+[package]
+name = "imperium-crawl-flows"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "Browser workflow recorder + executor for imperium-crawl"
+
+[dependencies]
+imperium-crawl-core = { workspace = true }
+imperium-crawl-browser = { workspace = true }
+imperium-crawl-tools = { workspace = true }
+
+tokio = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+
+[dev-dependencies]
+insta = { workspace = true }
+tempfile = { workspace = true }
