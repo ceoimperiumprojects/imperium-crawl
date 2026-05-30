@@ -721,6 +721,27 @@ npm start           # Start CLI (shows help or TUI)
 
 ---
 
+## Experimental Rust build (preview)
+
+A native **Rust engine** for imperium-crawl is in early, experimental development. It lives on its own branch to keep `main` lean and stable:
+
+```bash
+git clone -b rust https://github.com/ceoimperiumprojects/imperium-crawl
+cd imperium-crawl/rust
+cargo build
+```
+
+> ⚠️ **Experimental — expect rough edges.** Crate layout, APIs, and behavior may change without notice. Not production-ready yet.
+
+**Ran into a bug or something broken?** I'd genuinely love to hear about it — every report helps shape the native engine:
+
+- 🐛 **Open a GitHub issue** (preferred, keeps it tracked): [imperium-crawl/issues](https://github.com/ceoimperiumprojects/imperium-crawl/issues)
+- ✉️ **Or email me directly:** ceoimperiumprojects@gmail.com
+
+Thanks for testing the bleeding edge. 🦀
+
+---
+
 ## Contributing
 
 Contributions welcome! Whether it's a bug fix, new tool, or documentation improvement — open an issue or PR.
